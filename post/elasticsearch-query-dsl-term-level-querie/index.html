@@ -1,0 +1,951 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>
+    Elasticsearch Query DSL - 术语查询  | kingofzihua
+</title>
+<link rel="shortcut icon" href="http://kingofzihua.github.io/favicon.ico?v=1577770835023">
+<!-- <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous"> -->
+<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="http://kingofzihua.github.io/styles/main.css">
+<!-- js -->
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+<script src="http://kingofzihua.github.io/media/js/jquery.sticky-sidebar.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<script src="https://cdn.bootcss.com/moment.js/2.23.0/moment.min.js"></script>
+
+
+        
+</head>
+
+<body>
+    <div class="main">
+        <div class="header">
+    <div class="nav">
+        <div class="logo">
+            <a href="http://kingofzihua.github.io">
+                <img class="avatar" src="http://kingofzihua.github.io/images/avatar.png?v=1577770835023" alt="">
+            </a>
+            <div class="site-title">
+                <h1>
+                    kingofzihua
+                </h1>
+            </div>
+        </div>
+        <span class="menu-btn fa fa-align-justify"></span>
+        <div class="menu-container">
+            <ul>
+                
+                    
+                            <li>
+                                <a href="/" class="menu">
+                                    首页
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/archives" class="menu">
+                                    归档
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/tags" class="menu">
+                                    标签
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/post/about" class="menu">
+                                    关于
+                                </a>
+                            </li>
+                            
+                                
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $(".menu-btn").click(function() {
+            $(".menu-container").slideToggle();
+        });
+        $(window).resize(function() {
+
+            if (window.matchMedia('(min-width: 960px)').matches) {
+                $(".menu-container").css('display', 'block')
+            } else {
+                $(".menu-container").css('display', 'none')
+            }
+
+        });
+    });
+</script>
+
+            <div id="main-content" class="post-detail main-container">
+                <!-- left -->
+                <div id="content" class="main-container-left">
+                    <article class="post i-card">
+                        <h2 class="post-title">
+                            Elasticsearch Query DSL - 术语查询 
+                        </h2>
+                        <div class="post-info">
+                            <time class="post-time">2019-09-12</time>
+                            
+                                <a href="http://kingofzihua.github.io/tag/n9VRPxrjY" class="post-tag i-tag
+                            i-tag-warning">
+                            #elasticsearch
+                        </a>
+                                
+                        </div>
+                        
+                            <div class="post-feature-image" style="background-image: url('http://kingofzihua.github.io/post-images/elasticsearch-query-dsl-term-level-querie.jpg')"></div>
+                            
+                                <div class="post-content">
+                                    <blockquote>
+<p>Term Level（术语） 查询操作的是存储在反向索引（倒排索引）中的准确词根，这些查询通常用于结构化数据，如数字、日期和枚举，而不是全文字段，无需进行分析（分词），Term Level查询类似于关系型数据库的（where条件过滤）。</p>
+</blockquote>
+<!-- more -->
+<h2 id="exists-存在-非空查询">Exists (存在) 非空查询</h2>
+<p>  返回在提供的字段中包含null或[]以外的值的文档。</p>
+<h3 id="请求实例">请求实例</h3>
+<pre><code>
+POST /moulds/_search
+{
+  &quot;query&quot;: {
+    &quot;exists&quot;: {
+      &quot;field&quot;: &quot;deleted_at&quot;
+    }
+  }
+}
+</code></pre>
+<h3 id="顶级参数">顶级参数</h3>
+<p>  <code>field</code>: ( 必填 , 字符串 ) 所要搜索的字段名称<br>
+   要返回文档，此字段必须存在且包含除<code>null</code> 或者 <code>[]</code> 以外的的值，这些值可包括：</p>
+<ul>
+<li>空的字符串，例如<code>&quot;&quot;</code> 或 <code>&quot;-&quot;</code></li>
+<li>包含 <code>null</code> 和其他值的数组，例如<code>[null,&quot;foo&quot;]</code></li>
+<li>自定义 <a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/null-value.html">null-value</a> ，在字段映射中定义</li>
+</ul>
+<h3 id="备注">备注</h3>
+<h4 id="查找具有空值的文档">查找具有空值的文档</h4>
+<p>  为了找到只包含文件<code>null</code>值或<code>[]</code>在所提供的字段，使用 <code>must_not</code> 布尔查询与<code>exists</code> 查询</p>
+<pre><code>
+GET moulds/_search
+{
+    &quot;query&quot;: {
+        &quot;bool&quot;: {
+            &quot;must_not&quot;: {
+                &quot;exists&quot;: {
+                    &quot;field&quot;: &quot;deleted_at&quot;
+                }
+            }
+        }
+    }
+}
+</code></pre>
+<h2 id="fuzzy-模糊查询">Fuzzy  模糊查询</h2>
+<p> 返回包含与搜索词类似的词的文档。 由<a href="https://zh.wikipedia.org/wiki/%E8%90%8A%E6%96%87%E6%96%AF%E5%9D%A6%E8%B7%9D%E9%9B%A2">莱文斯坦距离</a>测量。<br>
+ 编辑距离是将一个术语转换为另一个术语所需的单个字符更改的数量。这些变化包括：</p>
+<ul>
+<li>改变一个字符 (<strong>b</strong>ox → <strong>f</strong>ox)</li>
+<li>删除一个字符 (<strong>b</strong>lack → lack)</li>
+<li>插入一个字符 (sic → sic<strong>k</strong>)</li>
+<li>转置两个相邻的字符 (<strong>ac</strong>t → <strong>ca</strong>t)</li>
+</ul>
+<h3 id="请求示例">请求示例</h3>
+<h4 id="简单的例子">简单的例子</h4>
+<pre><code>GET /_search
+{
+    &quot;query&quot;: {
+        &quot;fuzzy&quot;: {
+            &quot;user&quot;: {
+                &quot;value&quot;: &quot;ki&quot;
+            }
+        }
+    }
+}
+</code></pre>
+<h4 id="使用高级参数的例子">使用高级参数的例子</h4>
+<pre><code>GET /_search
+{
+    &quot;query&quot;: {
+        &quot;fuzzy&quot;: {
+            &quot;user&quot;: {
+                &quot;value&quot;: &quot;ki&quot;,
+                &quot;fuzziness&quot;: &quot;AUTO&quot;,
+                &quot;max_expansions&quot;: 50,
+                &quot;prefix_length&quot;: 0,
+                &quot;transpositions&quot;: true,
+                &quot;rewrite&quot;: &quot;constant_score&quot;
+            }
+        }
+    }
+}
+</code></pre>
+<h3 id="顶级参数-2">顶级参数</h3>
+<p>  <code>&lt;field&gt;</code>: ( 必需，对象）要搜索的字段</p>
+<h3 id="field-参数"><code>&lt;field&gt;</code> 参数</h3>
+<ul>
+<li><code>value</code> : （必填，字符串）您希望在提供的术语中找到术语的起始字符<code>&lt;field&gt;</code>。</li>
+<li><code>fuzziness</code>  : ( 可选，字符串）匹配所允许的最大编辑距离。有关 有效值和更多信息，请参见<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/common-options.html#fuzziness">模糊性</a>。</li>
+<li><code>max_expansions</code> : （可选，整数）创建的最大变体数。默认为50。
+<ul>
+<li>避免在<code>max_expansions</code>参数中使用高值，尤其是<code>prefix_length</code>参数值为0。<code>max_expansions</code>由于检查的变化很多，参数中的高值 会导致性能不佳。</li>
+</ul>
+</li>
+<li><code>prefix_length</code> :  （可选，整数）创建扩展时保持不变的起始字符数。默认为0。</li>
+<li><code>transpositions</code> : （可选，布尔值）指示编辑是否包含两个相邻字符的转置（ab→ba）。默认为true。</li>
+<li><code>rewrite</code> :  （可选，字符串）用于重写查询的方法。有关有效值和更多信息，请参阅<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/query-dsl-multi-term-rewrite.html">rewrite参数</a>。</li>
+</ul>
+<h2 id="ids">IDs</h2>
+<p> 根据文档的IDs返回文档。此查询使用存储在<code>_id</code>字段中的文档IDs。</p>
+<h3 id="请求实例-2">请求实例</h3>
+<pre><code>
+GET moulds/_search
+{
+    &quot;query&quot;: {
+        &quot;ids&quot; : {
+            &quot;values&quot; : [&quot;100011&quot;, &quot;100012&quot;, &quot;100&quot;]
+        }
+    }
+}
+</code></pre>
+<h3 id="顶级参数-3">顶级参数</h3>
+<p>  <code>&lt;values&gt;</code>: ( 必填 , 字符串或数组 ) 所要搜索的文档编号</p>
+<h2 id="prefix-前缀查询">Prefix 前缀查询</h2>
+<p>  返回在提供的字段中包含特定前缀的文档。</p>
+<h3 id="请求示例-2">请求示例</h3>
+<pre><code>GET /moulds/_search
+{
+  &quot;query&quot;: {
+    &quot;prefix&quot;: {
+      &quot;name&quot;: {
+        &quot;value&quot;: &quot;美式&quot;
+      }
+    }
+  }
+}
+</code></pre>
+<h3 id="顶级参数-4">顶级参数</h3>
+<p>  <code>&lt;field&gt;</code>: ( 必填 , 字符串 ) 所要搜索的字段名称</p>
+<h3 id="field-参数-2"><code>&lt;field&gt;</code> 参数</h3>
+<ul>
+<li><code>value</code> : （必填，字符串）您希望在提供的术语中找到术语的起始字符<code>&lt;field&gt;</code>。</li>
+<li><code>rewrite</code> : ( 可选，字符串）用于重写查询的方法。有关有效值和更多信息，请参阅<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/query-dsl-multi-term-rewrite.html">rewrite参数</a>。</li>
+</ul>
+<h2 id="range-范围查询">Range 范围查询</h2>
+<p>  查询在所选范围内的文档</p>
+<h3 id="请求示例-3">请求示例</h3>
+<p>搜索<code>价格</code>在 <code>20</code>到<code>30</code>之间的文档</p>
+<pre><code>
+GET moulds/_search
+{
+    &quot;query&quot;: {
+        &quot;range&quot; : {
+            &quot;price&quot;: {
+                &quot;gte&quot; : 20,
+                &quot;lte&quot; : 30,
+                &quot;boost&quot; : 2.0
+            }
+        }
+    }
+}
+</code></pre>
+<h3 id="顶级参数-5">顶级参数</h3>
+<p>  <code>&lt;field&gt;</code>: ( 必填 , 字符串 ) 所要搜索的字段名称</p>
+<h3 id="field-参数-3"><code>&lt;field&gt;</code> 参数</h3>
+<ul>
+<li><code>gt</code> : (可选) 大于</li>
+<li><code>gte</code> : (可选) 大于等于</li>
+<li><code>lt</code>: (可选) 小于</li>
+<li><code>lte</code>: (可选) 小于等于</li>
+<li><code>format</code> : ( 可选 , 字符串 ) 用于转换date查询中的值的日期格式</li>
+<li><code>relation</code> : ( 可选 , 字符串 ) 指示范围查询如何匹配range 字段的值
+<ul>
+<li><strong>INTERSECTS</strong> (默认) : 匹配具有与查询范围相交的范围字段值的文档。</li>
+<li><strong>CONTAINS</strong> : 匹配具有完全包含查询范围的范围字段值的文档。</li>
+<li><strong>WITHIN</strong> : 匹配范围字段值完全在查询范围内的文档。</li>
+</ul>
+</li>
+<li><code>time_zone</code> : ( 可选 ，字符串 ） 用于将查询中的值转换为UTC的<code>date</code></li>
+<li><code>boost</code> : （可选，浮点）用于降低或增加查询的相关性分数的浮点数 。默认为1.0。</li>
+</ul>
+<h3 id="date-math-expressions-日期数学表达式">Date Math Expressions (日期数学表达式)</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">关键字（词）</th>
+<th style="text-align:center">含 义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">now</td>
+<td style="text-align:center">当前时间</td>
+</tr>
+<tr>
+<td style="text-align:center">y</td>
+<td style="text-align:center">年</td>
+</tr>
+<tr>
+<td style="text-align:center">M</td>
+<td style="text-align:center">月</td>
+</tr>
+<tr>
+<td style="text-align:center">w</td>
+<td style="text-align:center">周</td>
+</tr>
+<tr>
+<td style="text-align:center">d</td>
+<td style="text-align:center">天</td>
+</tr>
+<tr>
+<td style="text-align:center">H / h</td>
+<td style="text-align:center">小时</td>
+</tr>
+<tr>
+<td style="text-align:center">m</td>
+<td style="text-align:center">分钟</td>
+</tr>
+<tr>
+<td style="text-align:center">s</td>
+<td style="text-align:center">秒</td>
+</tr>
+</tbody>
+</table>
+<h3 id="备注-2">备注</h3>
+<h4 id="使用range-查询-date-字段">使用<code>range</code> 查询 <code>date</code> 字段</h4>
+<p>  当<code>&lt;field&gt;</code>参数是日期字段数据类型时，可以使用以下参数：<code>gt</code>、<code>gte</code>、<code>lt</code>、<code>lte</code>。</p>
+<p>   例如，下面的搜索返回的文档中，<code>updated_at</code>字段包含从今天到昨天之间的日期。</p>
+<pre><code>
+GET moulds/_search
+{
+    &quot;query&quot;: {
+        &quot;range&quot; : {
+            &quot;updated_at&quot;: {
+                &quot;gte&quot;: &quot;now-1d/d&quot;, // 注意那个 T
+                &quot;lte&quot;: &quot;now/d&quot; 
+            }
+        }
+    }
+}
+</code></pre>
+<h4 id="使用-time_zone-参数的-示例">使用 <code>time_zone</code> 参数的 示例</h4>
+<pre><code>
+GET moulds/_search
+{
+
+    &quot;query&quot;: {
+        &quot;range&quot; : {
+            &quot;updated_at&quot;: {
+                &quot;time_zone&quot;: &quot;+08:00&quot;,  //这个地方是 你存储的数据增加 8小时后和下面的比较，也可以认为是 下面的时间减去上面的8小时
+                &quot;gte&quot;: &quot;2019-09-10T16:43:38&quot;,  // 注意那个 T
+                &quot;lte&quot;: &quot;now&quot;  // 时区参数不影响now值。
+            }
+        }
+    }
+}
+</code></pre>
+<ul>
+<li>表示 <code>date</code> 值使用UTC偏移量<code>+08:00</code>。</li>
+<li>使用UTC偏移量+01:00，Elasticsearch会将此日期转换为 <code>2019-09-10T08:43:38 UTC</code>。</li>
+<li>该 <code>time_zone</code>参数不会影响该<code>now</code>值。</li>
+</ul>
+<h2 id="regexp-正则表达式查询">Regexp 正则表达式查询</h2>
+<p>  返回包含与<a href="https://en.wikipedia.org/wiki/Regular_expression">正则表达式</a>匹配的术语的文档 。</p>
+<p>   正则表达式是一种使用占位符字符匹配数据模式的方法，称为运算符。有关regexp查询支持的运算符列表 ，请参阅<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/regexp-syntax.html">正则表达式语法</a>。</p>
+<h3 id="请求示例-4">请求示例</h3>
+<pre><code>GET /moulds/_search
+{
+    &quot;query&quot;: {
+        &quot;regexp&quot;: {
+            &quot;style&quot;: {
+                &quot;value&quot;: &quot;bo*&quot;,
+                &quot;flags&quot; : &quot;ALL&quot;,
+                &quot;max_determinized_states&quot;: 10000,
+                &quot;rewrite&quot;: &quot;constant_score&quot;
+            }
+        }
+    }
+}
+</code></pre>
+<h3 id="顶级参数-6">顶级参数</h3>
+<p>  <code>&lt;field&gt;</code>: ( 必填 , 对象 ) 你要搜索的字段。</p>
+<h3 id="field-参数-4"><code>&lt;field&gt;</code> 参数</h3>
+<ul>
+<li><code>value</code> : (必需，字符串）您希望在提供的术语中找到的术语的正则表达式 <code>&lt;field&gt;</code>。有关支持的运算符的列表，请参阅<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/regexp-syntax.html">正则表达式语法</a>。</li>
+<li><code>flags</code> : （可选，字符串）为正则表达式启用可选运算符。有关有效值和更多信息，请参阅<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/regexp-syntax.html">正则表达式语法</a>。</li>
+<li><code>max_determinized_states</code> : （可选，整数） 查询所需的最大自动机状态数 。默认是10000。</li>
+<li><code>rewrite</code> : ( 可选，字符串）用于重写查询的方法。有关有效值和更多信息，请参阅<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/query-dsl-multi-term-rewrite.html">rewrite参数</a>。</li>
+</ul>
+<h2 id="term-术语查询">Term  术语查询</h2>
+<p>  返回在提供的字段中包含确切项的文档。<br>
+  可以使用term查询根据精确值（例如价格，产品ID或用户名）查找文档。</p>
+<blockquote>
+<ul>
+<li>避免使用字段term查询<code>text</code>。</li>
+<li>默认情况下，Elasticsearch会更改text字段的值作为<code>analysis</code>的一部分。这可以使得text难以找到字段值的精确匹配。</li>
+<li>要搜索text字段值，请改用<code>match</code>查询。</li>
+</ul>
+</blockquote>
+<h3 id="请求实例-3">请求实例</h3>
+<p>   查询价格是26的文档</p>
+<pre><code>
+GET moulds/_search
+{
+    &quot;query&quot;: {
+        &quot;term&quot;: {
+            &quot;price&quot;: {
+                &quot;value&quot;: &quot;26&quot;
+            }
+        }
+    }
+}
+</code></pre>
+<h3 id="顶级参数-7">顶级参数</h3>
+<p>  <code>&lt;field&gt;</code>: ( 必填 , 对象 ) 你要搜索的字段。</p>
+<h3 id="field-参数-5"><code>&lt;field&gt;</code> 参数</h3>
+<ul>
+<li><code>value</code> :（必填，字符串）您希望在提供的术语中找到的索引词<code>&lt;field&gt;</code>。要返回文档，该索引词必须与字段值完全匹配，包括空格和大小写。</li>
+<li><code>boost</code> : ( 可选，浮点）用于降低或增加查询的相关性分数的浮点数 。默认为1.0。</li>
+</ul>
+<h3 id="备注-3">备注</h3>
+<h3 id="避免使用字段term查询text">避免使用字段<code>term</code>查询<code>text</code></h3>
+<p> 默认情况下，Elasticsearch会text在分析期间更改字段的值。例如，默认 <a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/analysis-standard-analyzer.html">standard analyzer</a> (标准分析器) 更改 text字段值，如下所示：</p>
+<ul>
+<li>删除大多数标点符号</li>
+<li>将剩余内容划分为单个单词，称为<code>tokens</code>(词元)</li>
+<li>切分的单词、词元进行小写</li>
+</ul>
+<p> 为了更好地搜索<code>text</code>字段，<code>match</code>查询还会在执行搜索之前分析您提供的搜索字词。这意味着<code>match</code>查询可以搜索<code>text</code>字段以查找 分析的标记，而不是精确的术语。<br>
+  该 <code>term</code>查询并没有<code>analyze</code>( 分析 )搜索词。该<code>term</code>查询只精确搜索您提供的值。这意味着<code>term</code>查询在搜索<code>text</code>字段时可能返回不同的或无结果。</p>
+<p>   要查看搜索结果中的差异，请尝试以下示例。</p>
+<ul>
+<li>
+<ol>
+<li>使用text名为的字段创建索引full_text</li>
+</ol>
+</li>
+</ul>
+<pre><code>
+PUT my_index
+{
+    &quot;mappings&quot; : {
+        &quot;properties&quot; : {
+            &quot;full_text&quot; : { &quot;type&quot; : &quot;text&quot; }
+        }
+    }
+}
+</code></pre>
+<ul>
+<li>
+<ol start="2">
+<li>往索引中添加一个，值为<code>Quick Brown Foxes!</code>的<code>full_text</code>字段</li>
+</ol>
+</li>
+</ul>
+<pre><code>PUT my_index/_doc/1
+{
+  &quot;full_text&quot;:   &quot;Quick Brown Foxes!&quot;
+}
+</code></pre>
+<ul>
+<li>
+<ol start="3">
+<li>使用<code>term</code>查询<code>Quick Brown Foxes!</code> 在<code>full_text</code>字段中搜索。增加一个<code>pretty</code> 参数以使返回的结果更具可读性。</li>
+</ol>
+</li>
+</ul>
+<pre><code>GET my_index/_search?pretty
+{
+  &quot;query&quot;: {
+    &quot;term&quot;: {
+      &quot;full_text&quot;: &quot;Quick Brown Foxes!&quot;
+    }
+  }
+}
+</code></pre>
+<p>   因为<code>full_text</code> 字段中并不包含<strong>Quick Brown Foxes!</strong> 这个索引词，所以<code>term</code>查询搜索不返回任何结果。</p>
+<ul>
+<li>
+<ol start="4">
+<li>使用match查询Quick Brown Foxes!在full_text 字段中搜索</li>
+</ol>
+</li>
+</ul>
+<pre><code>GET my_index/_search?pretty
+{
+  &quot;query&quot;: {
+    &quot;match&quot;: {
+      &quot;full_text&quot;: &quot;Quick Brown Foxes!&quot;
+    }
+  }
+}
+</code></pre>
+<p>    与 <code>term</code> 搜索不同 <code>match</code> 查询会分析您提供的搜索文本<strong>Quick Brown Foxes!</strong> 然后执行搜索，然后，<code>match</code>查询返回在<code>full_text</code>字段中包含<code>quick</code>、<code>brown</code>或<code>fox</code>索引词的任何文档。<br>
+     下面是对结果中包含索引文档的匹配查询搜索的响应:</p>
+<pre><code>{
+  &quot;took&quot; : 1,
+  &quot;timed_out&quot; : false,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 1,
+    &quot;successful&quot; : 1,
+    &quot;skipped&quot; : 0,
+    &quot;failed&quot; : 0
+  },
+  &quot;hits&quot; : {
+    &quot;total&quot; : {
+      &quot;value&quot; : 1,
+      &quot;relation&quot; : &quot;eq&quot;
+    },
+    &quot;max_score&quot; : 0.8630463,
+    &quot;hits&quot; : [
+      {
+        &quot;_index&quot; : &quot;my_index&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_score&quot; : 0.8630463,
+        &quot;_source&quot; : {
+          &quot;full_text&quot; : &quot;Quick Brown Foxes!&quot;
+        }
+      }
+    ]
+  }
+}
+</code></pre>
+<h2 id="terms-多个术语查询">Terms  多个术语查询</h2>
+<p> 返回在提供的字段中包含一个或多个确切术语的文档。每个<code>term</code>之间的关系是 <code>OR</code>（或者）</p>
+<h3 id="请求示例-5">请求示例</h3>
+<pre><code>
+GET moulds/_search
+{
+    &quot;query&quot;: {
+        &quot;terms&quot;: {
+            &quot;price&quot;:[&quot;26&quot;,&quot;27&quot;]
+        }
+    }
+}
+</code></pre>
+<h3 id="顶级参数-8">顶级参数</h3>
+<p>  <code>&lt;field&gt;</code>: ( 必填 , 对象 ) 你要搜索的字段。<br>
+  <code>boost</code>: ( 可选，浮点 ) 用于降低或增加查询的相关性分数的浮点数 。默认为1.0。</p>
+<h2 id="terms-set-多个术语查询">Terms Set  多个术语查询</h2>
+<p> 返回在提供的字段中包含最少数量的确切术语的文档。<br>
+该terms_set查询相同的terms 查询，但您可以定义返回文档所需的匹配项数。例如：</p>
+<ul>
+<li>有一个字段<code>programming_languages</code>包含已知的编程语言，如<code>c++</code>，<code>java</code>或<code>php</code>为求职者。您可以使用该<code>terms_set</code>查询返回与这些语言中至少两种语言匹配的文档。</li>
+<li>有一个字段<code>permissions</code>包含应用程序的可能用户权限列表。您可以使用该<code>terms_set</code>查询返回与这些权限的子集匹配的文档。</li>
+</ul>
+<h3 id="请求示例-6">请求示例</h3>
+<h4 id="准备测试数据">准备测试数据</h4>
+<ul>
+<li>1、创建索引<code>job-candidates</code>
+<ul>
+<li><code>name</code> : 一个<code>keyword</code>字段。该字段包含求职者的名称。</li>
+<li><code>programming_languages</code> : 一个<code>keyword</code>领域。该字段包含求职者已知的编程语言。</li>
+<li><code>required_matches</code> : 一个数字 long字段。此字段包含返回文档所需的匹配项数。</li>
+</ul>
+</li>
+</ul>
+<pre><code>PUT /job-candidates
+{
+    &quot;mappings&quot;: {
+        &quot;properties&quot;: {
+            &quot;name&quot;: {
+                &quot;type&quot;: &quot;keyword&quot;
+            },
+            &quot;programming_languages&quot;: {
+                &quot;type&quot;: &quot;keyword&quot;
+            },
+            &quot;required_matches&quot;: {
+                &quot;type&quot;: &quot;long&quot;
+            }
+        }
+    }
+}
+</code></pre>
+<ul>
+<li>2、添加一条编号为1文档
+<ul>
+<li><code>name</code>字段设置为<code>Jane Smith</code></li>
+<li><code>programming_languages</code> 字段为 <code>[&quot;c++&quot;,&quot;java&quot;]</code></li>
+<li><code>required_matches</code>字段为 2</li>
+</ul>
+</li>
+</ul>
+<pre><code>PUT /job-candidates/_doc/1?refresh
+{
+    &quot;name&quot;: &quot;Jane Smith&quot;,
+    &quot;programming_languages&quot;: [&quot;c++&quot;, &quot;java&quot;],
+    &quot;required_matches&quot;: 2
+}
+</code></pre>
+<ul>
+<li>3、添加一条编号为2文档
+<ul>
+<li><code>name</code>字段设置为<code>Jason Response</code></li>
+<li><code>programming_languages</code> 字段为 <code>[&quot;php&quot;,&quot;java&quot;]</code></li>
+<li><code>required_matches</code>字段为 1</li>
+</ul>
+</li>
+</ul>
+<pre><code>PUT /job-candidates/_doc/1?refresh
+{
+    &quot;name&quot;: &quot;Jason Response&quot;,
+    &quot;programming_languages&quot;: [&quot;php&quot;, &quot;java&quot;],
+    &quot;required_matches&quot;: 1
+}
+</code></pre>
+<h4 id="测试请求">测试请求</h4>
+<p> 搜索语言为<code>c++</code>,<code>java</code>, <code>php</code>的</p>
+<pre><code>GET /job-candidates/_search
+{
+    &quot;query&quot;: {
+        &quot;terms_set&quot;: {
+            &quot;programming_languages&quot;: {
+                &quot;terms&quot;: [&quot;c++&quot;, &quot;java&quot;, &quot;php&quot;],
+                &quot;minimum_should_match_field&quot;: &quot;required_matches&quot;
+            }
+        }
+    }
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;took&quot; : 2,
+  &quot;timed_out&quot; : false,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 1,
+    &quot;successful&quot; : 1,
+    &quot;skipped&quot; : 0,
+    &quot;failed&quot; : 0
+  },
+  &quot;hits&quot; : {
+    &quot;total&quot; : {
+      &quot;value&quot; : 2,
+      &quot;relation&quot; : &quot;eq&quot;
+    },
+    &quot;max_score&quot; : 1.1005894,
+    &quot;hits&quot; : [
+      {
+        &quot;_index&quot; : &quot;job-candidates&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_score&quot; : 1.1005894,
+        &quot;_source&quot; : {
+          &quot;name&quot; : &quot;Jane Smith&quot;,
+          &quot;programming_languages&quot; : [
+            &quot;c++&quot;,
+            &quot;java&quot;
+          ],
+          &quot;required_matches&quot; : 2
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;job-candidates&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_score&quot; : 1.1005894,
+        &quot;_source&quot; : {
+          &quot;name&quot; : &quot;Jason Response&quot;,
+          &quot;programming_languages&quot; : [
+            &quot;java&quot;,
+            &quot;php&quot;
+          ],
+          &quot;required_matches&quot; : 1
+        }
+      }
+    ]
+  }
+}
+</code></pre>
+<ul>
+<li>第一条数据的匹配的数量是2个，语言<code>c++</code>,<code>java</code>在查询条件中，所以能匹配</li>
+<li>第二条数据匹配数量是1个，就是说，<code>java</code>或者是<code>php</code> 其中一个就可以，满足条件，所以能匹配</li>
+</ul>
+<p> 搜索语言为<code>c++</code>,<code>php</code>的</p>
+<pre><code>GET /job-candidates/_search
+{
+    &quot;query&quot;: {
+        &quot;terms_set&quot;: {
+            &quot;programming_languages&quot;: {
+                &quot;terms&quot;: [&quot;c++&quot;,&quot;php&quot;],
+                &quot;minimum_should_match_field&quot;: &quot;required_matches&quot;
+            }
+        }
+    }
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;took&quot; : 1,
+  &quot;timed_out&quot; : false,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 1,
+    &quot;successful&quot; : 1,
+    &quot;skipped&quot; : 0,
+    &quot;failed&quot; : 0
+  },
+  &quot;hits&quot; : {
+    &quot;total&quot; : {
+      &quot;value&quot; : 1,
+      &quot;relation&quot; : &quot;eq&quot;
+    },
+    &quot;max_score&quot; : 0.8713851,
+    &quot;hits&quot; : [
+      {
+        &quot;_index&quot; : &quot;job-candidates&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_score&quot; : 0.8713851,
+        &quot;_source&quot; : {
+          &quot;name&quot; : &quot;Jason Response&quot;,
+          &quot;programming_languages&quot; : [
+            &quot;java&quot;,
+            &quot;php&quot;
+          ],
+          &quot;required_matches&quot; : 1
+        }
+      }
+    ]
+  }
+}
+</code></pre>
+<ul>
+<li>第一条数据的匹配的数量是2个，只有语言<code>c++</code>在查询条件中，所以不能匹配</li>
+<li>第二条数据匹配数量是1个，就是说，<code>java</code>或者是<code>php</code> 其中一个就可以，满足条件，所以能匹配</li>
+</ul>
+<h3 id="顶级参数-9">顶级参数</h3>
+<p>  <code>&lt;field&gt;</code>: ( 必填 , 对象 ) 你要搜索的字段。</p>
+<h4 id="field-参数-6"><code>&lt;field&gt;</code> 参数</h4>
+<ul>
+<li><code>terms</code> :（必需，字符串数组) 您希望在提供的术语中找到的术语数组 <code>&lt;field&gt;</code>。要返回文档，所需数量的术语必须与字段值完全匹配，包括空格和大小写。</li>
+<li><code>minimum_should_match_field</code> : ( 可选，字符串）<strong>数字</strong> 字段，包含返回文档所需的匹配项数。</li>
+<li><code>minimum_should_match_script</code> : ( 可选，字符串）自定义脚本，包含返回文档所需的匹配项数。</li>
+</ul>
+<h3 id="备注-4">备注</h3>
+<h4 id="如何使用minimum_should_match_script参数编辑">如何使用<code>minimum_should_match_script</code>参数编辑</h4>
+<p>您可以使用<code>minimum_should_match_script</code>脚本定义所需的匹配术语数。如果您需要动态设置所需术语的数量，这非常有用。</p>
+<h4 id="使用编辑的示例查询minimum_should_match_script">使用编辑的示例查询<code>minimum_should_match_script</code></h4>
+<p>以下搜索返回该<code>programming_languages</code>字段至少包含以下两个术语的文档：<br>
+<code>c++</code>、<code>php</code></p>
+<pre><code>GET /job-candidates/_search
+{
+    &quot;query&quot;: {
+        &quot;terms_set&quot;: {
+            &quot;programming_languages&quot;: {
+                &quot;terms&quot;: [&quot;c++&quot;, &quot;php&quot;],
+                &quot;minimum_should_match_script&quot;: {
+                   &quot;source&quot;: &quot;2&quot;
+                },
+                &quot;boost&quot;: 1.0
+            }
+        }
+    }
+}
+</code></pre>
+<p><strong>没有匹配</strong></p>
+<hr>
+<h2 id="参考资料">参考资料</h2>
+<ul>
+<li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/term-level-queries.html">Elasticsearch文档:Term-level-queries</a></li>
+<li><a href="https://time.geekbang.org/course/intro/197">极客时间:Elasticsearch核心技术与实战</a></li>
+</ul>
+
+                                </div>
+                    </article>
+                    <!--  -->
+                    
+                        <div class="next-post">
+                            <div class="next">下一篇</div>
+                            <a href="http://kingofzihua.github.io/post/elasticsearch-mapping-ying-she">
+                                <h3 class="post-title">
+                                    Elasticsearch Mapping (映射)
+                                </h3>
+                            </a>
+                        </div>
+                        
+                            <div id="disqus_thread"></div>
+                            <div id="gitalk-container"></div>
+                </div>
+                <!-- middle -->
+                <div class="main-container-middle"></div>
+                <!-- right -->
+                <div id="sidebar" class="main-container-right">
+                    
+                        <!-- toc -->
+                        
+    <div class="toc-card i-card ">
+        <div class="toc-title i-card-title">目录</div>
+        <div class="toc-content">
+            <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#exists-%E5%AD%98%E5%9C%A8-%E9%9D%9E%E7%A9%BA%E6%9F%A5%E8%AF%A2">Exists (存在) 非空查询</a>
+<ul>
+<li><a href="#%E8%AF%B7%E6%B1%82%E5%AE%9E%E4%BE%8B">请求实例</a></li>
+<li><a href="#%E9%A1%B6%E7%BA%A7%E5%8F%82%E6%95%B0">顶级参数</a></li>
+<li><a href="#%E5%A4%87%E6%B3%A8">备注</a>
+<ul>
+<li><a href="#%E6%9F%A5%E6%89%BE%E5%85%B7%E6%9C%89%E7%A9%BA%E5%80%BC%E7%9A%84%E6%96%87%E6%A1%A3">查找具有空值的文档</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#fuzzy-%E6%A8%A1%E7%B3%8A%E6%9F%A5%E8%AF%A2">Fuzzy  模糊查询</a>
+<ul>
+<li><a href="#%E8%AF%B7%E6%B1%82%E7%A4%BA%E4%BE%8B">请求示例</a>
+<ul>
+<li><a href="#%E7%AE%80%E5%8D%95%E7%9A%84%E4%BE%8B%E5%AD%90">简单的例子</a></li>
+<li><a href="#%E4%BD%BF%E7%94%A8%E9%AB%98%E7%BA%A7%E5%8F%82%E6%95%B0%E7%9A%84%E4%BE%8B%E5%AD%90">使用高级参数的例子</a></li>
+</ul>
+</li>
+<li><a href="#%E9%A1%B6%E7%BA%A7%E5%8F%82%E6%95%B0-2">顶级参数</a></li>
+<li><a href="#field-%E5%8F%82%E6%95%B0"><code>&lt;field&gt;</code> 参数</a></li>
+</ul>
+</li>
+<li><a href="#ids">IDs</a>
+<ul>
+<li><a href="#%E8%AF%B7%E6%B1%82%E5%AE%9E%E4%BE%8B-2">请求实例</a></li>
+<li><a href="#%E9%A1%B6%E7%BA%A7%E5%8F%82%E6%95%B0-3">顶级参数</a></li>
+</ul>
+</li>
+<li><a href="#prefix-%E5%89%8D%E7%BC%80%E6%9F%A5%E8%AF%A2">Prefix 前缀查询</a>
+<ul>
+<li><a href="#%E8%AF%B7%E6%B1%82%E7%A4%BA%E4%BE%8B-2">请求示例</a></li>
+<li><a href="#%E9%A1%B6%E7%BA%A7%E5%8F%82%E6%95%B0-4">顶级参数</a></li>
+<li><a href="#field-%E5%8F%82%E6%95%B0-2"><code>&lt;field&gt;</code> 参数</a></li>
+</ul>
+</li>
+<li><a href="#range-%E8%8C%83%E5%9B%B4%E6%9F%A5%E8%AF%A2">Range 范围查询</a>
+<ul>
+<li><a href="#%E8%AF%B7%E6%B1%82%E7%A4%BA%E4%BE%8B-3">请求示例</a></li>
+<li><a href="#%E9%A1%B6%E7%BA%A7%E5%8F%82%E6%95%B0-5">顶级参数</a></li>
+<li><a href="#field-%E5%8F%82%E6%95%B0-3"><code>&lt;field&gt;</code> 参数</a></li>
+<li><a href="#date-math-expressions-%E6%97%A5%E6%9C%9F%E6%95%B0%E5%AD%A6%E8%A1%A8%E8%BE%BE%E5%BC%8F">Date Math Expressions (日期数学表达式)</a></li>
+<li><a href="#%E5%A4%87%E6%B3%A8-2">备注</a>
+<ul>
+<li><a href="#%E4%BD%BF%E7%94%A8range-%E6%9F%A5%E8%AF%A2-date-%E5%AD%97%E6%AE%B5">使用<code>range</code> 查询 <code>date</code> 字段</a></li>
+<li><a href="#%E4%BD%BF%E7%94%A8-time_zone-%E5%8F%82%E6%95%B0%E7%9A%84-%E7%A4%BA%E4%BE%8B">使用 <code>time_zone</code> 参数的 示例</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#regexp-%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F%E6%9F%A5%E8%AF%A2">Regexp 正则表达式查询</a>
+<ul>
+<li><a href="#%E8%AF%B7%E6%B1%82%E7%A4%BA%E4%BE%8B-4">请求示例</a></li>
+<li><a href="#%E9%A1%B6%E7%BA%A7%E5%8F%82%E6%95%B0-6">顶级参数</a></li>
+<li><a href="#field-%E5%8F%82%E6%95%B0-4"><code>&lt;field&gt;</code> 参数</a></li>
+</ul>
+</li>
+<li><a href="#term-%E6%9C%AF%E8%AF%AD%E6%9F%A5%E8%AF%A2">Term  术语查询</a>
+<ul>
+<li><a href="#%E8%AF%B7%E6%B1%82%E5%AE%9E%E4%BE%8B-3">请求实例</a></li>
+<li><a href="#%E9%A1%B6%E7%BA%A7%E5%8F%82%E6%95%B0-7">顶级参数</a></li>
+<li><a href="#field-%E5%8F%82%E6%95%B0-5"><code>&lt;field&gt;</code> 参数</a></li>
+<li><a href="#%E5%A4%87%E6%B3%A8-3">备注</a></li>
+<li><a href="#%E9%81%BF%E5%85%8D%E4%BD%BF%E7%94%A8%E5%AD%97%E6%AE%B5term%E6%9F%A5%E8%AF%A2text">避免使用字段<code>term</code>查询<code>text</code></a></li>
+</ul>
+</li>
+<li><a href="#terms-%E5%A4%9A%E4%B8%AA%E6%9C%AF%E8%AF%AD%E6%9F%A5%E8%AF%A2">Terms  多个术语查询</a>
+<ul>
+<li><a href="#%E8%AF%B7%E6%B1%82%E7%A4%BA%E4%BE%8B-5">请求示例</a></li>
+<li><a href="#%E9%A1%B6%E7%BA%A7%E5%8F%82%E6%95%B0-8">顶级参数</a></li>
+</ul>
+</li>
+<li><a href="#terms-set-%E5%A4%9A%E4%B8%AA%E6%9C%AF%E8%AF%AD%E6%9F%A5%E8%AF%A2">Terms Set  多个术语查询</a>
+<ul>
+<li><a href="#%E8%AF%B7%E6%B1%82%E7%A4%BA%E4%BE%8B-6">请求示例</a>
+<ul>
+<li><a href="#%E5%87%86%E5%A4%87%E6%B5%8B%E8%AF%95%E6%95%B0%E6%8D%AE">准备测试数据</a></li>
+<li><a href="#%E6%B5%8B%E8%AF%95%E8%AF%B7%E6%B1%82">测试请求</a></li>
+</ul>
+</li>
+<li><a href="#%E9%A1%B6%E7%BA%A7%E5%8F%82%E6%95%B0-9">顶级参数</a>
+<ul>
+<li><a href="#field-%E5%8F%82%E6%95%B0-6"><code>&lt;field&gt;</code> 参数</a></li>
+</ul>
+</li>
+<li><a href="#%E5%A4%87%E6%B3%A8-4">备注</a>
+<ul>
+<li><a href="#%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8minimum_should_match_script%E5%8F%82%E6%95%B0%E7%BC%96%E8%BE%91">如何使用<code>minimum_should_match_script</code>参数编辑</a></li>
+<li><a href="#%E4%BD%BF%E7%94%A8%E7%BC%96%E8%BE%91%E7%9A%84%E7%A4%BA%E4%BE%8B%E6%9F%A5%E8%AF%A2minimum_should_match_script">使用编辑的示例查询<code>minimum_should_match_script</code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99">参考资料</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+        <script>
+            function locateCatelogList() {
+                /*获取文章目录集合,可通过:header过滤器*/
+                var alis = $('.post-content :header');
+                /*获取侧边栏目录列表集合**/
+                var sidebar_alis = $('.markdownIt-TOC a');
+                /*获取滚动条到顶部的距离*/
+                var scroll_height = $(window).scrollTop();
+                for (var i = 0; i < alis.length; i++) {
+                    /*获取锚点集合中的元素分别到顶点的距离*/
+                    var a_height = $(alis[i]).offset().top;
+                    if (a_height < scroll_height) {
+                        /*高亮显示*/
+                        sidebar_alis.removeClass('on');
+                        $(sidebar_alis[i]).addClass('on');
+                    }
+                }
+            }
+            $(function() {
+                /*绑定滚动事件 */
+                $(window).bind('scroll', locateCatelogList);
+            });
+        </script>
+    </div>
+    
+                            
+
+                </div>
+
+
+
+
+            </div>
+
+
+            <div class="site-footer">
+  Powered by <a href="https://github.com/kingofzihua" target="_blank">kingofzihua</a> | 
+  <a class="rss" href="http://kingofzihua.github.io/atom.xml" target="_blank">RSS</a>
+</div>
+
+<script>
+  hljs.initHighlightingOnLoad()
+</script>
+
+
+    </div>
+    <script>
+        $('#sidebar').stickySidebar({
+            topSpacing: 80,
+            // bottomSpacing: 60
+        });
+    </script>
+    
+</body>
+
+</html>

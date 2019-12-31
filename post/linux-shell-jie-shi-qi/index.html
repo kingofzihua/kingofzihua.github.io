@@ -1,0 +1,398 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>
+    Linux - shell 解释器 | kingofzihua
+</title>
+<link rel="shortcut icon" href="http://kingofzihua.github.io/favicon.ico?v=1577770835023">
+<!-- <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous"> -->
+<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="http://kingofzihua.github.io/styles/main.css">
+<!-- js -->
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+<script src="http://kingofzihua.github.io/media/js/jquery.sticky-sidebar.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<script src="https://cdn.bootcss.com/moment.js/2.23.0/moment.min.js"></script>
+
+
+        
+</head>
+
+<body>
+    <div class="main">
+        <div class="header">
+    <div class="nav">
+        <div class="logo">
+            <a href="http://kingofzihua.github.io">
+                <img class="avatar" src="http://kingofzihua.github.io/images/avatar.png?v=1577770835023" alt="">
+            </a>
+            <div class="site-title">
+                <h1>
+                    kingofzihua
+                </h1>
+            </div>
+        </div>
+        <span class="menu-btn fa fa-align-justify"></span>
+        <div class="menu-container">
+            <ul>
+                
+                    
+                            <li>
+                                <a href="/" class="menu">
+                                    首页
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/archives" class="menu">
+                                    归档
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/tags" class="menu">
+                                    标签
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/post/about" class="menu">
+                                    关于
+                                </a>
+                            </li>
+                            
+                                
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $(".menu-btn").click(function() {
+            $(".menu-container").slideToggle();
+        });
+        $(window).resize(function() {
+
+            if (window.matchMedia('(min-width: 960px)').matches) {
+                $(".menu-container").css('display', 'block')
+            } else {
+                $(".menu-container").css('display', 'none')
+            }
+
+        });
+    });
+</script>
+
+            <div id="main-content" class="post-detail main-container">
+                <!-- left -->
+                <div id="content" class="main-container-left">
+                    <article class="post i-card">
+                        <h2 class="post-title">
+                            Linux - shell 解释器
+                        </h2>
+                        <div class="post-info">
+                            <time class="post-time">2019-08-19</time>
+                            
+                                <a href="http://kingofzihua.github.io/tag/fEqfdRwnr" class="post-tag i-tag
+                            i-tag-primary">
+                            #linux
+                        </a>
+                                
+                                <a href="http://kingofzihua.github.io/tag/nVksIMufFf" class="post-tag i-tag
+                            i-tag-other_3">
+                            #shell
+                        </a>
+                                
+                        </div>
+                        
+                            <div class="post-feature-image" style="background-image: url('http://kingofzihua.github.io/post-images/linux-shell-jie-shi-qi.jpeg')"></div>
+                            
+                                <div class="post-content">
+                                    <blockquote>
+<p>Shell 是一个用 C 语言编写的程序，它是用户使用 Linux 的桥梁。Shell 既是一种命令语言，又是一种程序设计语言。 Shell 是指一种应用程序，这个应用程序提供了一个界面，用户通过这个界面访问操作系统内核的服务。</p>
+</blockquote>
+ <!-- more -->
+<h3 id="什么是shell解释器">什么是shell解释器</h3>
+<ul>
+<li>Shell 运行于内核之上，相对于操作系统内核层级较高，因而被成为壳（Shell单词含义是壳）</li>
+<li>Linux的Shell解释器中最常见的是BASH：bourne-again shell 起源于Stephen R. Bourne 为Version 7 Unix 写的 Bourne Shell ，后经GNU改（重）写为BASH</li>
+<li>UNIX中最常见的shell解释器是KornShell（KSH），POSIX中的shell规范最早参考KSH实现</li>
+</ul>
+<h3 id="什么是shell通用语言">什么是shell通用语言</h3>
+<p>Shell通用语言是</p>
+<ul>
+<li>在POSIX规范（IEEE Std 1003.2 第二章）中定义的</li>
+<li>命令式的</li>
+<li>面向过程的</li>
+<li>解释运行的</li>
+<li>脚本语言</li>
+</ul>
+<h3 id="为什么用bash">为什么用BASH</h3>
+<figure data-type="image" tabindex="1"><img src="http://kingofzihua.github.io/post-images/1566204902085.png" alt="" loading="lazy"></figure>
+<ul>
+<li>许多常见linux发行版采用bash作为默认shell</li>
+<li>部分UNIX 或类UNIX 操作系统</li>
+<li>部分linux之外的UNIX也包含bash 比如 苹果的MacOS和freebsd</li>
+</ul>
+<h3 id="执行命令">执行命令</h3>
+<p>Shell解释器中最基本的用法是执行命令：<br>
+输入一条命令列表，按回车执行</p>
+<pre><code class="language-shell">vagrant@homestead:~$ echo kingofzihua
+kingofzihua
+</code></pre>
+<blockquote>
+<p>shell 在执行这条命令时，执行了非常复杂的寻找命令的操作，这个我们不需要关心，只需要关心这样可以执行命令就可以了</p>
+</blockquote>
+<h3 id="键盘操作">键盘操作</h3>
+<ul>
+<li>在现代交互式的shell解释器命令行中，左右移动光标，按退格删除光标前的字符，按delete删除光标后的字符</li>
+<li>在大多数bash的默认配置里按home将光标置于行首，end置于行尾</li>
+<li>在某些配置里（如macOS）按ctrl+A和ctrl+E移至行首行尾</li>
+</ul>
+<h3 id="历史记录和补全">历史记录和补全</h3>
+<ul>
+<li>在大多数现代shell里有历史记录功能，根据shell的不同和配置不同有不同的用法</li>
+<li>一般来说使用上箭头向上查找历史记录，右箭头向下查找</li>
+<li>按tab进行补全，不同shell补全规则和能力不同</li>
+</ul>
+<h3 id="作业job控制">作业（job）控制</h3>
+<p>现代的shell解释器中存在作业控制功能</p>
+<ul>
+<li>按ctrl+Z 将向当前进程发送SIGSTOP信号，如果当前进程没有实现SIGSTOP的特定逻辑，默认的行为是当前进程暂停并置入后台</li>
+<li>使用命令fg来使恢复后台进程的前台运行</li>
+<li>使用命令bg来使暂停的后台进程后台继续运行</li>
+<li>使用命令jobs来显示后台作业</li>
+<li>作业号不同于进程号</li>
+</ul>
+<p>案例 1</p>
+<pre><code class="language-shell">$ wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.3.0-amd64.deb
+# 按ctrl + Z 后会显示 
+[1]+  Stopped     wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.3.0-amd64.deb
+
+$ bg %1 # 这个1 就是上面中括号里面的作业号
+#会显示下面这样
+[1]+ wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.3.0-amd64.deb &amp;
+# Redirecting output to ‘wget-log’
+$ wait %1 等待任务1的执行 # 可以按ctrl + C退出
+
+$jobs 查看所有后台作业列表
+</code></pre>
+<p>案例 2</p>
+<pre><code class="language-shell"># 编辑一个文件
+vim wget-log
+# 忘记内容了 按 ctrl +Z 将vim 进入后台
+# [2]+  Stopped                 vim wget-log
+man vim # 查看vim文档
+
+#退出后将vim 拉入前台
+fg %2 
+# ... 继续编辑
+</code></pre>
+<h3 id="用分号-结束一条命令">用分号 ; 结束一条命令</h3>
+<p>和很多语言中的分号一样，shell中的分号也结束一条语句。分号在很多情况下可以代替换行符</p>
+<pre><code class="language-shell">#在1行中执行两条命令
+$ echo 1; echo 2
+1
+2
+
+$ for i in 1 2 3; do echo $i ; done
+1
+2
+3
+</code></pre>
+<h3 id="用-异步执行一条命令">用 &amp; 异步执行一条命令</h3>
+<p>在命令列表后加一个 &amp; 来后台执行它</p>
+<pre><code>$ vim wget-log &amp;
+[2] 12316
+
+# 将vim 后台执行没有啥子意义，用fg拉回来
+fg %2 
+</code></pre>
+<h3 id="pipeline">Pipeline : | &gt; &lt; &gt;&gt;</h3>
+<ul>
+<li>使用 | 来连接两个命令列表来连接前一个命令进程的stdout到后一个到stdin</li>
+<li>使用 &gt; 来转发 stdout （或指定任意文件描述符）到文件（使用&gt;&gt;采用追加模式打开目标文件）</li>
+<li>使用&lt; 来转发文件到stdin （或指定任意文件描述符）</li>
+</ul>
+<p>| 管道符</p>
+<pre><code class="language-shell"># base64  将一个字符串加密成base64编码 -d:将base64编码后端字符串解析成字符串
+
+$  echo helloword | base64 # 将字符串 helloword输出并连接到 base64进程
+aGVsbG93b3JkCg==
+$ echo aGVsbG93b3JkCg== | base64 -d
+helloword
+</code></pre>
+<p>&gt; 、&gt;&gt; 输出到文件</p>
+<pre><code>$ echo helloword &gt; a.txt
+$ cat a.txt
+helloword
+
+$echo helloword &gt;&gt; a.txt  # &gt;&gt; 追加到文件
+$ cat a.txt
+helloword
+helloword
+</code></pre>
+<p>&lt; 输出到前面进程</p>
+<pre><code>$ base64 &lt; a.txt # 两个helloword
+aGVsbG93b3JkCmhlbGxvd29yZAo=
+</code></pre>
+<h3 id="heredoc">Heredoc ： &lt;&lt;</h3>
+<p>在命令后使用&lt;&lt;来使用heredoc功能</p>
+<pre><code>$ base64 &lt;&lt; EOF
+&gt; helloword
+&gt; EOF
+aGVsbG93b3JkCg==
+</code></pre>
+<h3 id="命令列表逻辑">命令列表逻辑 || &amp;&amp;</h3>
+<ul>
+<li>Shell中命令返回值为0代表成功，不为0为失败<br>
+<em>若命令由于某信号退出（如用户按了ctrl+C发送了SIGINT（值为2）到进程，进程未做处理，按默认行为异常退出）则命令返回值为负信号（以上情况返回值为 -2）</em></li>
+<li>在命令间使用||和&amp;&amp;，根据前一条命令的返回值决定是否执行后一条命令</li>
+</ul>
+<h3 id="shell变量">Shell变量</h3>
+<ul>
+<li>Shell中存在变量，这些变量在当前子Shell作为环境变量，使用export命令导出后在上层shell作为环境变量</li>
+<li>变量明明规则类似于C的标识符：<br>
+<em>若干个下划线，大小写字母和数字，标识符的第一个字符不能是数字</em></li>
+<li>与CMD的变量不同，shell的边领名区分大小写</li>
+</ul>
+<pre><code class="language-shell"># 注意 变量名和=中间、=后面不能有空格
+$ var=kingofzihua
+
+# 我们可以先设置一个变量，后面执行命令，前面的变量会作为后面命令的环境变量
+$LANG=en date
+</code></pre>
+<h3 id="引用shell变量">引用Shell变量</h3>
+<ul>
+<li>使用<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi mathvariant="normal">变</mi><mi mathvariant="normal">量</mi><mi mathvariant="normal">或</mi></mrow><annotation encoding="application/x-tex">变量或</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mord cjk_fallback">变</span><span class="mord cjk_fallback">量</span><span class="mord cjk_fallback">或</span></span></span></span>{变量名}来引用变量</li>
+<li><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mrow><mi mathvariant="normal">变</mi><mi mathvariant="normal">量</mi><mi mathvariant="normal">名</mi><mo>−</mo><mi mathvariant="normal">字</mi><mi mathvariant="normal">符</mi><mi mathvariant="normal">串</mi></mrow><mi mathvariant="normal">和</mi></mrow><annotation encoding="application/x-tex">{变量名-字符串}和</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.66666em;vertical-align:-0.08333em;"></span><span class="mord"><span class="mord cjk_fallback">变</span><span class="mord cjk_fallback">量</span><span class="mord cjk_fallback">名</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mord cjk_fallback">字</span><span class="mord cjk_fallback">符</span><span class="mord cjk_fallback">串</span></span><span class="mord cjk_fallback">和</span></span></span></span>{变量名+字符串}使用默认值和替换值</li>
+<li>${变量名?字符串}提供变量未设置时的错误信息</li>
+<li>${变量名%%字符串} ${变量名%字符串} ${变量名## 字符串} ${变量名#字符串}截取字符串</li>
+</ul>
+<h3 id="shell引用">Shell引用： &quot;&quot; '' ``</h3>
+<ul>
+<li>双引号 &quot; 括住的字符串不会根据$IFS环境变量截断</li>
+<li>单引号 ' 括住的字符串不会被$IFS截断并不会引用变量</li>
+<li>反引号 ` 括主的字符串表示被括住的命令执行输出</li>
+</ul>
+
+                                </div>
+                    </article>
+                    <!--  -->
+                    
+                        <div class="next-post">
+                            <div class="next">下一篇</div>
+                            <a href="http://kingofzihua.github.io/post/an-zhuang-elasticsearch-6.5.0-he-elasticsearch-analysis-ik">
+                                <h3 class="post-title">
+                                    安装 Elasticsearch6 和 elasticsearch-analysis-ik
+                                </h3>
+                            </a>
+                        </div>
+                        
+                            <div id="disqus_thread"></div>
+                            <div id="gitalk-container"></div>
+                </div>
+                <!-- middle -->
+                <div class="main-container-middle"></div>
+                <!-- right -->
+                <div id="sidebar" class="main-container-right">
+                    
+                        <!-- toc -->
+                        
+    <div class="toc-card i-card ">
+        <div class="toc-title i-card-title">目录</div>
+        <div class="toc-content">
+            <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#%E4%BB%80%E4%B9%88%E6%98%AFshell%E8%A7%A3%E9%87%8A%E5%99%A8">什么是shell解释器</a></li>
+<li><a href="#%E4%BB%80%E4%B9%88%E6%98%AFshell%E9%80%9A%E7%94%A8%E8%AF%AD%E8%A8%80">什么是shell通用语言</a></li>
+<li><a href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E7%94%A8bash">为什么用BASH</a></li>
+<li><a href="#%E6%89%A7%E8%A1%8C%E5%91%BD%E4%BB%A4">执行命令</a></li>
+<li><a href="#%E9%94%AE%E7%9B%98%E6%93%8D%E4%BD%9C">键盘操作</a></li>
+<li><a href="#%E5%8E%86%E5%8F%B2%E8%AE%B0%E5%BD%95%E5%92%8C%E8%A1%A5%E5%85%A8">历史记录和补全</a></li>
+<li><a href="#%E4%BD%9C%E4%B8%9Ajob%E6%8E%A7%E5%88%B6">作业（job）控制</a></li>
+<li><a href="#%E7%94%A8%E5%88%86%E5%8F%B7-%E7%BB%93%E6%9D%9F%E4%B8%80%E6%9D%A1%E5%91%BD%E4%BB%A4">用分号 ; 结束一条命令</a></li>
+<li><a href="#%E7%94%A8-%E5%BC%82%E6%AD%A5%E6%89%A7%E8%A1%8C%E4%B8%80%E6%9D%A1%E5%91%BD%E4%BB%A4">用 &amp; 异步执行一条命令</a></li>
+<li><a href="#pipeline">Pipeline : | &gt; &lt; &gt;&gt;</a></li>
+<li><a href="#heredoc">Heredoc ： &lt;&lt;</a></li>
+<li><a href="#%E5%91%BD%E4%BB%A4%E5%88%97%E8%A1%A8%E9%80%BB%E8%BE%91">命令列表逻辑 || &amp;&amp;</a></li>
+<li><a href="#shell%E5%8F%98%E9%87%8F">Shell变量</a></li>
+<li><a href="#%E5%BC%95%E7%94%A8shell%E5%8F%98%E9%87%8F">引用Shell变量</a></li>
+<li><a href="#shell%E5%BC%95%E7%94%A8">Shell引用： &quot;&quot; '' ``</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+        <script>
+            function locateCatelogList() {
+                /*获取文章目录集合,可通过:header过滤器*/
+                var alis = $('.post-content :header');
+                /*获取侧边栏目录列表集合**/
+                var sidebar_alis = $('.markdownIt-TOC a');
+                /*获取滚动条到顶部的距离*/
+                var scroll_height = $(window).scrollTop();
+                for (var i = 0; i < alis.length; i++) {
+                    /*获取锚点集合中的元素分别到顶点的距离*/
+                    var a_height = $(alis[i]).offset().top;
+                    if (a_height < scroll_height) {
+                        /*高亮显示*/
+                        sidebar_alis.removeClass('on');
+                        $(sidebar_alis[i]).addClass('on');
+                    }
+                }
+            }
+            $(function() {
+                /*绑定滚动事件 */
+                $(window).bind('scroll', locateCatelogList);
+            });
+        </script>
+    </div>
+    
+                            
+
+                </div>
+
+
+
+
+            </div>
+
+
+            <div class="site-footer">
+  Powered by <a href="https://github.com/kingofzihua" target="_blank">kingofzihua</a> | 
+  <a class="rss" href="http://kingofzihua.github.io/atom.xml" target="_blank">RSS</a>
+</div>
+
+<script>
+  hljs.initHighlightingOnLoad()
+</script>
+
+
+    </div>
+    <script>
+        $('#sidebar').stickySidebar({
+            topSpacing: 80,
+            // bottomSpacing: 60
+        });
+    </script>
+    
+</body>
+
+</html>

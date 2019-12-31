@@ -1,0 +1,260 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>
+    CentOS6 用 Let&#39;s Encrypt 和 certbot 搭建 https | kingofzihua
+</title>
+<link rel="shortcut icon" href="http://kingofzihua.github.io/favicon.ico?v=1577770835023">
+<!-- <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous"> -->
+<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="http://kingofzihua.github.io/styles/main.css">
+<!-- js -->
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+<script src="http://kingofzihua.github.io/media/js/jquery.sticky-sidebar.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<script src="https://cdn.bootcss.com/moment.js/2.23.0/moment.min.js"></script>
+
+
+        
+</head>
+
+<body>
+    <div class="main">
+        <div class="header">
+    <div class="nav">
+        <div class="logo">
+            <a href="http://kingofzihua.github.io">
+                <img class="avatar" src="http://kingofzihua.github.io/images/avatar.png?v=1577770835023" alt="">
+            </a>
+            <div class="site-title">
+                <h1>
+                    kingofzihua
+                </h1>
+            </div>
+        </div>
+        <span class="menu-btn fa fa-align-justify"></span>
+        <div class="menu-container">
+            <ul>
+                
+                    
+                            <li>
+                                <a href="/" class="menu">
+                                    首页
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/archives" class="menu">
+                                    归档
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/tags" class="menu">
+                                    标签
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/post/about" class="menu">
+                                    关于
+                                </a>
+                            </li>
+                            
+                                
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $(".menu-btn").click(function() {
+            $(".menu-container").slideToggle();
+        });
+        $(window).resize(function() {
+
+            if (window.matchMedia('(min-width: 960px)').matches) {
+                $(".menu-container").css('display', 'block')
+            } else {
+                $(".menu-container").css('display', 'none')
+            }
+
+        });
+    });
+</script>
+
+            <div id="main-content" class="post-detail main-container">
+                <!-- left -->
+                <div id="content" class="main-container-left">
+                    <article class="post i-card">
+                        <h2 class="post-title">
+                            CentOS6 用 Let&#39;s Encrypt 和 certbot 搭建 https
+                        </h2>
+                        <div class="post-info">
+                            <time class="post-time">2019-08-19</time>
+                            
+                                <a href="http://kingofzihua.github.io/tag/Vzh9azh5L" class="post-tag i-tag
+                            i-tag-other_2">
+                            #https
+                        </a>
+                                
+                                <a href="http://kingofzihua.github.io/tag/6fw3EfqwrK" class="post-tag i-tag
+                            i-tag-success">
+                            #certbot
+                        </a>
+                                
+                                <a href="http://kingofzihua.github.io/tag/1u6prZq5cw" class="post-tag i-tag
+                            i-tag-primary">
+                            #Let&#39;s Encrypt
+                        </a>
+                                
+                        </div>
+                        
+                            <div class="post-feature-image" style="background-image: url('/post-images/centos6-yong-lets-encrypt-he-certbot-da-jian-https.jpg')"></div>
+                            
+                                <div class="post-content">
+                                    <blockquote>
+<p>为了在您的网站上启用HTTPS，您需要从证书颁发机构（CA）获取证书（一种文件）。Let’s Encrypt是一个证书颁发机构（CA）。要从Let’s Encrypt获取您网站域名的证书，您必须证明您对域名的实际控制权。您可以在您的网络主机上运行使用ACME协议的软件来获取Let’s Encrypt证书。</p>
+</blockquote>
+<!-- more -->
+<h3 id="安装">安装</h3>
+<p>打开<a href="https://certbot.eff.org/" title="certbot 官网">certbot 官网</a>，选择服务器软件和系统（我的是 NGINX+ CentOS6）<br>
+由于CentOS6没有打包版本的Certbot，因此您应该使用certbot-auto脚本来获取副本：</p>
+<pre><code class="language-shell">wget https://dl.eff.org/certbot-auto
+chmod a+x certbot-auto
+</code></pre>
+<p>certbot-auto是和 certbot一样的; 它是一个包装器，可以安装所有自己的依赖项并自动更新客户端代码。</p>
+<blockquote>
+<p>注意：<br>
+certbot-auto将一直试图从其最新版本中获取最新版本的自身。如果您希望将其锁定到特定版本并且未收到自动更新，请使用--no-self-upgrade标志运行它 。另外，如果您对从网络上下载和运行脚本感到紧张，则可以使用一些额外的验证步骤。</p>
+</blockquote>
+<h4 id="开始使用">开始使用</h4>
+<p>Certbot有一个Nginx插件，它在许多平台上都受支持，并且安装了证书。</p>
+<pre><code class="language-shell">sudo ./path/to/certbot-auto --nginx
+</code></pre>
+<p>运行此命令将为您获得证书，并让Certbot自动编辑您的Nginx配置以便为其提供服务。如果您感觉更保守，并且想手动更改Nginx配置，则可以使用certonly 子命令：</p>
+<pre><code class="language-shell">sudo ./path/to/certbot-auto --nginx certonly
+</code></pre>
+<h3 id="自动更新">自动更新</h3>
+<p>Certbot可以配置为在证书过期之前自动续订您的证书。自从让我们将证书最后加密90天后，最好利用此功能。您可以通过运行以下命令来测试证书的自动续订：</p>
+<pre><code class="language-shell">sudo ./path/to/certbot-auto renew --dry-run
+</code></pre>
+<p>如果这似乎工作正常，您可以通过添加运行以下命令的cron作业或systemd计时器来安排自动续订：</p>
+<pre><code>./path/to/certbot-auto renew
+</code></pre>
+<blockquote>
+<p>注意：<br>
+如果您正在设置cron或systemd作业，我们建议每天运行两次（在您的证书到期续约或撤消之前，它不会执行任何操作，但定期运行它可以让您的站点保持在线状态案例a让我们加密发起的撤销是由于某种原因发生的）。请在一小时内为您的续订任务选择一个随机分钟。</p>
+</blockquote>
+
+                                </div>
+                    </article>
+                    <!--  -->
+                    
+                        <div class="next-post">
+                            <div class="next">下一篇</div>
+                            <a href="http://kingofzihua.github.io/post/helloworld">
+                                <h3 class="post-title">
+                                    Hello，gridea！
+                                </h3>
+                            </a>
+                        </div>
+                        
+                            <div id="disqus_thread"></div>
+                            <div id="gitalk-container"></div>
+                </div>
+                <!-- middle -->
+                <div class="main-container-middle"></div>
+                <!-- right -->
+                <div id="sidebar" class="main-container-right">
+                    
+                        <!-- toc -->
+                        
+    <div class="toc-card i-card ">
+        <div class="toc-title i-card-title">目录</div>
+        <div class="toc-content">
+            <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#%E5%AE%89%E8%A3%85">安装</a>
+<ul>
+<li><a href="#%E5%BC%80%E5%A7%8B%E4%BD%BF%E7%94%A8">开始使用</a></li>
+</ul>
+</li>
+<li><a href="#%E8%87%AA%E5%8A%A8%E6%9B%B4%E6%96%B0">自动更新</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+        <script>
+            function locateCatelogList() {
+                /*获取文章目录集合,可通过:header过滤器*/
+                var alis = $('.post-content :header');
+                /*获取侧边栏目录列表集合**/
+                var sidebar_alis = $('.markdownIt-TOC a');
+                /*获取滚动条到顶部的距离*/
+                var scroll_height = $(window).scrollTop();
+                for (var i = 0; i < alis.length; i++) {
+                    /*获取锚点集合中的元素分别到顶点的距离*/
+                    var a_height = $(alis[i]).offset().top;
+                    if (a_height < scroll_height) {
+                        /*高亮显示*/
+                        sidebar_alis.removeClass('on');
+                        $(sidebar_alis[i]).addClass('on');
+                    }
+                }
+            }
+            $(function() {
+                /*绑定滚动事件 */
+                $(window).bind('scroll', locateCatelogList);
+            });
+        </script>
+    </div>
+    
+                            
+
+                </div>
+
+
+
+
+            </div>
+
+
+            <div class="site-footer">
+  Powered by <a href="https://github.com/kingofzihua" target="_blank">kingofzihua</a> | 
+  <a class="rss" href="http://kingofzihua.github.io/atom.xml" target="_blank">RSS</a>
+</div>
+
+<script>
+  hljs.initHighlightingOnLoad()
+</script>
+
+
+    </div>
+    <script>
+        $('#sidebar').stickySidebar({
+            topSpacing: 80,
+            // bottomSpacing: 60
+        });
+    </script>
+    
+</body>
+
+</html>

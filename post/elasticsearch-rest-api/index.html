@@ -1,0 +1,808 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>
+    Elasticsearch REST API | kingofzihua
+</title>
+<link rel="shortcut icon" href="http://kingofzihua.github.io/favicon.ico?v=1577770835023">
+<!-- <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous"> -->
+<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="http://kingofzihua.github.io/styles/main.css">
+<!-- js -->
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+<script src="http://kingofzihua.github.io/media/js/jquery.sticky-sidebar.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<script src="https://cdn.bootcss.com/moment.js/2.23.0/moment.min.js"></script>
+
+
+        
+</head>
+
+<body>
+    <div class="main">
+        <div class="header">
+    <div class="nav">
+        <div class="logo">
+            <a href="http://kingofzihua.github.io">
+                <img class="avatar" src="http://kingofzihua.github.io/images/avatar.png?v=1577770835023" alt="">
+            </a>
+            <div class="site-title">
+                <h1>
+                    kingofzihua
+                </h1>
+            </div>
+        </div>
+        <span class="menu-btn fa fa-align-justify"></span>
+        <div class="menu-container">
+            <ul>
+                
+                    
+                            <li>
+                                <a href="/" class="menu">
+                                    首页
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/archives" class="menu">
+                                    归档
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/tags" class="menu">
+                                    标签
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/post/about" class="menu">
+                                    关于
+                                </a>
+                            </li>
+                            
+                                
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $(".menu-btn").click(function() {
+            $(".menu-container").slideToggle();
+        });
+        $(window).resize(function() {
+
+            if (window.matchMedia('(min-width: 960px)').matches) {
+                $(".menu-container").css('display', 'block')
+            } else {
+                $(".menu-container").css('display', 'none')
+            }
+
+        });
+    });
+</script>
+
+            <div id="main-content" class="post-detail main-container">
+                <!-- left -->
+                <div id="content" class="main-container-left">
+                    <article class="post i-card">
+                        <h2 class="post-title">
+                            Elasticsearch REST API
+                        </h2>
+                        <div class="post-info">
+                            <time class="post-time">2019-09-03</time>
+                            
+                                <a href="http://kingofzihua.github.io/tag/n9VRPxrjY" class="post-tag i-tag
+                            i-tag-banana">
+                            #elasticsearch
+                        </a>
+                                
+                        </div>
+                        
+                            <div class="post-feature-image" style="background-image: url('http://kingofzihua.github.io/post-images/elasticsearch-rest-api.png')"></div>
+                            
+                                <div class="post-content">
+                                    <blockquote>
+<p>为了方便其他语言的整合Elasticsearch为开发者提供了一套基于Http协议的Restful接口，只需要构造rest请求并解析请求返回的json即可实现访问Elasticsearch服务器。Elasticsearch的API接口功能丰富，包含集群、监控、部署管理等，也包含常用的文档、索引操作。</p>
+</blockquote>
+<!-- more -->
+<h1 id="rest-api-很容易被各种语言调用">REST API - 很容易被各种语言调用</h1>
+<figure data-type="image" tabindex="1"><img src="http://kingofzihua.github.io/post-images/1567409800687.jpg" alt="" loading="lazy"></figure>
+<h2 id="文档的操作">文档的操作</h2>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>REST API</th>
+<th>参数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Index</td>
+<td>PUT my_index/_doc/1</td>
+<td><code>{&quot;user&quot;:&quot;mike&quot;,&quot;comment&quot;:&quot;You Konw,for search&quot;}</code></td>
+</tr>
+<tr>
+<td>Create</td>
+<td>PUT my_index/_create/1<br>POST my_index/_doc(不指定ID，自动生成)</td>
+<td><code>{&quot;user&quot;:&quot;mike&quot;,&quot;comment&quot;:&quot;You Konw,for search&quot;}</code><br><code>{&quot;user&quot;:&quot;mike&quot;,&quot;comment&quot;:&quot;You Konw,for search&quot;}</code></td>
+</tr>
+<tr>
+<td>Read</td>
+<td>GET my_index/_doc/1</td>
+<td></td>
+</tr>
+<tr>
+<td>Update</td>
+<td>POST my_index/_update/1</td>
+<td><code>{&quot;doc&quot;:{&quot;user&quot;:&quot;mike&quot;,&quot;comment&quot;:&quot;You Konw,for search&quot;}}</code></td>
+</tr>
+<tr>
+<td>Delete</td>
+<td>DELETE my_index/_doc/1</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Type 名，约定都用<code>_doc</code></li>
+<li>Create - 如果ID已经存在，会失败</li>
+<li>Index - 如果 ID 不存在 ，创建新的文档。否则，先删除现有的文档，再创建新的文档，版本会增加</li>
+<li>Update -文档必须已经存在，更新只会对相应字段做增量修改</li>
+</ul>
+<h3 id="create-一个文档">Create 一个文档</h3>
+<h4 id="指定文档id">指定文档ID</h4>
+<pre><code>PUT users/_create/1
+{
+  &quot;firstName&quot;:&quot;Jack&quot;,
+  &quot;lastName&quot;:&quot;Johnson&quot;,
+  &quot;tags&quot;:[&quot;guitar&quot;,&quot;skateboard&quot;]
+}
+or # 手动设置 type 是 create
+PUT users/_doc/1?op_type=create
+{
+  &quot;firstName&quot;:&quot;Jack&quot;,
+  &quot;lastName&quot;:&quot;Johnson&quot;,
+  &quot;tags&quot;:[&quot;guitar&quot;,&quot;skateboard&quot;]
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;_index&quot; : &quot;users&quot;,
+  &quot;_type&quot; : &quot;_doc&quot;,
+  &quot;_id&quot; : &quot;1&quot;, # 手动指定的文档编号
+  &quot;_version&quot; : 1,
+  &quot;result&quot; : &quot;created&quot;,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 2,
+    &quot;successful&quot; : 1,
+    &quot;failed&quot; : 0
+  },
+  &quot;_seq_no&quot; : 0,
+  &quot;_primary_term&quot; : 1
+}
+</code></pre>
+<p>如果已经存在会报错：</p>
+<pre><code>{
+  &quot;error&quot;: {
+    &quot;root_cause&quot;: [
+      {
+        &quot;type&quot;: &quot;version_conflict_engine_exception&quot;,
+        &quot;reason&quot;: &quot;[1]: version conflict, document already exists (current version [1])&quot;,
+        &quot;index_uuid&quot;: &quot;nzRRiahvRtSNNSf7oohKEQ&quot;,
+        &quot;shard&quot;: &quot;0&quot;,
+        &quot;index&quot;: &quot;users&quot;
+      }
+    ],
+    &quot;type&quot;: &quot;version_conflict_engine_exception&quot;,
+    &quot;reason&quot;: &quot;[1]: version conflict, document already exists (current version [1])&quot;,
+    &quot;index_uuid&quot;: &quot;nzRRiahvRtSNNSf7oohKEQ&quot;,
+    &quot;shard&quot;: &quot;0&quot;,
+    &quot;index&quot;: &quot;users&quot;
+  },
+  &quot;status&quot;: 409
+}
+</code></pre>
+<h4 id="自动生成id">自动生成ID</h4>
+<pre><code>POST users/_doc
+{
+  &quot;firstName&quot;:&quot;Tom&quot;,
+  &quot;lastName&quot;:&quot;Jerry&quot;,
+  &quot;tags&quot;:[&quot;cat&quot;,&quot;rat&quot;]
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;_index&quot; : &quot;users&quot;,
+  &quot;_type&quot; : &quot;_doc&quot;,
+  &quot;_id&quot; : &quot;VWsV9WwBOKERAIDEZ-sc&quot;, # 自动生成的文档编号
+  &quot;_version&quot; : 1,
+  &quot;result&quot; : &quot;created&quot;,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 2,
+    &quot;successful&quot; : 1,
+    &quot;failed&quot; : 0
+  },
+  &quot;_seq_no&quot; : 1,
+  &quot;_primary_term&quot; : 1
+}
+</code></pre>
+<h3 id="get-一个文档">Get 一个文档</h3>
+<h4 id="找到文档返回-http-200">找到文档，返回 HTTP 200</h4>
+<ul>
+<li>文档元信息
+<ul>
+<li>_index/_type/</li>
+<li>版本信息，同一个ID的文档 即使被删除 Version号也会不断增加</li>
+<li>source 中默认包含了 文档的所有原始信息</li>
+</ul>
+</li>
+</ul>
+<pre><code>GET users/_doc/1
+</code></pre>
+<p>返回结果</p>
+<pre><code>{
+  &quot;_index&quot; : &quot;users&quot;, # 索引名称
+  &quot;_type&quot; : &quot;_doc&quot;, # type
+  &quot;_id&quot; : &quot;1&quot;, # 主键
+  &quot;_version&quot; : 1, # 版本
+  &quot;_seq_no&quot; : 0,
+  &quot;_primary_term&quot; : 1,
+  &quot;found&quot; : true,
+  &quot;_source&quot; : { # 原始信息
+    &quot;firstName&quot; : &quot;Jack&quot;,
+    &quot;lastName&quot; : &quot;Johnson&quot;,
+    &quot;tags&quot; : [
+      &quot;guitar&quot;,
+      &quot;skateboard&quot;
+    ]
+  }
+}
+</code></pre>
+<h4 id="找不到文档返回http-404">找不到文档，返回HTTP 404</h4>
+<pre><code>GET users/_doc/2
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;_index&quot; : &quot;users&quot;,
+  &quot;_type&quot; : &quot;_doc&quot;,
+  &quot;_id&quot; : &quot;2&quot;,
+  &quot;found&quot; : false
+}
+</code></pre>
+<h3 id="index索引-文档">Index(索引) 文档</h3>
+<p>Index 和Create 不一样的地方： 如果文档不存在，就索引新的文档。否则现有文档会被删除，新的文档被索引。版本信息+1；</p>
+<h4 id="put-文档">put 文档</h4>
+<pre><code>PUT users/_doc/1
+{
+  &quot;tags&quot;:[&quot;guitar&quot;,&quot;skateboard&quot;,&quot;reading&quot;]
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;_index&quot; : &quot;users&quot;,
+  &quot;_type&quot; : &quot;_doc&quot;,
+  &quot;_id&quot; : &quot;1&quot;,
+  &quot;_version&quot; : 2,
+  &quot;result&quot; : &quot;updated&quot;,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 2,
+    &quot;successful&quot; : 1,
+    &quot;failed&quot; : 0
+  },
+  &quot;_seq_no&quot; : 2,
+  &quot;_primary_term&quot; : 1
+}
+</code></pre>
+<h4 id="获取操作后的文档">获取操作后的文档</h4>
+<pre><code>GET users/_doc/1
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;_index&quot; : &quot;users&quot;,
+  &quot;_type&quot; : &quot;_doc&quot;,
+  &quot;_id&quot; : &quot;1&quot;,
+  &quot;_version&quot; : 2,
+  &quot;_seq_no&quot; : 2,
+  &quot;_primary_term&quot; : 1,
+  &quot;found&quot; : true,
+  &quot;_source&quot; : {
+    &quot;tags&quot; : [
+      &quot;guitar&quot;,
+      &quot;skateboard&quot;,
+      &quot;reading&quot;
+    ]
+  }
+}
+</code></pre>
+<h3 id="update-文档">Update 文档</h3>
+<ul>
+<li>Update方法不会删除原来的文档，而是实现真正的数据更新</li>
+<li>Post方法 / Payload 需要包含在 <code>doc</code>中</li>
+</ul>
+<h4 id="更新文档">更新文档</h4>
+<pre><code>POST users/_update/1
+{
+  &quot;doc&quot;:{
+    &quot;albums&quot;:[&quot;album1&quot;,&quot;album2&quot;]
+  }
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;_index&quot; : &quot;users&quot;,
+  &quot;_type&quot; : &quot;_doc&quot;,
+  &quot;_id&quot; : &quot;1&quot;,
+  &quot;_version&quot; : 3,
+  &quot;result&quot; : &quot;updated&quot;,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 2,
+    &quot;successful&quot; : 1,
+    &quot;failed&quot; : 0
+  },
+  &quot;_seq_no&quot; : 3,
+  &quot;_primary_term&quot; : 1
+}
+</code></pre>
+<h4 id="获取更新后的文档">获取更新后的文档</h4>
+<pre><code>GET users/_doc/1
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;_index&quot; : &quot;users&quot;,
+  &quot;_type&quot; : &quot;_doc&quot;,
+  &quot;_id&quot; : &quot;1&quot;,
+  &quot;_version&quot; : 3,
+  &quot;_seq_no&quot; : 3,
+  &quot;_primary_term&quot; : 1,
+  &quot;found&quot; : true,
+  &quot;_source&quot; : {
+    &quot;tags&quot; : [
+      &quot;guitar&quot;,
+      &quot;skateboard&quot;,
+      &quot;reading&quot;
+    ],
+    &quot;albums&quot; : [
+      &quot;album1&quot;,
+      &quot;album2&quot;
+    ]
+  }
+}
+</code></pre>
+<h4 id="put-和-update-的区别">put 和 update 的区别</h4>
+<ul>
+<li>update 会将数据更新，未修改的字段保持愿值</li>
+<li>put 会直接覆盖掉元数据(元数据删除掉后，重新索引)</li>
+</ul>
+<h3 id="delete-文档">delete 文档</h3>
+<pre><code>DELETE users/_doc/1
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;_index&quot; : &quot;users&quot;,
+  &quot;_type&quot; : &quot;_doc&quot;,
+  &quot;_id&quot; : &quot;1&quot;,
+  &quot;_version&quot; : 7,
+  &quot;result&quot; : &quot;deleted&quot;,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 2,
+    &quot;successful&quot; : 1,
+    &quot;failed&quot; : 0
+  },
+  &quot;_seq_no&quot; : 7,
+  &quot;_primary_term&quot; : 3
+}
+</code></pre>
+<h2 id="indices">Indices</h2>
+<h3 id="创建索引">创建索引</h3>
+<pre><code>PUT movies
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;acknowledged&quot; : true,
+  &quot;shards_acknowledged&quot; : true,
+  &quot;index&quot; : &quot;movies&quot;
+}
+</code></pre>
+<h3 id="删除索引">删除索引</h3>
+<pre><code>DELETE movies
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;acknowledged&quot; : true
+}
+</code></pre>
+<h2 id="批量操作">批量操作</h2>
+<h3 id="bulk-api">Bulk API</h3>
+<blockquote>
+<p>在一个REST请求的时候，重新建立网络开销是非常损耗性能的，Bulk API的核心思想就是，在一次请求中，做不同的操作。</p>
+</blockquote>
+<ul>
+<li>支持在一次API 调用中，对不同对索引进行操作</li>
+<li>支持四种类型操作
+<ul>
+<li>Index</li>
+<li>Create</li>
+<li>Update</li>
+<li>Delete</li>
+</ul>
+</li>
+<li>可以在URI中指定Index，也可以在请求的Payload中进行</li>
+<li>操作中单条操作失败，并不会影响其他操作</li>
+<li>返回结果包括了每一条操作执行的结果</li>
+</ul>
+<h4 id="demo">Demo</h4>
+<pre><code>POST _bulk
+{&quot;index&quot;:{&quot;_index&quot;:&quot;test&quot;,&quot;_id&quot;:&quot;1&quot;}}
+{&quot;field1&quot;:&quot;value1&quot;}
+{&quot;delete&quot;:{&quot;_index&quot;:&quot;test&quot;,&quot;_id&quot;:&quot;2&quot;}}
+{&quot;create&quot;:{&quot;_index&quot;:&quot;test2&quot;,&quot;_id&quot;:&quot;3&quot;}}
+{&quot;field1&quot;:&quot;value3&quot;}
+{&quot;update&quot;:{&quot;_index&quot;:&quot;test&quot;,&quot;_id&quot;:&quot;1&quot;}}
+{&quot;doc&quot;: {&quot;field2&quot;:&quot;value2&quot;}}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;took&quot; : 288,
+  &quot;errors&quot; : false,
+  &quot;items&quot; : [
+    {
+      &quot;index&quot; : {
+        &quot;_index&quot; : &quot;test&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_version&quot; : 1,
+        &quot;result&quot; : &quot;created&quot;,
+        &quot;_shards&quot; : {
+          &quot;total&quot; : 2,
+          &quot;successful&quot; : 1,
+          &quot;failed&quot; : 0
+        },
+        &quot;_seq_no&quot; : 0,
+        &quot;_primary_term&quot; : 1,
+        &quot;status&quot; : 201
+      }
+    },
+    {
+      &quot;delete&quot; : {
+        &quot;_index&quot; : &quot;test&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_version&quot; : 1,
+        &quot;result&quot; : &quot;not_found&quot;,
+        &quot;_shards&quot; : {
+          &quot;total&quot; : 2,
+          &quot;successful&quot; : 1,
+          &quot;failed&quot; : 0
+        },
+        &quot;_seq_no&quot; : 1,
+        &quot;_primary_term&quot; : 1,
+        &quot;status&quot; : 404
+      }
+    },
+    {
+      &quot;create&quot; : {
+        &quot;_index&quot; : &quot;test2&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;3&quot;,
+        &quot;_version&quot; : 1,
+        &quot;result&quot; : &quot;created&quot;,
+        &quot;_shards&quot; : {
+          &quot;total&quot; : 2,
+          &quot;successful&quot; : 1,
+          &quot;failed&quot; : 0
+        },
+        &quot;_seq_no&quot; : 0,
+        &quot;_primary_term&quot; : 1,
+        &quot;status&quot; : 201
+      }
+    },
+    {
+      &quot;update&quot; : {
+        &quot;_index&quot; : &quot;test&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_version&quot; : 2,
+        &quot;result&quot; : &quot;updated&quot;,
+        &quot;_shards&quot; : {
+          &quot;total&quot; : 2,
+          &quot;successful&quot; : 1,
+          &quot;failed&quot; : 0
+        },
+        &quot;_seq_no&quot; : 2,
+        &quot;_primary_term&quot; : 1,
+        &quot;status&quot; : 200
+      }
+    }
+  ]
+}
+</code></pre>
+<h5 id="请求解析">请求解析</h5>
+<pre><code>POST _bulk # 这个是请求地址
+# 索引一个文档  指明索引是test 文档编号(主键)是 1 字段名为 field1 值为 value1
+{&quot;index&quot;:{&quot;_index&quot;:&quot;test&quot;,&quot;_id&quot;:&quot;1&quot;}}
+{&quot;field1&quot;:&quot;value1&quot;}
+
+# 删除 一个文档 指明索引是 test 文档编号(主键)是2
+{&quot;delete&quot;:{&quot;_index&quot;:&quot;test&quot;,&quot;_id&quot;:&quot;2&quot;}}
+
+# 创建一个文档，指明索引是test2 文档编号(主键)是 3  字段名为 field1 值为 value3
+{&quot;create&quot;:{&quot;_index&quot;:&quot;test2&quot;,&quot;_id&quot;:&quot;3&quot;}}
+{&quot;field1&quot;:&quot;value3&quot;}
+
+# 更新一个文档 指明索引是test 文档编号(主键)是1 修改的字段是 field2 值为 value2
+{&quot;update&quot;:{&quot;_index&quot;:&quot;test&quot;,&quot;_id&quot;:&quot;1&quot;}}
+{&quot;doc&quot;: {&quot;field2&quot;:&quot;value2&quot;}}
+</code></pre>
+<h5 id="响应解析">响应解析</h5>
+<pre><code>{
+  &quot;took&quot; : 288,
+  &quot;errors&quot; : false,
+  &quot;items&quot; : [
+	# 第一个操作的返回值 创建成功，HTTP响应 201
+    {
+      &quot;index&quot; : {
+        &quot;_index&quot; : &quot;test&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_version&quot; : 1,
+        &quot;result&quot; : &quot;created&quot;,  # 创建成功
+        &quot;_shards&quot; : {
+          &quot;total&quot; : 2,
+          &quot;successful&quot; : 1,
+          &quot;failed&quot; : 0
+        },
+        &quot;_seq_no&quot; : 0,
+        &quot;_primary_term&quot; : 1,
+        &quot;status&quot; : 201 # HTTP响应码
+      }
+    },
+	# 第二个操作的返回值 删除失败，HTTP响应 404
+    {
+      &quot;delete&quot; : {
+        &quot;_index&quot; : &quot;test&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_version&quot; : 1,
+        &quot;result&quot; : &quot;not_found&quot;, # 文档不存在
+        &quot;_shards&quot; : {
+          &quot;total&quot; : 2,
+          &quot;successful&quot; : 1,
+          &quot;failed&quot; : 0
+        },
+        &quot;_seq_no&quot; : 1,
+        &quot;_primary_term&quot; : 1,
+        &quot;status&quot; : 404 # HTTP响应码
+      }
+    },
+		# 第三个操作的返回值 创建成功，HTTP响应 201
+    {
+      &quot;create&quot; : {
+        &quot;_index&quot; : &quot;test2&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;3&quot;,
+        &quot;_version&quot; : 1,
+        &quot;result&quot; : &quot;created&quot;, # 创建成功
+        &quot;_shards&quot; : {
+          &quot;total&quot; : 2,
+          &quot;successful&quot; : 1,
+          &quot;failed&quot; : 0
+        },
+        &quot;_seq_no&quot; : 0,
+        &quot;_primary_term&quot; : 1,
+        &quot;status&quot; : 201  # HTTP响应码
+      }
+    },
+		# 第四个操作的返回值 更新成功，HTTP响应 200
+    {
+      &quot;update&quot; : {
+        &quot;_index&quot; : &quot;test&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_version&quot; : 2,
+        &quot;result&quot; : &quot;updated&quot;, # 更新成功
+        &quot;_shards&quot; : {
+          &quot;total&quot; : 2,
+          &quot;successful&quot; : 1,
+          &quot;failed&quot; : 0
+        },
+        &quot;_seq_no&quot; : 2,
+        &quot;_primary_term&quot; : 1,
+        &quot;status&quot; : 200 # HTTP响应码
+      }
+    }
+  ]
+}
+</code></pre>
+<h1 id="常见错误返回">常见错误返回</h1>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>无法连接</td>
+<td>网络故障或集群挂了</td>
+</tr>
+<tr>
+<td>连接无法关闭</td>
+<td>网络故障或节点出错</td>
+</tr>
+<tr>
+<td>429</td>
+<td>集群过于繁忙</td>
+</tr>
+<tr>
+<td>4xx</td>
+<td>请求体格式有错</td>
+</tr>
+<tr>
+<td>500</td>
+<td>集群内部错误</td>
+</tr>
+</tbody>
+</table>
+<h1 id="参考链接">参考链接</h1>
+<ul>
+<li><a href="https://e.jd.com/30318357.html">Elasticsearch技术解析与实战</a></li>
+<li><a href="https://time.geekbang.org/course/intro/197">极客时间:Elasticsearch核心技术与实战</a></li>
+</ul>
+
+                                </div>
+                    </article>
+                    <!--  -->
+                    
+                        <div class="next-post">
+                            <div class="next">下一篇</div>
+                            <a href="http://kingofzihua.github.io/post/elasticsearch-ji-ben-gai-nian">
+                                <h3 class="post-title">
+                                    Elasticsearch 基本概念
+                                </h3>
+                            </a>
+                        </div>
+                        
+                            <div id="disqus_thread"></div>
+                            <div id="gitalk-container"></div>
+                </div>
+                <!-- middle -->
+                <div class="main-container-middle"></div>
+                <!-- right -->
+                <div id="sidebar" class="main-container-right">
+                    
+                        <!-- toc -->
+                        
+    <div class="toc-card i-card ">
+        <div class="toc-title i-card-title">目录</div>
+        <div class="toc-content">
+            <ul class="markdownIt-TOC">
+<li><a href="#rest-api-%E5%BE%88%E5%AE%B9%E6%98%93%E8%A2%AB%E5%90%84%E7%A7%8D%E8%AF%AD%E8%A8%80%E8%B0%83%E7%94%A8">REST API - 很容易被各种语言调用</a>
+<ul>
+<li><a href="#%E6%96%87%E6%A1%A3%E7%9A%84%E6%93%8D%E4%BD%9C">文档的操作</a>
+<ul>
+<li><a href="#create-%E4%B8%80%E4%B8%AA%E6%96%87%E6%A1%A3">Create 一个文档</a>
+<ul>
+<li><a href="#%E6%8C%87%E5%AE%9A%E6%96%87%E6%A1%A3id">指定文档ID</a></li>
+<li><a href="#%E8%87%AA%E5%8A%A8%E7%94%9F%E6%88%90id">自动生成ID</a></li>
+</ul>
+</li>
+<li><a href="#get-%E4%B8%80%E4%B8%AA%E6%96%87%E6%A1%A3">Get 一个文档</a>
+<ul>
+<li><a href="#%E6%89%BE%E5%88%B0%E6%96%87%E6%A1%A3%E8%BF%94%E5%9B%9E-http-200">找到文档，返回 HTTP 200</a></li>
+<li><a href="#%E6%89%BE%E4%B8%8D%E5%88%B0%E6%96%87%E6%A1%A3%E8%BF%94%E5%9B%9Ehttp-404">找不到文档，返回HTTP 404</a></li>
+</ul>
+</li>
+<li><a href="#index%E7%B4%A2%E5%BC%95-%E6%96%87%E6%A1%A3">Index(索引) 文档</a>
+<ul>
+<li><a href="#put-%E6%96%87%E6%A1%A3">put 文档</a></li>
+<li><a href="#%E8%8E%B7%E5%8F%96%E6%93%8D%E4%BD%9C%E5%90%8E%E7%9A%84%E6%96%87%E6%A1%A3">获取操作后的文档</a></li>
+</ul>
+</li>
+<li><a href="#update-%E6%96%87%E6%A1%A3">Update 文档</a>
+<ul>
+<li><a href="#%E6%9B%B4%E6%96%B0%E6%96%87%E6%A1%A3">更新文档</a></li>
+<li><a href="#%E8%8E%B7%E5%8F%96%E6%9B%B4%E6%96%B0%E5%90%8E%E7%9A%84%E6%96%87%E6%A1%A3">获取更新后的文档</a></li>
+<li><a href="#put-%E5%92%8C-update-%E7%9A%84%E5%8C%BA%E5%88%AB">put 和 update 的区别</a></li>
+</ul>
+</li>
+<li><a href="#delete-%E6%96%87%E6%A1%A3">delete 文档</a></li>
+</ul>
+</li>
+<li><a href="#indices">Indices</a>
+<ul>
+<li><a href="#%E5%88%9B%E5%BB%BA%E7%B4%A2%E5%BC%95">创建索引</a></li>
+<li><a href="#%E5%88%A0%E9%99%A4%E7%B4%A2%E5%BC%95">删除索引</a></li>
+</ul>
+</li>
+<li><a href="#%E6%89%B9%E9%87%8F%E6%93%8D%E4%BD%9C">批量操作</a>
+<ul>
+<li><a href="#bulk-api">Bulk API</a>
+<ul>
+<li><a href="#demo">Demo</a>
+<ul>
+<li><a href="#%E8%AF%B7%E6%B1%82%E8%A7%A3%E6%9E%90">请求解析</a></li>
+<li><a href="#%E5%93%8D%E5%BA%94%E8%A7%A3%E6%9E%90">响应解析</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E5%B8%B8%E8%A7%81%E9%94%99%E8%AF%AF%E8%BF%94%E5%9B%9E">常见错误返回</a></li>
+<li><a href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5">参考链接</a></li>
+</ul>
+
+        </div>
+        <script>
+            function locateCatelogList() {
+                /*获取文章目录集合,可通过:header过滤器*/
+                var alis = $('.post-content :header');
+                /*获取侧边栏目录列表集合**/
+                var sidebar_alis = $('.markdownIt-TOC a');
+                /*获取滚动条到顶部的距离*/
+                var scroll_height = $(window).scrollTop();
+                for (var i = 0; i < alis.length; i++) {
+                    /*获取锚点集合中的元素分别到顶点的距离*/
+                    var a_height = $(alis[i]).offset().top;
+                    if (a_height < scroll_height) {
+                        /*高亮显示*/
+                        sidebar_alis.removeClass('on');
+                        $(sidebar_alis[i]).addClass('on');
+                    }
+                }
+            }
+            $(function() {
+                /*绑定滚动事件 */
+                $(window).bind('scroll', locateCatelogList);
+            });
+        </script>
+    </div>
+    
+                            
+
+                </div>
+
+
+
+
+            </div>
+
+
+            <div class="site-footer">
+  Powered by <a href="https://github.com/kingofzihua" target="_blank">kingofzihua</a> | 
+  <a class="rss" href="http://kingofzihua.github.io/atom.xml" target="_blank">RSS</a>
+</div>
+
+<script>
+  hljs.initHighlightingOnLoad()
+</script>
+
+
+    </div>
+    <script>
+        $('#sidebar').stickySidebar({
+            topSpacing: 80,
+            // bottomSpacing: 60
+        });
+    </script>
+    
+</body>
+
+</html>

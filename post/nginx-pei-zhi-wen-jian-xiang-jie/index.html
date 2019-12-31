@@ -1,0 +1,304 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>
+    Nginx 配置文件详解 | kingofzihua
+</title>
+<link rel="shortcut icon" href="http://kingofzihua.github.io/favicon.ico?v=1577770835023">
+<!-- <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous"> -->
+<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="http://kingofzihua.github.io/styles/main.css">
+<!-- js -->
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+<script src="http://kingofzihua.github.io/media/js/jquery.sticky-sidebar.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<script src="https://cdn.bootcss.com/moment.js/2.23.0/moment.min.js"></script>
+
+
+        
+</head>
+
+<body>
+    <div class="main">
+        <div class="header">
+    <div class="nav">
+        <div class="logo">
+            <a href="http://kingofzihua.github.io">
+                <img class="avatar" src="http://kingofzihua.github.io/images/avatar.png?v=1577770835023" alt="">
+            </a>
+            <div class="site-title">
+                <h1>
+                    kingofzihua
+                </h1>
+            </div>
+        </div>
+        <span class="menu-btn fa fa-align-justify"></span>
+        <div class="menu-container">
+            <ul>
+                
+                    
+                            <li>
+                                <a href="/" class="menu">
+                                    首页
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/archives" class="menu">
+                                    归档
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/tags" class="menu">
+                                    标签
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/post/about" class="menu">
+                                    关于
+                                </a>
+                            </li>
+                            
+                                
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $(".menu-btn").click(function() {
+            $(".menu-container").slideToggle();
+        });
+        $(window).resize(function() {
+
+            if (window.matchMedia('(min-width: 960px)').matches) {
+                $(".menu-container").css('display', 'block')
+            } else {
+                $(".menu-container").css('display', 'none')
+            }
+
+        });
+    });
+</script>
+
+            <div id="main-content" class="post-detail main-container">
+                <!-- left -->
+                <div id="content" class="main-container-left">
+                    <article class="post i-card">
+                        <h2 class="post-title">
+                            Nginx 配置文件详解
+                        </h2>
+                        <div class="post-info">
+                            <time class="post-time">2019-08-19</time>
+                            
+                        </div>
+                        
+                            <div class="post-feature-image" style="background-image: url('http://kingofzihua.github.io/post-images/nginx-pei-zhi-wen-jian-xiang-jie.png')"></div>
+                            
+                                <div class="post-content">
+                                    <blockquote>
+<p>nginx配置文件位于/etc/nginx/nginx.conf，Nginx 服务启动时会读入配置文件，后续的行为则按照配置文件中的指令进行。</p>
+</blockquote>
+<!-- more --> 
+<h4 id="主配置文件">主配置文件</h4>
+<pre><code class="language-shell"># /etc/nginx/nginx.conf
+user  nginx nginx;    #设置nginx用户
+worker_processes  2;    #工作进程数 一般是cpu的核数
+error_log  logs/error.log;    #错误日志的地址
+error_log  logs/error.log  notice;    #错误记录的类型 并指定 对应文件
+error_log  logs/error.log  info;    #错误记录的类型
+pid        logs/nginx.pid;    #pid 存放目录
+events {
+    worker_connections  1024;    #每个进程最大允许的连接数
+}
+http {
+    include       mime.types;    #设定mime类型，类型又mime.type文件定义
+    default_type  application/octet-stream;    #设置默认类型
+    #设置日志格式
+    log_format  main  '$remote_addr - $remote_user [$time_local] &quot;$request&quot; '
+                      '$status $body_bytes_sent &quot;$http_referer&quot; '
+                      '&quot;$http_user_agent&quot; &quot;$http_x_forwarded_for&quot;';
+    access_log  logs/access.log  main;    #成功日志
+    sendfile        on;    #指定nginx是否有调用sendfile函数来输出文件 对于普通应用
+    #tcp_nopush     on;
+
+    #keepalive_timeout  0;
+    keepalive_timeout  65;    #连接超时时间
+    #gzip  on;    #是否开启gzip压缩
+
+    include /usr/local/nginx/conf/conf.d/*.conf;    #包含文件
+}
+</code></pre>
+<h4 id="子配置文件">子配置文件</h4>
+<pre><code class="language-shell"># /etc/nginx/conf.d/wordpress.conf
+#HTTP server
+server {
+    listen       80;
+    server_name  blog.kingofzihua.top;
+
+    if ($host = blog.kingofzihua.top) {
+        return 301 https://$host$request_uri;
+    }
+
+    return 404;
+}
+# HTTPS server
+server {
+        listen       443;    #监听的端口
+        server_name   blog.kingofzihua.top;    #域名 或者是IP
+		# 设置SSL证书
+		ssl_certificate /etc/letsencrypt/live/blog.kingofzihua.top/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/blog.kingofzihua.top/privkey.pem;
+        include /etc/letsencrypt/options-ssl-nginx.conf;
+        ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+        #charset koi8-r;
+        #access_log  logs/host.access.log  main;
+		#定义项目根路径
+        root   /www/wordpress;
+        location / {
+            index  index.html index.htm;
+        }
+        #error_page  404              /404.html;
+        # redirect server error pages to the static page /50x.html
+        #
+        error_page   500 502 503 504  /50x.html; #错误页面
+        # 错误页面所在目录
+        location = /50x.html {
+            root   html;
+        }
+        # proxy the PHP scripts to Apache listening on 127.0.0.1:80
+        #
+        #location ~ \.php$ {
+        #    proxy_pass   http://127.0.0.1;
+        #}
+        # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
+        #
+        # 解析.php结尾的
+        location ~ \.php$ {
+            fastcgi_pass   127.0.0.1:9000; #指定解析的端口 可以写 unix:/var/run/php5-fpm.sock;
+            fastcgi_index  index.php; # 指定默认访问的PHP文件
+            fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name; #$document_root 就是上面设置的root
+            include        fastcgi_params;
+        }
+        # deny access to .htaccess files, if Apache's document root
+        # concurs with nginx's one
+        #
+        #location ~ /\.ht {
+        #    deny  all;
+        #}
+}
+</code></pre>
+
+                                </div>
+                    </article>
+                    <!--  -->
+                    
+                        <div class="next-post">
+                            <div class="next">下一篇</div>
+                            <a href="http://kingofzihua.github.io/post/centos6-yong-lets-encrypt-he-certbot-da-jian-https">
+                                <h3 class="post-title">
+                                    CentOS6 用 Let&#39;s Encrypt 和 certbot 搭建 https
+                                </h3>
+                            </a>
+                        </div>
+                        
+                            <div id="disqus_thread"></div>
+                            <div id="gitalk-container"></div>
+                </div>
+                <!-- middle -->
+                <div class="main-container-middle"></div>
+                <!-- right -->
+                <div id="sidebar" class="main-container-right">
+                    
+                        <!-- toc -->
+                        
+    <div class="toc-card i-card ">
+        <div class="toc-title i-card-title">目录</div>
+        <div class="toc-content">
+            <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#%E4%B8%BB%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6">主配置文件</a></li>
+<li><a href="#%E5%AD%90%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6">子配置文件</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+        <script>
+            function locateCatelogList() {
+                /*获取文章目录集合,可通过:header过滤器*/
+                var alis = $('.post-content :header');
+                /*获取侧边栏目录列表集合**/
+                var sidebar_alis = $('.markdownIt-TOC a');
+                /*获取滚动条到顶部的距离*/
+                var scroll_height = $(window).scrollTop();
+                for (var i = 0; i < alis.length; i++) {
+                    /*获取锚点集合中的元素分别到顶点的距离*/
+                    var a_height = $(alis[i]).offset().top;
+                    if (a_height < scroll_height) {
+                        /*高亮显示*/
+                        sidebar_alis.removeClass('on');
+                        $(sidebar_alis[i]).addClass('on');
+                    }
+                }
+            }
+            $(function() {
+                /*绑定滚动事件 */
+                $(window).bind('scroll', locateCatelogList);
+            });
+        </script>
+    </div>
+    
+                            
+
+                </div>
+
+
+
+
+            </div>
+
+
+            <div class="site-footer">
+  Powered by <a href="https://github.com/kingofzihua" target="_blank">kingofzihua</a> | 
+  <a class="rss" href="http://kingofzihua.github.io/atom.xml" target="_blank">RSS</a>
+</div>
+
+<script>
+  hljs.initHighlightingOnLoad()
+</script>
+
+
+    </div>
+    <script>
+        $('#sidebar').stickySidebar({
+            topSpacing: 80,
+            // bottomSpacing: 60
+        });
+    </script>
+    
+</body>
+
+</html>

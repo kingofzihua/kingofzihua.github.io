@@ -1,0 +1,253 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>
+    CentOS7 安装 Python3.7 | kingofzihua
+</title>
+<link rel="shortcut icon" href="http://kingofzihua.github.io/favicon.ico?v=1577770835023">
+<!-- <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous"> -->
+<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="http://kingofzihua.github.io/styles/main.css">
+<!-- js -->
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+<script src="http://kingofzihua.github.io/media/js/jquery.sticky-sidebar.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<script src="https://cdn.bootcss.com/moment.js/2.23.0/moment.min.js"></script>
+
+
+        
+</head>
+
+<body>
+    <div class="main">
+        <div class="header">
+    <div class="nav">
+        <div class="logo">
+            <a href="http://kingofzihua.github.io">
+                <img class="avatar" src="http://kingofzihua.github.io/images/avatar.png?v=1577770835023" alt="">
+            </a>
+            <div class="site-title">
+                <h1>
+                    kingofzihua
+                </h1>
+            </div>
+        </div>
+        <span class="menu-btn fa fa-align-justify"></span>
+        <div class="menu-container">
+            <ul>
+                
+                    
+                            <li>
+                                <a href="/" class="menu">
+                                    首页
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/archives" class="menu">
+                                    归档
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/tags" class="menu">
+                                    标签
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/post/about" class="menu">
+                                    关于
+                                </a>
+                            </li>
+                            
+                                
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $(".menu-btn").click(function() {
+            $(".menu-container").slideToggle();
+        });
+        $(window).resize(function() {
+
+            if (window.matchMedia('(min-width: 960px)').matches) {
+                $(".menu-container").css('display', 'block')
+            } else {
+                $(".menu-container").css('display', 'none')
+            }
+
+        });
+    });
+</script>
+
+            <div id="main-content" class="post-detail main-container">
+                <!-- left -->
+                <div id="content" class="main-container-left">
+                    <article class="post i-card">
+                        <h2 class="post-title">
+                            CentOS7 安装 Python3.7
+                        </h2>
+                        <div class="post-info">
+                            <time class="post-time">2019-08-19</time>
+                            
+                        </div>
+                        
+                            <div class="post-feature-image" style="background-image: url('http://kingofzihua.github.io/post-images/centos7-an-zhuang-python37.jpg')"></div>
+                            
+                                <div class="post-content">
+                                    <blockquote>
+<p>在某些系统下，系统默认的python 还是2.x.Python 软件基金会宣布，到 2020 年元旦，将不再为编程语言 Python 2.x 分支提供任何支持,所以我们接下来就进入到python3.7的安装教程</p>
+</blockquote>
+<!-- more -->
+<h3 id="一-更新系统软件包">一、更新系统软件包</h3>
+<pre><code class="language-shell">yum update -y
+</code></pre>
+<h3 id="二-安装软件管理包和可能使用的依赖">二、安装软件管理包和可能使用的依赖</h3>
+<pre><code class="language-shell">yum -y groupinstall &quot;Development tools&quot;
+yum install openssl-devel bzip2-devel expat-devel gdbm-devel readline-devel sqlite-devel libffi-devel
+</code></pre>
+<h3 id="三-下载pyhton3并安装">三、下载Pyhton3并安装</h3>
+<pre><code class="language-shell">cd /opt/package/ # 自定义目录，随便放到那里就行，根据个人喜好
+wget https://www.python.org/ftp/python/3.7.1/Python-3.7.1.tgz
+</code></pre>
+<h4 id="解压">解压</h4>
+<pre><code class="language-shell">tar -zxvf Python-3.7.1.tgz
+cd Python-3.7.1
+</code></pre>
+<h4 id="对软件进行配置">对软件进行配置</h4>
+<pre><code class="language-shell">./configure --prefix=/usr/local/python3
+</code></pre>
+<h4 id="安装python3">安装python3</h4>
+<pre><code class="language-shell">make -j  # -j 并行编译 
+make install
+</code></pre>
+<h3 id="四-建立软链接-添加变量">四、建立软链接 添加变量</h3>
+<pre><code class="language-shell">ln -s /usr/local/python3/bin/python3 /usr/bin/python3 # python
+ln -s /usr/local/python3/bin/pip3 /usr/bin/pip3 # pip
+</code></pre>
+<h3 id="五-查看python3和pip3安装情况">五、查看Python3和pip3安装情况</h3>
+<pre><code class="language-shell">python3 --version
+pip -V
+</code></pre>
+<hr>
+<p>@  <a href="https://www.django.cn" title="django中文网">django中文网</a></p>
+
+                                </div>
+                    </article>
+                    <!--  -->
+                    
+                        <div class="next-post">
+                            <div class="next">下一篇</div>
+                            <a href="http://kingofzihua.github.io/post/nginx-pei-zhi-wen-jian-xiang-jie">
+                                <h3 class="post-title">
+                                    Nginx 配置文件详解
+                                </h3>
+                            </a>
+                        </div>
+                        
+                            <div id="disqus_thread"></div>
+                            <div id="gitalk-container"></div>
+                </div>
+                <!-- middle -->
+                <div class="main-container-middle"></div>
+                <!-- right -->
+                <div id="sidebar" class="main-container-right">
+                    
+                        <!-- toc -->
+                        
+    <div class="toc-card i-card ">
+        <div class="toc-title i-card-title">目录</div>
+        <div class="toc-content">
+            <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#%E4%B8%80-%E6%9B%B4%E6%96%B0%E7%B3%BB%E7%BB%9F%E8%BD%AF%E4%BB%B6%E5%8C%85">一、更新系统软件包</a></li>
+<li><a href="#%E4%BA%8C-%E5%AE%89%E8%A3%85%E8%BD%AF%E4%BB%B6%E7%AE%A1%E7%90%86%E5%8C%85%E5%92%8C%E5%8F%AF%E8%83%BD%E4%BD%BF%E7%94%A8%E7%9A%84%E4%BE%9D%E8%B5%96">二、安装软件管理包和可能使用的依赖</a></li>
+<li><a href="#%E4%B8%89-%E4%B8%8B%E8%BD%BDpyhton3%E5%B9%B6%E5%AE%89%E8%A3%85">三、下载Pyhton3并安装</a>
+<ul>
+<li><a href="#%E8%A7%A3%E5%8E%8B">解压</a></li>
+<li><a href="#%E5%AF%B9%E8%BD%AF%E4%BB%B6%E8%BF%9B%E8%A1%8C%E9%85%8D%E7%BD%AE">对软件进行配置</a></li>
+<li><a href="#%E5%AE%89%E8%A3%85python3">安装python3</a></li>
+</ul>
+</li>
+<li><a href="#%E5%9B%9B-%E5%BB%BA%E7%AB%8B%E8%BD%AF%E9%93%BE%E6%8E%A5-%E6%B7%BB%E5%8A%A0%E5%8F%98%E9%87%8F">四、建立软链接 添加变量</a></li>
+<li><a href="#%E4%BA%94-%E6%9F%A5%E7%9C%8Bpython3%E5%92%8Cpip3%E5%AE%89%E8%A3%85%E6%83%85%E5%86%B5">五、查看Python3和pip3安装情况</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+        <script>
+            function locateCatelogList() {
+                /*获取文章目录集合,可通过:header过滤器*/
+                var alis = $('.post-content :header');
+                /*获取侧边栏目录列表集合**/
+                var sidebar_alis = $('.markdownIt-TOC a');
+                /*获取滚动条到顶部的距离*/
+                var scroll_height = $(window).scrollTop();
+                for (var i = 0; i < alis.length; i++) {
+                    /*获取锚点集合中的元素分别到顶点的距离*/
+                    var a_height = $(alis[i]).offset().top;
+                    if (a_height < scroll_height) {
+                        /*高亮显示*/
+                        sidebar_alis.removeClass('on');
+                        $(sidebar_alis[i]).addClass('on');
+                    }
+                }
+            }
+            $(function() {
+                /*绑定滚动事件 */
+                $(window).bind('scroll', locateCatelogList);
+            });
+        </script>
+    </div>
+    
+                            
+
+                </div>
+
+
+
+
+            </div>
+
+
+            <div class="site-footer">
+  Powered by <a href="https://github.com/kingofzihua" target="_blank">kingofzihua</a> | 
+  <a class="rss" href="http://kingofzihua.github.io/atom.xml" target="_blank">RSS</a>
+</div>
+
+<script>
+  hljs.initHighlightingOnLoad()
+</script>
+
+
+    </div>
+    <script>
+        $('#sidebar').stickySidebar({
+            topSpacing: 80,
+            // bottomSpacing: 60
+        });
+    </script>
+    
+</body>
+
+</html>

@@ -1,0 +1,4033 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>http://kingofzihua.github.io</id>
+    <title>kingofzihua</title>
+    <updated>2019-12-31T05:40:38.883Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="http://kingofzihua.github.io"/>
+    <link rel="self" href="http://kingofzihua.github.io/atom.xml"/>
+    <subtitle>我未曾见过一个早起、勤奋、谨慎、诚实的人整天抱怨的 — 富兰克林</subtitle>
+    <logo>http://kingofzihua.github.io/images/avatar.png</logo>
+    <icon>http://kingofzihua.github.io/favicon.ico</icon>
+    <rights>All rights reserved 2019, kingofzihua</rights>
+    <entry>
+        <title type="html"><![CDATA[Laravel 项目 伪静态分页处理]]></title>
+        <id>http://kingofzihua.github.io/post/laravel-xiang-mu-wei-jing-tai-fen-ye-chu-li</id>
+        <link href="http://kingofzihua.github.io/post/laravel-xiang-mu-wei-jing-tai-fen-ye-chu-li">
+        </link>
+        <updated>2019-12-31T01:54:47.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<p>手上有个Laravel 的项目，要求做伪静态处理，项目中使用了 Laravel 自带的分页组件，分页组件分页会在你的url 用 query 的方式做页码的传递，达不到伪静态的要求。</p>
+</blockquote>
+]]></summary>
+        <content type="html"><![CDATA[<blockquote>
+<p>手上有个Laravel 的项目，要求做伪静态处理，项目中使用了 Laravel 自带的分页组件，分页组件分页会在你的url 用 query 的方式做页码的传递，达不到伪静态的要求。</p>
+</blockquote>
+<!-- more -->
+<h2 id="想要的效果">想要的效果</h2>
+<p>我们伪静态想要的效果大体是这样的:</p>
+<pre><code class="language-php"> /software/3dmax/created_at/page-1.html
+</code></pre>
+<p>对应 Laravel 的路由是:</p>
+<pre><code class="language-php">/software/{category}/{order}/page-{page}.html
+</code></pre>
+<p>因为laravel 路由本身是支持路由参数的，所以说 我们变量的获取是完全没有问题的，但是 Laravel 自带的分页组件会将你的 参数 用 query的方式做传递，所以，分页地址是下面这种</p>
+<pre><code class="language-php"> /software/3dmax/created_at/page-1.html?category=3dmax&amp;order=created_at&amp;page=2
+</code></pre>
+<p>这不是我们需要的，所以我们需要对 Laravel 自带的分页组件进行修改。</p>
+<h2 id="laravel-分页组件">Laravel 分页组件</h2>
+<p>    在 Laravel 中我们如果需要分页，会调用 模型中的 <code>paginate</code> 方法，然后传递每页的页码。<code>paginate</code> 方法会调用 <code>Illuminate\Database\Concerns\BuildsQueries</code> 下的<code>paginator</code>方法，<code>paginator</code> 方法会构造一个 <code>Illuminate\Pagination\LengthAwarePaginator</code>的实例， <code>Illuminate\Pagination\LengthAwarePaginator</code> 会使用 <code>Illuminate\Pagination\AbstractPaginator</code> 中的<code>url</code>方法进行构造请求参数和url。<br>
+现在我们找到生成url的地方了，我们需要做的就是在这里修改。</p>
+<h2 id="重写分页组件">重写分页组件</h2>
+<p>Laravel 中本身支持自定义分页组件，but我们做的不是自定义分页，我们需要对于方法进行重写。</p>
+<h3 id="创建-lengthawarepaginator-类">创建 LengthAwarePaginator 类</h3>
+<pre><code class="language-php">mkdir app/Pagination
+touch app/Pagination/LengthAwarePaginator.php
+</code></pre>
+<p>文件app/Pagination/LengthAwarePaginator.php 内容：</p>
+<pre><code>&lt;?php
+
+namespace App\Pagination;
+
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
+use Illuminate\Pagination\LengthAwarePaginator as BasePaginator;
+
+class LengthAwarePaginator extends BasePaginator
+{
+}
+
+</code></pre>
+<h3 id="重写-url-方法">重写 url 方法</h3>
+<p>首先 Laravel 自带的分页 会把路由里面的参数放到 query中，我们需要的是 参数还是放到地址中。</p>
+<ul>
+<li>获取到所有的query参数</li>
+<li>判断需要分页的页面路由中是否有绑定的路由参数</li>
+<li>如果没有的话，我们就走 Laravel 本身的分页</li>
+<li>如果有的话，我们就通过路由和路由参数进行构建地址，并把它从query参数中剔除</li>
+<li>判断下当前的query参数中是否还有参数，如果还有的话，我们就和之前一样。</li>
+</ul>
+<pre><code class="language-php">...
+
+public function url($page)
+    {
+        if ($page &lt;= 0) {
+            $page = 1;
+        }
+
+        $parameters = [$this-&gt;pageName =&gt; $page];
+
+        if (count($this-&gt;query) &gt; 0) {
+            $parameters = array_merge($this-&gt;query, $parameters);
+        }
+
+        //判断的参数是否在 路由中 需要绑定的数据
+        $params = \request()-&gt;route()-&gt;parameters();
+
+        if (!empty($params)) {
+            foreach ($parameters as $key =&gt; $parameter) {
+                if (isset($params[$key])) {
+                    $params[$key] = $parameter;
+                    unset($parameters[$key]);
+                }
+            }
+
+            $path = route(\request()-&gt;route()-&gt;getAction('as'), $params);
+        } else {
+            $path = $this-&gt;path;
+        }
+
+        if (empty(Arr::query($parameters))) {
+            return $path . $this-&gt;buildFragment();
+        }
+
+        return $path
+            . (Str::contains($this-&gt;path, '?') ? '&amp;' : '?')
+            . Arr::query($parameters)
+            . $this-&gt;buildFragment();
+    }
+    ...
+</code></pre>
+<h2 id="使用自定义的分页组件">使用自定义的分页组件</h2>
+<p>在 Laravel 中我们如果需要分页，会调用 模型中的 <code>paginate</code> 方法，但是<code>paginate</code>方法的定义在<code>Illuminate\Database\Eloquent\Builder</code>下，如果我们需要重写的话，会很麻烦，并且还有一个问题就是，并不是我们所有的分页都是需要伪静态的，比如我们用户中心的数据可能不太需要伪静态。所以我们需要一个可以手动设置的东西，Larave 模型中有一个 <a href="https://learnku.com/docs/laravel/5.8/eloquent/3931#4330c1">本地作用域</a>，我们可以写一个方法<code>staticPaginate</code>，当需要使用静态分页的时候，我们可以<code>Model-&gt;query()-&gt;staticPaginate();</code> 来调用，所需要的参数和 Laravel 自带的 <code>pageinage</code> 方法类似。</p>
+<h3 id="公共的model-基类文件">公共的Model 基类文件</h3>
+<p>Laravel项目中的 Model 我们一般不会直接继承<code>Illuminate\Database\Eloquent\Model</code> 我们一般都在 <code>app\Models</code> 目录定义一个 Model  基类，所有的模型都继承自 Model 基类，这并不是必须的，只是这样的话对于模型修改，或添加公共的方法比较方便。</p>
+<h3 id="在模型中定义本地作用域">在模型中定义本地作用域</h3>
+<p>你只需要拷贝 <code>Illuminate\Database\Eloquent\Builder</code>下的<code>paginate</code>方法的内容并修改<code>$this</code>的指向就可以了</p>
+<pre><code class="language-php">
+...
+
+use Illuminate\Pagination\Paginator;
+# Laravel 自带的。
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+
+...
+
+/**
+     * 自定义静态分页
+     * @author kingofzihua
+     * @param Builder $builder
+     * @param int $perPage
+     * @param array $columns
+     * @param string $pageName
+     * @param int|null $page
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     *
+     * @throws \InvalidArgumentException
+     */
+    public function scopeStaticPaginate($builder, $perPage = null, $columns = ['*'], $pageName = 'page', $page = null)
+    {
+        if (request('page')) {
+            request()-&gt;offsetSet('page', request('page'));
+        }
+
+        $page = $page ?: Paginator::resolveCurrentPage($pageName);
+
+        $perPage = $perPage ?: $builder-&gt;getModel()-&gt;getPerPage();
+
+        $results = ($total = $builder-&gt;toBase()-&gt;getCountForPagination())
+            ? $builder-&gt;forPage($page, $perPage)-&gt;get($columns)
+            : $builder-&gt;getModel()-&gt;newCollection();
+        return $this-&gt;paginator($results, $total, $perPage, $page, [
+            'path' =&gt; Paginator::resolveCurrentPath(),
+            'pageName' =&gt; $pageName,
+        ]);
+    }
+
+    ...
+</code></pre>
+<h3 id="替换自定义的分页组件">替换自定义的分页组件</h3>
+<pre><code class="language-php">
+# 替换下
+use App\Pagination\LengthAwarePaginator;
+
+...
+
+/**
+     * Create a new length-aware paginator instance.
+     *
+     * @param \Illuminate\Support\Collection $items
+     * @param int $total
+     * @param int $perPage
+     * @param int $currentPage
+     * @param array $options
+     * @return \App\Pagination\LengthAwarePaginator
+     */
+    protected function paginator($items, $total, $perPage, $currentPage, $options)
+    {
+        return Container::getInstance()-&gt;makeWith(LengthAwarePaginator::class, compact(
+            'items', 'total', 'perPage', 'currentPage', 'options'
+        ));
+    }
+
+    ...
+
+</code></pre>
+<h2 id="在项目中使用静态分页组件">在项目中使用静态分页组件</h2>
+<pre><code class="language-php">Model::query()-&gt;staticPaginate($pageSize);
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[文本处理三剑客之awk]]></title>
+        <id>http://kingofzihua.github.io/post/wen-ben-chu-li-san-jian-ke-zhi-awk</id>
+        <link href="http://kingofzihua.github.io/post/wen-ben-chu-li-san-jian-ke-zhi-awk">
+        </link>
+        <updated>2019-10-31T05:55:52.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<p>AWK是一个优良的文本处理工具，Linux及Unix环境中现有的功能最强大的数据处理引擎之一。AWK 提供了极其强大的功能：可以进行样式装入、流控制、数学运算符、进程控制语句甚至于内置的变量和函数。它具备了一个完整的语言所应具有的几乎所有精美特性。              --- 百度百科</p>
+</blockquote>
+]]></summary>
+        <content type="html"><![CDATA[<blockquote>
+<p>AWK是一个优良的文本处理工具，Linux及Unix环境中现有的功能最强大的数据处理引擎之一。AWK 提供了极其强大的功能：可以进行样式装入、流控制、数学运算符、进程控制语句甚至于内置的变量和函数。它具备了一个完整的语言所应具有的几乎所有精美特性。              --- 百度百科</p>
+</blockquote>
+<!-- more -->
+<h2 id="简介">简介</h2>
+<p>AWK 是一个文本处理工具，通常用于处理数据并生成结果报告。</p>
+<h3 id="awk的语法格式">awk的语法格式</h3>
+<ul>
+<li>第一种格式: <code>awk 'BEGIN{}pattern{commands}END{}' file_name</code></li>
+<li>第二种格式: <code>standard output| awk 'BEGIN{}pattern{commands}END{}'</code></li>
+</ul>
+<h4 id="语法格式说明">语法格式说明</h4>
+<table>
+<thead>
+<tr>
+<th>语法格式</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BEGIN{}</td>
+<td>正式处理数据之前执行</td>
+</tr>
+<tr>
+<td>pattern</td>
+<td>匹配模式</td>
+</tr>
+<tr>
+<td>{commands}</td>
+<td>处理命令，可能多行</td>
+</tr>
+<tr>
+<td>END{}</td>
+<td>处理完所有匹配数据后执行</td>
+</tr>
+</tbody>
+</table>
+<h3 id="awk中的内置变量">awk中的内置变量</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">内置变量</th>
+<th style="text-align:center"></th>
+<th style="text-align:left">含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">$0</td>
+<td style="text-align:center"></td>
+<td style="text-align:left">整行内容。</td>
+</tr>
+<tr>
+<td style="text-align:left">$1-$n</td>
+<td style="text-align:center"></td>
+<td style="text-align:left">当前行的第1-n个字段。</td>
+</tr>
+<tr>
+<td style="text-align:left">NF</td>
+<td style="text-align:center">Number Field</td>
+<td style="text-align:left">当前行的字段个数，也就是有多少列，$NF是最后一行。</td>
+</tr>
+<tr>
+<td style="text-align:left">NR</td>
+<td style="text-align:center">Number Row</td>
+<td style="text-align:left">当前行的行号，从1开始计数。</td>
+</tr>
+<tr>
+<td style="text-align:left">FNR</td>
+<td style="text-align:center">File Number Row</td>
+<td style="text-align:left">多文件处理时，每个文件行号单独计数，都是从0开始。</td>
+</tr>
+<tr>
+<td style="text-align:left">FS</td>
+<td style="text-align:center">Field Separator</td>
+<td style="text-align:left">输入字段分隔符，不指定默认以空格或tab键分割。</td>
+</tr>
+<tr>
+<td style="text-align:left">RS</td>
+<td style="text-align:center">Row Separator</td>
+<td style="text-align:left">输入行分隔符，默认回车换行。</td>
+</tr>
+<tr>
+<td style="text-align:left">OFS</td>
+<td style="text-align:center">Output Field Separator</td>
+<td style="text-align:left">输出字段分隔符，默认为空格。</td>
+</tr>
+<tr>
+<td style="text-align:left">ORS</td>
+<td style="text-align:center">Output Row Separator</td>
+<td style="text-align:left">输出行分隔符，默认为回车换行。</td>
+</tr>
+<tr>
+<td style="text-align:left">FILENAME</td>
+<td style="text-align:center"></td>
+<td style="text-align:left">当前输入的文件名字。</td>
+</tr>
+<tr>
+<td style="text-align:left">ARGC</td>
+<td style="text-align:center"></td>
+<td style="text-align:left">命令行参数个数。</td>
+</tr>
+<tr>
+<td style="text-align:left">ARGV</td>
+<td style="text-align:center"></td>
+<td style="text-align:left">命令行参数数组。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="commands-处理命令">commands 处理命令</h3>
+<h4 id="printf"><code>printf</code></h4>
+<h5 id="格式符说明">格式符说明</h5>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">格式符</th>
+<th style="text-align:left">含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">%s</td>
+<td style="text-align:left">打印字符串</td>
+</tr>
+<tr>
+<td style="text-align:left">%d</td>
+<td style="text-align:left">打印十进制数</td>
+</tr>
+<tr>
+<td style="text-align:left">%f</td>
+<td style="text-align:left">打印一个浮点数</td>
+</tr>
+<tr>
+<td style="text-align:left">%x</td>
+<td style="text-align:left">打印十六进制数</td>
+</tr>
+<tr>
+<td style="text-align:left">%o</td>
+<td style="text-align:left">打印八进制数</td>
+</tr>
+<tr>
+<td style="text-align:left">%e</td>
+<td style="text-align:left">打印数字的科学计数法形式</td>
+</tr>
+<tr>
+<td style="text-align:left">%c</td>
+<td style="text-align:left">打印单个字符的ASCII码</td>
+</tr>
+</tbody>
+</table>
+<h5 id="修饰符说明">修饰符说明</h5>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">修饰符</th>
+<th style="text-align:left">含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">-</td>
+<td style="text-align:left">左对齐</td>
+</tr>
+<tr>
+<td style="text-align:left">+</td>
+<td style="text-align:left">右对齐</td>
+</tr>
+<tr>
+<td style="text-align:left">#</td>
+<td style="text-align:left">显示8进制在前面加0，显示16进制在前面加0x。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="正则表达式于操作符">正则表达式于操作符</h3>
+<p>awk同sed一样也可以通过模式匹配来对输入的文本进行匹配处理。awk也支持大量的正则表达式模式，大部分与sed支持的元字符类似，而且正则表达式是玩转三剑客的必备工具。</p>
+<h4 id="awk支持的正则表达式元字符">awk支持的正则表达式元字符</h4>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">元字符</th>
+<th style="text-align:left">功能</th>
+<th style="text-align:left">示例</th>
+<th style="text-align:left">解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">^</td>
+<td style="text-align:left">字符串开头</td>
+<td style="text-align:left">/^creditease/</td>
+<td style="text-align:left">匹配所有以 creditease 开头的字符串</td>
+</tr>
+<tr>
+<td style="text-align:left">$</td>
+<td style="text-align:left">字符串的结尾</td>
+<td style="text-align:left">/creditease$/</td>
+<td style="text-align:left">匹配所有以 creditease 结尾的字符串</td>
+</tr>
+<tr>
+<td style="text-align:left">.</td>
+<td style="text-align:left">匹配任意单个字符(包括回车符)</td>
+<td style="text-align:left">/c..1/</td>
+<td style="text-align:left">匹配字母c，然后两个任意字符,再以1结尾的行， 比如ckkl</td>
+</tr>
+<tr>
+<td style="text-align:left">*</td>
+<td style="text-align:left">重复0个或多个字符</td>
+<td style="text-align:left">/a*cool/</td>
+<td style="text-align:left">匹配a 和cool 中间间隔0个或多个字符</td>
+</tr>
+<tr>
+<td style="text-align:left">+</td>
+<td style="text-align:left">重复前一个字符一次或一次以上</td>
+<td style="text-align:left">/a+b/</td>
+<td style="text-align:left">匹配一个或多个a加b的行</td>
+</tr>
+<tr>
+<td style="text-align:left">?</td>
+<td style="text-align:left">匹配0个或一个前导字符</td>
+<td style="text-align:left">/a?b/</td>
+<td style="text-align:left">匹配b或者ab的行</td>
+</tr>
+<tr>
+<td style="text-align:left">[]</td>
+<td style="text-align:left">匹配指定字符组内的任一个字符</td>
+<td style="text-align:left">/^[abc]/</td>
+<td style="text-align:left">匹配以字母a或b或c开头的行</td>
+</tr>
+<tr>
+<td style="text-align:left">[^]</td>
+<td style="text-align:left">匹配不再指定字符组内的任一个字符</td>
+<td style="text-align:left">/<sup>[</sup>abc]/</td>
+<td style="text-align:left">匹配不以字母a或b或c开头的行</td>
+</tr>
+<tr>
+<td style="text-align:left">()</td>
+<td style="text-align:left">子表达式组合</td>
+<td style="text-align:left">/(cool)+/</td>
+<td style="text-align:left">表示一个或多个cool组合，当有一些字符需要组合时，使用括号括起来</td>
+</tr>
+<tr>
+<td style="text-align:left">|</td>
+<td style="text-align:left">或者的意思</td>
+<td style="text-align:left">/(cool)|B/</td>
+<td style="text-align:left">匹配cool或者字母B的行</td>
+</tr>
+</tbody>
+</table>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Elasticsearch Query DSL - 复合查询]]></title>
+        <id>http://kingofzihua.github.io/post/elasticsearch-query-dsl-compound-queries</id>
+        <link href="http://kingofzihua.github.io/post/elasticsearch-query-dsl-compound-queries">
+        </link>
+        <updated>2019-09-16T06:12:04.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<p>复合查询包括其他复合查询或叶查询，可以组合其结果和分数，更改其行为，或者从查询切换到筛选上下文。</p>
+</blockquote>
+]]></summary>
+        <content type="html"><![CDATA[<blockquote>
+<p>复合查询包括其他复合查询或叶查询，可以组合其结果和分数，更改其行为，或者从查询切换到筛选上下文。</p>
+</blockquote>
+ <!-- more --> 
+<h2 id="bool-query-布尔查询">Bool Query 布尔查询</h2>
+<ul>
+<li>一个 bool 查询 ，是一个或者多个查询子句的组合
+<ul>
+<li>总共包括4中子句。其中两种会影响算分，2中不影响算分</li>
+</ul>
+</li>
+<li>相关性并不只是全文检索的专利。也适用于 yes|no的子句，匹配的子句越多，相关性评越高。如果多条子查询语句被合并为一跳复合查询语句，比如bool查询，则每个查询子句计算得出的评分会被合并到总的相关性评分中</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">类型</th>
+<th style="text-align:center">匹配</th>
+<th style="text-align:center">算分</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">must</td>
+<td style="text-align:center">必须匹配</td>
+<td style="text-align:center">贡献算分</td>
+</tr>
+<tr>
+<td style="text-align:center">should</td>
+<td style="text-align:center">选择性匹配</td>
+<td style="text-align:center">贡献算分</td>
+</tr>
+<tr>
+<td style="text-align:center">must_not</td>
+<td style="text-align:center">Filter Context <br> 必须不能匹配</td>
+<td style="text-align:center">不贡献算分</td>
+</tr>
+<tr>
+<td style="text-align:center">filter</td>
+<td style="text-align:center">Filter Context <br> 必须匹配</td>
+<td style="text-align:center">不贡献算分</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Filter Context -不影响算分</strong></p>
+<h3 id="请求示例">请求示例</h3>
+<h4 id="准备数据">准备数据</h4>
+<pre><code>POST /news/_bulk
+{&quot;index&quot;:{&quot;_id&quot;:1}}
+{&quot;content&quot;:&quot;Apple Mac&quot;}
+{&quot;index&quot;:{&quot;_id&quot;:2}}
+{&quot;content&quot;:&quot;Apple iPad&quot;}
+{&quot;index&quot;:{&quot;_id&quot;:3}}
+{&quot;content&quot;:&quot;Apple employee like Apple Pie and Apple Juice&quot;}
+</code></pre>
+<h4 id="must-查询">Must 查询</h4>
+<p>查询包含apple的内容<br>
+请求</p>
+<pre><code>POST news/_search
+{
+  &quot;query&quot;:{
+    &quot;bool&quot;: {
+      &quot;must&quot;: [
+        {&quot;match&quot;: {&quot;content&quot;: &quot;apple&quot;}}
+      ]
+    }
+  }
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;took&quot; : 3,
+  &quot;timed_out&quot; : false,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 1,
+    &quot;successful&quot; : 1,
+    &quot;skipped&quot; : 0,
+    &quot;failed&quot; : 0
+  },
+  &quot;hits&quot; : {
+    &quot;total&quot; : {
+      &quot;value&quot; : 3,
+      &quot;relation&quot; : &quot;eq&quot;
+    },
+    &quot;max_score&quot; : 0.17280532,
+    &quot;hits&quot; : [
+      {
+        &quot;_index&quot; : &quot;news&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;3&quot;,
+        &quot;_score&quot; : 0.17280532,
+        &quot;_source&quot; : {
+          &quot;content&quot; : &quot;Apple employee like Apple Pie and Apple Juice&quot;
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;news&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_score&quot; : 0.16786805,
+        &quot;_source&quot; : {
+          &quot;content&quot; : &quot;Apple Mac&quot;
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;news&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_score&quot; : 0.16786805,
+        &quot;_source&quot; : {
+          &quot;content&quot; : &quot;Apple iPad&quot;
+        }
+      }
+    ]
+  }
+}
+</code></pre>
+<h4 id="must-not-查询">Must Not 查询</h4>
+<p>查询包含apple的内容 但是不包含 pie<br>
+请求</p>
+<pre><code>POST news/_search
+{
+  &quot;query&quot;:{
+    &quot;bool&quot;: {
+      &quot;must&quot;: [
+        {&quot;match&quot;: {&quot;content&quot;: &quot;apple&quot;}}
+      ],
+      &quot;must_not&quot;: [
+        {&quot;match&quot;: {&quot;content&quot;: &quot;pie&quot;}}
+      ]
+    }
+  }
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;took&quot; : 3,
+  &quot;timed_out&quot; : false,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 1,
+    &quot;successful&quot; : 1,
+    &quot;skipped&quot; : 0,
+    &quot;failed&quot; : 0
+  },
+  &quot;hits&quot; : {
+    &quot;total&quot; : {
+      &quot;value&quot; : 2,
+      &quot;relation&quot; : &quot;eq&quot;
+    },
+    &quot;max_score&quot; : 0.16786805,
+    &quot;hits&quot; : [
+      {
+        &quot;_index&quot; : &quot;news&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_score&quot; : 0.16786805,
+        &quot;_source&quot; : {
+          &quot;content&quot; : &quot;Apple Mac&quot;
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;news&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_score&quot; : 0.16786805,
+        &quot;_source&quot; : {
+          &quot;content&quot; : &quot;Apple iPad&quot;
+        }
+      }
+    ]
+  }
+}
+</code></pre>
+<h3 id="bool-嵌套">Bool 嵌套</h3>
+<figure data-type="image" tabindex="1"><img src="http://kingofzihua.github.io/post-images/1568255247856.png" alt="" loading="lazy"></figure>
+<h4 id="查询语句的结构会对相关度算分产生影响">查询语句的结构，会对相关度算分产生影响</h4>
+<ul>
+<li>同一层级下对竞争字段，具有相同对权重</li>
+<li>通过嵌套bool查询，可以改变对算分对影响</li>
+</ul>
+<figure data-type="image" tabindex="2"><img src="http://kingofzihua.github.io/post-images/1568255536825.png" alt="" loading="lazy"></figure>
+<h4 id="查询语法">查询语法</h4>
+<ul>
+<li>子查询可以任意顺序出现</li>
+<li>可以嵌套多个查询</li>
+<li>如果你的bool查询中，没有must条件，should中必须至少满足一条查询</li>
+</ul>
+<figure data-type="image" tabindex="3"><img src="http://kingofzihua.github.io/post-images/1568254527196.jpg" alt="" loading="lazy"></figure>
+<h2 id="boosting-相关性提升查询">Boosting 相关性提升查询</h2>
+<ul>
+<li>Boosting 是控制相关度的一种手段</li>
+<li>参数  boost 的含义
+<ul>
+<li>当 boost &gt; 1，打分的相关度相对性提升</li>
+<li>当 0 &lt; boost &lt; 1，打分的权重相对性降低</li>
+<li>当 boost &lt; 0 时，贡献负分</li>
+</ul>
+</li>
+</ul>
+<h3 id="请求示例-2">请求示例</h3>
+<h4 id="准备测试数据">准备测试数据</h4>
+<pre><code>POST /blogs/_bulk
+{&quot;index&quot;:{&quot;_id&quot;:1}}
+{&quot;title&quot;:&quot;Apple iPad&quot;,&quot;content&quot;:&quot;Apple iPad,Apple iPad&quot;}
+{&quot;index&quot;:{&quot;_id&quot;:2}}
+{&quot;title&quot;:&quot;Apple iPad,Apple iPad&quot;,&quot;content&quot;:&quot;Apple iPad&quot;}
+</code></pre>
+<h4 id="测试">测试</h4>
+<pre><code>POST news/_search
+{
+  &quot;query&quot;:{
+    &quot;boosting&quot;: {
+      &quot;positive&quot;: {    //提升
+        &quot;match&quot;: {
+          &quot;content&quot;: &quot;apple&quot;
+        }
+      },
+      &quot;negative&quot;: { //降低
+        &quot;match&quot;: {
+          &quot;content&quot;: &quot;pie&quot;
+        }
+      },
+      &quot;negative_boost&quot;: 0.5 //降低的分数
+    }
+  }
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;took&quot; : 0,
+  &quot;timed_out&quot; : false,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 1,
+    &quot;successful&quot; : 1,
+    &quot;skipped&quot; : 0,
+    &quot;failed&quot; : 0
+  },
+  &quot;hits&quot; : {
+    &quot;total&quot; : {
+      &quot;value&quot; : 3,
+      &quot;relation&quot; : &quot;eq&quot;
+    },
+    &quot;max_score&quot; : 0.16786805,
+    &quot;hits&quot; : [
+      {
+        &quot;_index&quot; : &quot;news&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_score&quot; : 0.16786805,
+        &quot;_source&quot; : {
+          &quot;content&quot; : &quot;Apple Mac&quot;
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;news&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_score&quot; : 0.16786805,
+        &quot;_source&quot; : {
+          &quot;content&quot; : &quot;Apple iPad&quot;
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;news&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;3&quot;,
+        &quot;_score&quot; : 0.08640266,
+        &quot;_source&quot; : {
+          &quot;content&quot; : &quot;Apple employee like Apple Pie and Apple Juice&quot;
+        }
+      }
+    ]
+  }
+}
+</code></pre>
+<p>   可以把<code>negative_boost</code> 改成 <code>1</code> 对比查看效果。原本来说文档3中 <code>apple</code>出现的频率高，算分高，通过降低相关性，调整了返回结果的算分。</p>
+<h3 id="顶级参数">顶级参数</h3>
+<p>  <code>positive</code>:（必需，查询对象）您希望运行的查询。任何返回的文档必须与此查询匹配。<br>
+  <code>negative</code>:（必需，查询对象）用于降低匹配文档的<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/query-filter-context.html#relevance-scores">相关性得分</a>的查询。<br>
+ 	  如果返回的文档与<code>positive</code>查询和此查询匹配，则 <code>boosting</code>查询将计算文档的最终相关性分数，如下所示：</p>
+<ul>
+<li>从positive查询中获取原始相关性分数。</li>
+<li>将得分乘以该negative_boost值。</li>
+</ul>
+<p>  <code>negative_boost</code>:（必需，浮动）之间的浮点数0和1.0用于降低<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/query-filter-context.html#relevance-scores">相关性得分</a>的匹配的文件 negative的查询。</p>
+<h2 id="constant-score-查询">Constant Score 查询</h2>
+<ul>
+<li>将Query 转成Filter，忽略 TF-IDF计算，避免相关性算分的开销</li>
+<li>Filter 可以有效利用缓存</li>
+</ul>
+<h3 id="请求示例-3">请求示例</h3>
+<pre><code>POST news/_search
+{
+  &quot;query&quot;: {
+    &quot;constant_score&quot;: {
+      &quot;filter&quot;: {
+        &quot;term&quot;: {
+          &quot;content&quot;: &quot;apple&quot;
+        }
+      },
+      &quot;boost&quot;: 1
+    }
+  }
+}
+</code></pre>
+<h3 id="顶级参数-2">顶级参数</h3>
+<p><code>filter</code> :<br>
+    （必需，查询对象）要运行的<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/query-dsl-bool-query.html">筛选查询</a>。任何返回的文档必须与此查询匹配。<br>
+     过滤查询不会计算<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/query-filter-context.html#relevance-scores">相关性分数</a> 。为了加快性能，Elasticsearch会自动缓存经常使用的过滤器查询。</p>
+<p><code>boost</code> :<br>
+      （可选，浮点）浮点数用作匹配查询的每个文档的常量 <a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/query-filter-context.html#relevance-scores">相关性分数</a> filter。默认为1.0。</p>
+<h2 id="disjunction-max-查询">Disjunction Max  查询</h2>
+<ul>
+<li>将任何与任一查询匹配的文档作为结果返回</li>
+<li>采用字段上最匹配的评分最终评分返回</li>
+</ul>
+<h3 id="请求示例-4">请求示例</h3>
+<h4 id="准备测试数据-2">准备测试数据</h4>
+<pre><code>PUT blogs/_bulk
+{&quot;index&quot;:{&quot;_id&quot;:1}}
+{&quot;title&quot;:&quot;Quick  brown rabbits&quot;,&quot;body&quot;:&quot;Brown rabbits are commonly seen.&quot;}
+{&quot;index&quot;:{&quot;_id&quot;:2}}
+{&quot;title&quot;:&quot;Keeping pets healthy&quot;,&quot;body&quot;:&quot;My quick brown fox eats rabbits on a regular basis.&quot;}
+</code></pre>
+<h4 id="使用-bool-查询">使用 bool 查询</h4>
+<p>请求：</p>
+<pre><code>POST blogs/_search
+{
+  &quot;query&quot;: {
+    &quot;bool&quot;: {
+      &quot;should&quot;: [
+        {&quot;match&quot;: {&quot;title&quot;: &quot;Brown fox&quot;}},
+        {&quot;match&quot;: {&quot;body&quot;: &quot;Brown fox&quot;}}
+      ]
+    }
+  }
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;took&quot; : 3,
+  &quot;timed_out&quot; : false,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 1,
+    &quot;successful&quot; : 1,
+    &quot;skipped&quot; : 0,
+    &quot;failed&quot; : 0
+  },
+  &quot;hits&quot; : {
+    &quot;total&quot; : {
+      &quot;value&quot; : 2,
+      &quot;relation&quot; : &quot;eq&quot;
+    },
+    &quot;max_score&quot; : 0.90425634,
+    &quot;hits&quot; : [
+      {
+        &quot;_index&quot; : &quot;blogs&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_score&quot; : 0.90425634,
+        &quot;_source&quot; : {
+          &quot;title&quot; : &quot;Quick  brown rabbits&quot;,
+          &quot;body&quot; : &quot;Brown rabbits are commonly seen.&quot;
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;blogs&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_score&quot; : 0.77041256,
+        &quot;_source&quot; : {
+          &quot;title&quot; : &quot;Keeping pets healthy&quot;,
+          &quot;body&quot; : &quot;My quick brown fox eats rabbits on a regular basis.&quot;
+        }
+      }
+    ]
+  }
+}
+</code></pre>
+<h4 id="使用-dis_max-查询-disjunction-max-query">使用 dis_max 查询 (Disjunction Max Query)</h4>
+<p>请求：</p>
+<pre><code>POST blogs/_search
+{
+  &quot;query&quot;: {
+    &quot;dis_max&quot;: {
+      &quot;queries&quot;: [
+        {&quot;match&quot;: {&quot;title&quot;: &quot;Brown fox&quot;}},
+        {&quot;match&quot;: {&quot;body&quot;: &quot;Brown fox&quot;}}
+      ]
+    }
+  }
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;took&quot; : 5,
+  &quot;timed_out&quot; : false,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 1,
+    &quot;successful&quot; : 1,
+    &quot;skipped&quot; : 0,
+    &quot;failed&quot; : 0
+  },
+  &quot;hits&quot; : {
+    &quot;total&quot; : {
+      &quot;value&quot; : 2,
+      &quot;relation&quot; : &quot;eq&quot;
+    },
+    &quot;max_score&quot; : 0.77041256,
+    &quot;hits&quot; : [
+      {
+        &quot;_index&quot; : &quot;blogs&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_score&quot; : 0.77041256,
+        &quot;_source&quot; : {
+          &quot;title&quot; : &quot;Keeping pets healthy&quot;,
+          &quot;body&quot; : &quot;My quick brown fox eats rabbits on a regular basis.&quot;
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;blogs&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_score&quot; : 0.6931472,
+        &quot;_source&quot; : {
+          &quot;title&quot; : &quot;Quick  brown rabbits&quot;,
+          &quot;body&quot; : &quot;Brown rabbits are commonly seen.&quot;
+        }
+      }
+    ]
+  }
+}
+</code></pre>
+<h3 id="顶级参数-3">顶级参数</h3>
+<p><code>queries</code> :<br>
+    （必需，查询对象数组）包含一个或多个查询子句。返回的文档必须与这些查询中的<strong>一个或多个匹配</strong>。如果文档与多个查询匹配，则Elasticsearch使用最高<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/query-filter-context.html">相关性分数</a>。<br>
+<code>tie_breaker</code> :<br>
+    （可选，浮动）之间的浮动点数目0和1.0用于提高相关分数的匹配多个查询子句文档。默认为0.0。</p>
+<h3 id="tie-breaker-参数调整评分">Tie Breaker 参数调整评分</h3>
+<p>Tier Breaker 是一个介于0-1之间的浮点数。 0代表使用最佳匹配，1代表所有语句同等重要。</p>
+<ul>
+<li>获得最佳匹配语句的评分 <code>_score</code></li>
+<li>将其他匹配语句的评分与 <code>tie_breaker</code> 相乘</li>
+<li>将最高分数添加到相乘的分数中。</li>
+</ul>
+<p> 如果该tie_breaker值大于0.0，则所有匹配子句都计数，但得分最高的子句最多。</p>
+<h2 id="function-score-查询">Function Score 查询</h2>
+<p>...</p>
+<hr>
+<h2 id="参考资料">参考资料</h2>
+<ul>
+<li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/compound-queries.html">Elasticsearch文档:Compound-queries</a></li>
+<li><a href="https://time.geekbang.org/course/intro/197">极客时间:Elasticsearch核心技术与实战</a></li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Elasticsearch Query DSL - 术语查询 ]]></title>
+        <id>http://kingofzihua.github.io/post/elasticsearch-query-dsl-term-level-querie</id>
+        <link href="http://kingofzihua.github.io/post/elasticsearch-query-dsl-term-level-querie">
+        </link>
+        <updated>2019-09-12T06:41:19.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<p>Term Level（术语） 查询操作的是存储在反向索引（倒排索引）中的准确词根，这些查询通常用于结构化数据，如数字、日期和枚举，而不是全文字段，无需进行分析（分词），Term Level查询类似于关系型数据库的（where条件过滤）。</p>
+</blockquote>
+]]></summary>
+        <content type="html"><![CDATA[<blockquote>
+<p>Term Level（术语） 查询操作的是存储在反向索引（倒排索引）中的准确词根，这些查询通常用于结构化数据，如数字、日期和枚举，而不是全文字段，无需进行分析（分词），Term Level查询类似于关系型数据库的（where条件过滤）。</p>
+</blockquote>
+<!-- more -->
+<h2 id="exists-存在-非空查询">Exists (存在) 非空查询</h2>
+<p>  返回在提供的字段中包含null或[]以外的值的文档。</p>
+<h3 id="请求实例">请求实例</h3>
+<pre><code>
+POST /moulds/_search
+{
+  &quot;query&quot;: {
+    &quot;exists&quot;: {
+      &quot;field&quot;: &quot;deleted_at&quot;
+    }
+  }
+}
+</code></pre>
+<h3 id="顶级参数">顶级参数</h3>
+<p>  <code>field</code>: ( 必填 , 字符串 ) 所要搜索的字段名称<br>
+   要返回文档，此字段必须存在且包含除<code>null</code> 或者 <code>[]</code> 以外的的值，这些值可包括：</p>
+<ul>
+<li>空的字符串，例如<code>&quot;&quot;</code> 或 <code>&quot;-&quot;</code></li>
+<li>包含 <code>null</code> 和其他值的数组，例如<code>[null,&quot;foo&quot;]</code></li>
+<li>自定义 <a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/null-value.html">null-value</a> ，在字段映射中定义</li>
+</ul>
+<h3 id="备注">备注</h3>
+<h4 id="查找具有空值的文档">查找具有空值的文档</h4>
+<p>  为了找到只包含文件<code>null</code>值或<code>[]</code>在所提供的字段，使用 <code>must_not</code> 布尔查询与<code>exists</code> 查询</p>
+<pre><code>
+GET moulds/_search
+{
+    &quot;query&quot;: {
+        &quot;bool&quot;: {
+            &quot;must_not&quot;: {
+                &quot;exists&quot;: {
+                    &quot;field&quot;: &quot;deleted_at&quot;
+                }
+            }
+        }
+    }
+}
+</code></pre>
+<h2 id="fuzzy-模糊查询">Fuzzy  模糊查询</h2>
+<p> 返回包含与搜索词类似的词的文档。 由<a href="https://zh.wikipedia.org/wiki/%E8%90%8A%E6%96%87%E6%96%AF%E5%9D%A6%E8%B7%9D%E9%9B%A2">莱文斯坦距离</a>测量。<br>
+ 编辑距离是将一个术语转换为另一个术语所需的单个字符更改的数量。这些变化包括：</p>
+<ul>
+<li>改变一个字符 (<strong>b</strong>ox → <strong>f</strong>ox)</li>
+<li>删除一个字符 (<strong>b</strong>lack → lack)</li>
+<li>插入一个字符 (sic → sic<strong>k</strong>)</li>
+<li>转置两个相邻的字符 (<strong>ac</strong>t → <strong>ca</strong>t)</li>
+</ul>
+<h3 id="请求示例">请求示例</h3>
+<h4 id="简单的例子">简单的例子</h4>
+<pre><code>GET /_search
+{
+    &quot;query&quot;: {
+        &quot;fuzzy&quot;: {
+            &quot;user&quot;: {
+                &quot;value&quot;: &quot;ki&quot;
+            }
+        }
+    }
+}
+</code></pre>
+<h4 id="使用高级参数的例子">使用高级参数的例子</h4>
+<pre><code>GET /_search
+{
+    &quot;query&quot;: {
+        &quot;fuzzy&quot;: {
+            &quot;user&quot;: {
+                &quot;value&quot;: &quot;ki&quot;,
+                &quot;fuzziness&quot;: &quot;AUTO&quot;,
+                &quot;max_expansions&quot;: 50,
+                &quot;prefix_length&quot;: 0,
+                &quot;transpositions&quot;: true,
+                &quot;rewrite&quot;: &quot;constant_score&quot;
+            }
+        }
+    }
+}
+</code></pre>
+<h3 id="顶级参数-2">顶级参数</h3>
+<p>  <code>&lt;field&gt;</code>: ( 必需，对象）要搜索的字段</p>
+<h3 id="field-参数"><code>&lt;field&gt;</code> 参数</h3>
+<ul>
+<li><code>value</code> : （必填，字符串）您希望在提供的术语中找到术语的起始字符<code>&lt;field&gt;</code>。</li>
+<li><code>fuzziness</code>  : ( 可选，字符串）匹配所允许的最大编辑距离。有关 有效值和更多信息，请参见<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/common-options.html#fuzziness">模糊性</a>。</li>
+<li><code>max_expansions</code> : （可选，整数）创建的最大变体数。默认为50。
+<ul>
+<li>避免在<code>max_expansions</code>参数中使用高值，尤其是<code>prefix_length</code>参数值为0。<code>max_expansions</code>由于检查的变化很多，参数中的高值 会导致性能不佳。</li>
+</ul>
+</li>
+<li><code>prefix_length</code> :  （可选，整数）创建扩展时保持不变的起始字符数。默认为0。</li>
+<li><code>transpositions</code> : （可选，布尔值）指示编辑是否包含两个相邻字符的转置（ab→ba）。默认为true。</li>
+<li><code>rewrite</code> :  （可选，字符串）用于重写查询的方法。有关有效值和更多信息，请参阅<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/query-dsl-multi-term-rewrite.html">rewrite参数</a>。</li>
+</ul>
+<h2 id="ids">IDs</h2>
+<p> 根据文档的IDs返回文档。此查询使用存储在<code>_id</code>字段中的文档IDs。</p>
+<h3 id="请求实例-2">请求实例</h3>
+<pre><code>
+GET moulds/_search
+{
+    &quot;query&quot;: {
+        &quot;ids&quot; : {
+            &quot;values&quot; : [&quot;100011&quot;, &quot;100012&quot;, &quot;100&quot;]
+        }
+    }
+}
+</code></pre>
+<h3 id="顶级参数-3">顶级参数</h3>
+<p>  <code>&lt;values&gt;</code>: ( 必填 , 字符串或数组 ) 所要搜索的文档编号</p>
+<h2 id="prefix-前缀查询">Prefix 前缀查询</h2>
+<p>  返回在提供的字段中包含特定前缀的文档。</p>
+<h3 id="请求示例-2">请求示例</h3>
+<pre><code>GET /moulds/_search
+{
+  &quot;query&quot;: {
+    &quot;prefix&quot;: {
+      &quot;name&quot;: {
+        &quot;value&quot;: &quot;美式&quot;
+      }
+    }
+  }
+}
+</code></pre>
+<h3 id="顶级参数-4">顶级参数</h3>
+<p>  <code>&lt;field&gt;</code>: ( 必填 , 字符串 ) 所要搜索的字段名称</p>
+<h3 id="field-参数-2"><code>&lt;field&gt;</code> 参数</h3>
+<ul>
+<li><code>value</code> : （必填，字符串）您希望在提供的术语中找到术语的起始字符<code>&lt;field&gt;</code>。</li>
+<li><code>rewrite</code> : ( 可选，字符串）用于重写查询的方法。有关有效值和更多信息，请参阅<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/query-dsl-multi-term-rewrite.html">rewrite参数</a>。</li>
+</ul>
+<h2 id="range-范围查询">Range 范围查询</h2>
+<p>  查询在所选范围内的文档</p>
+<h3 id="请求示例-3">请求示例</h3>
+<p>搜索<code>价格</code>在 <code>20</code>到<code>30</code>之间的文档</p>
+<pre><code>
+GET moulds/_search
+{
+    &quot;query&quot;: {
+        &quot;range&quot; : {
+            &quot;price&quot;: {
+                &quot;gte&quot; : 20,
+                &quot;lte&quot; : 30,
+                &quot;boost&quot; : 2.0
+            }
+        }
+    }
+}
+</code></pre>
+<h3 id="顶级参数-5">顶级参数</h3>
+<p>  <code>&lt;field&gt;</code>: ( 必填 , 字符串 ) 所要搜索的字段名称</p>
+<h3 id="field-参数-3"><code>&lt;field&gt;</code> 参数</h3>
+<ul>
+<li><code>gt</code> : (可选) 大于</li>
+<li><code>gte</code> : (可选) 大于等于</li>
+<li><code>lt</code>: (可选) 小于</li>
+<li><code>lte</code>: (可选) 小于等于</li>
+<li><code>format</code> : ( 可选 , 字符串 ) 用于转换date查询中的值的日期格式</li>
+<li><code>relation</code> : ( 可选 , 字符串 ) 指示范围查询如何匹配range 字段的值
+<ul>
+<li><strong>INTERSECTS</strong> (默认) : 匹配具有与查询范围相交的范围字段值的文档。</li>
+<li><strong>CONTAINS</strong> : 匹配具有完全包含查询范围的范围字段值的文档。</li>
+<li><strong>WITHIN</strong> : 匹配范围字段值完全在查询范围内的文档。</li>
+</ul>
+</li>
+<li><code>time_zone</code> : ( 可选 ，字符串 ） 用于将查询中的值转换为UTC的<code>date</code></li>
+<li><code>boost</code> : （可选，浮点）用于降低或增加查询的相关性分数的浮点数 。默认为1.0。</li>
+</ul>
+<h3 id="date-math-expressions-日期数学表达式">Date Math Expressions (日期数学表达式)</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">关键字（词）</th>
+<th style="text-align:center">含 义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">now</td>
+<td style="text-align:center">当前时间</td>
+</tr>
+<tr>
+<td style="text-align:center">y</td>
+<td style="text-align:center">年</td>
+</tr>
+<tr>
+<td style="text-align:center">M</td>
+<td style="text-align:center">月</td>
+</tr>
+<tr>
+<td style="text-align:center">w</td>
+<td style="text-align:center">周</td>
+</tr>
+<tr>
+<td style="text-align:center">d</td>
+<td style="text-align:center">天</td>
+</tr>
+<tr>
+<td style="text-align:center">H / h</td>
+<td style="text-align:center">小时</td>
+</tr>
+<tr>
+<td style="text-align:center">m</td>
+<td style="text-align:center">分钟</td>
+</tr>
+<tr>
+<td style="text-align:center">s</td>
+<td style="text-align:center">秒</td>
+</tr>
+</tbody>
+</table>
+<h3 id="备注-2">备注</h3>
+<h4 id="使用range-查询-date-字段">使用<code>range</code> 查询 <code>date</code> 字段</h4>
+<p>  当<code>&lt;field&gt;</code>参数是日期字段数据类型时，可以使用以下参数：<code>gt</code>、<code>gte</code>、<code>lt</code>、<code>lte</code>。</p>
+<p>   例如，下面的搜索返回的文档中，<code>updated_at</code>字段包含从今天到昨天之间的日期。</p>
+<pre><code>
+GET moulds/_search
+{
+    &quot;query&quot;: {
+        &quot;range&quot; : {
+            &quot;updated_at&quot;: {
+                &quot;gte&quot;: &quot;now-1d/d&quot;, // 注意那个 T
+                &quot;lte&quot;: &quot;now/d&quot; 
+            }
+        }
+    }
+}
+</code></pre>
+<h4 id="使用-time_zone-参数的-示例">使用 <code>time_zone</code> 参数的 示例</h4>
+<pre><code>
+GET moulds/_search
+{
+
+    &quot;query&quot;: {
+        &quot;range&quot; : {
+            &quot;updated_at&quot;: {
+                &quot;time_zone&quot;: &quot;+08:00&quot;,  //这个地方是 你存储的数据增加 8小时后和下面的比较，也可以认为是 下面的时间减去上面的8小时
+                &quot;gte&quot;: &quot;2019-09-10T16:43:38&quot;,  // 注意那个 T
+                &quot;lte&quot;: &quot;now&quot;  // 时区参数不影响now值。
+            }
+        }
+    }
+}
+</code></pre>
+<ul>
+<li>表示 <code>date</code> 值使用UTC偏移量<code>+08:00</code>。</li>
+<li>使用UTC偏移量+01:00，Elasticsearch会将此日期转换为 <code>2019-09-10T08:43:38 UTC</code>。</li>
+<li>该 <code>time_zone</code>参数不会影响该<code>now</code>值。</li>
+</ul>
+<h2 id="regexp-正则表达式查询">Regexp 正则表达式查询</h2>
+<p>  返回包含与<a href="https://en.wikipedia.org/wiki/Regular_expression">正则表达式</a>匹配的术语的文档 。</p>
+<p>   正则表达式是一种使用占位符字符匹配数据模式的方法，称为运算符。有关regexp查询支持的运算符列表 ，请参阅<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/regexp-syntax.html">正则表达式语法</a>。</p>
+<h3 id="请求示例-4">请求示例</h3>
+<pre><code>GET /moulds/_search
+{
+    &quot;query&quot;: {
+        &quot;regexp&quot;: {
+            &quot;style&quot;: {
+                &quot;value&quot;: &quot;bo*&quot;,
+                &quot;flags&quot; : &quot;ALL&quot;,
+                &quot;max_determinized_states&quot;: 10000,
+                &quot;rewrite&quot;: &quot;constant_score&quot;
+            }
+        }
+    }
+}
+</code></pre>
+<h3 id="顶级参数-6">顶级参数</h3>
+<p>  <code>&lt;field&gt;</code>: ( 必填 , 对象 ) 你要搜索的字段。</p>
+<h3 id="field-参数-4"><code>&lt;field&gt;</code> 参数</h3>
+<ul>
+<li><code>value</code> : (必需，字符串）您希望在提供的术语中找到的术语的正则表达式 <code>&lt;field&gt;</code>。有关支持的运算符的列表，请参阅<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/regexp-syntax.html">正则表达式语法</a>。</li>
+<li><code>flags</code> : （可选，字符串）为正则表达式启用可选运算符。有关有效值和更多信息，请参阅<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/regexp-syntax.html">正则表达式语法</a>。</li>
+<li><code>max_determinized_states</code> : （可选，整数） 查询所需的最大自动机状态数 。默认是10000。</li>
+<li><code>rewrite</code> : ( 可选，字符串）用于重写查询的方法。有关有效值和更多信息，请参阅<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/query-dsl-multi-term-rewrite.html">rewrite参数</a>。</li>
+</ul>
+<h2 id="term-术语查询">Term  术语查询</h2>
+<p>  返回在提供的字段中包含确切项的文档。<br>
+  可以使用term查询根据精确值（例如价格，产品ID或用户名）查找文档。</p>
+<blockquote>
+<ul>
+<li>避免使用字段term查询<code>text</code>。</li>
+<li>默认情况下，Elasticsearch会更改text字段的值作为<code>analysis</code>的一部分。这可以使得text难以找到字段值的精确匹配。</li>
+<li>要搜索text字段值，请改用<code>match</code>查询。</li>
+</ul>
+</blockquote>
+<h3 id="请求实例-3">请求实例</h3>
+<p>   查询价格是26的文档</p>
+<pre><code>
+GET moulds/_search
+{
+    &quot;query&quot;: {
+        &quot;term&quot;: {
+            &quot;price&quot;: {
+                &quot;value&quot;: &quot;26&quot;
+            }
+        }
+    }
+}
+</code></pre>
+<h3 id="顶级参数-7">顶级参数</h3>
+<p>  <code>&lt;field&gt;</code>: ( 必填 , 对象 ) 你要搜索的字段。</p>
+<h3 id="field-参数-5"><code>&lt;field&gt;</code> 参数</h3>
+<ul>
+<li><code>value</code> :（必填，字符串）您希望在提供的术语中找到的索引词<code>&lt;field&gt;</code>。要返回文档，该索引词必须与字段值完全匹配，包括空格和大小写。</li>
+<li><code>boost</code> : ( 可选，浮点）用于降低或增加查询的相关性分数的浮点数 。默认为1.0。</li>
+</ul>
+<h3 id="备注-3">备注</h3>
+<h3 id="避免使用字段term查询text">避免使用字段<code>term</code>查询<code>text</code></h3>
+<p> 默认情况下，Elasticsearch会text在分析期间更改字段的值。例如，默认 <a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/analysis-standard-analyzer.html">standard analyzer</a> (标准分析器) 更改 text字段值，如下所示：</p>
+<ul>
+<li>删除大多数标点符号</li>
+<li>将剩余内容划分为单个单词，称为<code>tokens</code>(词元)</li>
+<li>切分的单词、词元进行小写</li>
+</ul>
+<p> 为了更好地搜索<code>text</code>字段，<code>match</code>查询还会在执行搜索之前分析您提供的搜索字词。这意味着<code>match</code>查询可以搜索<code>text</code>字段以查找 分析的标记，而不是精确的术语。<br>
+  该 <code>term</code>查询并没有<code>analyze</code>( 分析 )搜索词。该<code>term</code>查询只精确搜索您提供的值。这意味着<code>term</code>查询在搜索<code>text</code>字段时可能返回不同的或无结果。</p>
+<p>   要查看搜索结果中的差异，请尝试以下示例。</p>
+<ul>
+<li>
+<ol>
+<li>使用text名为的字段创建索引full_text</li>
+</ol>
+</li>
+</ul>
+<pre><code>
+PUT my_index
+{
+    &quot;mappings&quot; : {
+        &quot;properties&quot; : {
+            &quot;full_text&quot; : { &quot;type&quot; : &quot;text&quot; }
+        }
+    }
+}
+</code></pre>
+<ul>
+<li>
+<ol start="2">
+<li>往索引中添加一个，值为<code>Quick Brown Foxes!</code>的<code>full_text</code>字段</li>
+</ol>
+</li>
+</ul>
+<pre><code>PUT my_index/_doc/1
+{
+  &quot;full_text&quot;:   &quot;Quick Brown Foxes!&quot;
+}
+</code></pre>
+<ul>
+<li>
+<ol start="3">
+<li>使用<code>term</code>查询<code>Quick Brown Foxes!</code> 在<code>full_text</code>字段中搜索。增加一个<code>pretty</code> 参数以使返回的结果更具可读性。</li>
+</ol>
+</li>
+</ul>
+<pre><code>GET my_index/_search?pretty
+{
+  &quot;query&quot;: {
+    &quot;term&quot;: {
+      &quot;full_text&quot;: &quot;Quick Brown Foxes!&quot;
+    }
+  }
+}
+</code></pre>
+<p>   因为<code>full_text</code> 字段中并不包含<strong>Quick Brown Foxes!</strong> 这个索引词，所以<code>term</code>查询搜索不返回任何结果。</p>
+<ul>
+<li>
+<ol start="4">
+<li>使用match查询Quick Brown Foxes!在full_text 字段中搜索</li>
+</ol>
+</li>
+</ul>
+<pre><code>GET my_index/_search?pretty
+{
+  &quot;query&quot;: {
+    &quot;match&quot;: {
+      &quot;full_text&quot;: &quot;Quick Brown Foxes!&quot;
+    }
+  }
+}
+</code></pre>
+<p>    与 <code>term</code> 搜索不同 <code>match</code> 查询会分析您提供的搜索文本<strong>Quick Brown Foxes!</strong> 然后执行搜索，然后，<code>match</code>查询返回在<code>full_text</code>字段中包含<code>quick</code>、<code>brown</code>或<code>fox</code>索引词的任何文档。<br>
+     下面是对结果中包含索引文档的匹配查询搜索的响应:</p>
+<pre><code>{
+  &quot;took&quot; : 1,
+  &quot;timed_out&quot; : false,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 1,
+    &quot;successful&quot; : 1,
+    &quot;skipped&quot; : 0,
+    &quot;failed&quot; : 0
+  },
+  &quot;hits&quot; : {
+    &quot;total&quot; : {
+      &quot;value&quot; : 1,
+      &quot;relation&quot; : &quot;eq&quot;
+    },
+    &quot;max_score&quot; : 0.8630463,
+    &quot;hits&quot; : [
+      {
+        &quot;_index&quot; : &quot;my_index&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_score&quot; : 0.8630463,
+        &quot;_source&quot; : {
+          &quot;full_text&quot; : &quot;Quick Brown Foxes!&quot;
+        }
+      }
+    ]
+  }
+}
+</code></pre>
+<h2 id="terms-多个术语查询">Terms  多个术语查询</h2>
+<p> 返回在提供的字段中包含一个或多个确切术语的文档。每个<code>term</code>之间的关系是 <code>OR</code>（或者）</p>
+<h3 id="请求示例-5">请求示例</h3>
+<pre><code>
+GET moulds/_search
+{
+    &quot;query&quot;: {
+        &quot;terms&quot;: {
+            &quot;price&quot;:[&quot;26&quot;,&quot;27&quot;]
+        }
+    }
+}
+</code></pre>
+<h3 id="顶级参数-8">顶级参数</h3>
+<p>  <code>&lt;field&gt;</code>: ( 必填 , 对象 ) 你要搜索的字段。<br>
+  <code>boost</code>: ( 可选，浮点 ) 用于降低或增加查询的相关性分数的浮点数 。默认为1.0。</p>
+<h2 id="terms-set-多个术语查询">Terms Set  多个术语查询</h2>
+<p> 返回在提供的字段中包含最少数量的确切术语的文档。<br>
+该terms_set查询相同的terms 查询，但您可以定义返回文档所需的匹配项数。例如：</p>
+<ul>
+<li>有一个字段<code>programming_languages</code>包含已知的编程语言，如<code>c++</code>，<code>java</code>或<code>php</code>为求职者。您可以使用该<code>terms_set</code>查询返回与这些语言中至少两种语言匹配的文档。</li>
+<li>有一个字段<code>permissions</code>包含应用程序的可能用户权限列表。您可以使用该<code>terms_set</code>查询返回与这些权限的子集匹配的文档。</li>
+</ul>
+<h3 id="请求示例-6">请求示例</h3>
+<h4 id="准备测试数据">准备测试数据</h4>
+<ul>
+<li>1、创建索引<code>job-candidates</code>
+<ul>
+<li><code>name</code> : 一个<code>keyword</code>字段。该字段包含求职者的名称。</li>
+<li><code>programming_languages</code> : 一个<code>keyword</code>领域。该字段包含求职者已知的编程语言。</li>
+<li><code>required_matches</code> : 一个数字 long字段。此字段包含返回文档所需的匹配项数。</li>
+</ul>
+</li>
+</ul>
+<pre><code>PUT /job-candidates
+{
+    &quot;mappings&quot;: {
+        &quot;properties&quot;: {
+            &quot;name&quot;: {
+                &quot;type&quot;: &quot;keyword&quot;
+            },
+            &quot;programming_languages&quot;: {
+                &quot;type&quot;: &quot;keyword&quot;
+            },
+            &quot;required_matches&quot;: {
+                &quot;type&quot;: &quot;long&quot;
+            }
+        }
+    }
+}
+</code></pre>
+<ul>
+<li>2、添加一条编号为1文档
+<ul>
+<li><code>name</code>字段设置为<code>Jane Smith</code></li>
+<li><code>programming_languages</code> 字段为 <code>[&quot;c++&quot;,&quot;java&quot;]</code></li>
+<li><code>required_matches</code>字段为 2</li>
+</ul>
+</li>
+</ul>
+<pre><code>PUT /job-candidates/_doc/1?refresh
+{
+    &quot;name&quot;: &quot;Jane Smith&quot;,
+    &quot;programming_languages&quot;: [&quot;c++&quot;, &quot;java&quot;],
+    &quot;required_matches&quot;: 2
+}
+</code></pre>
+<ul>
+<li>3、添加一条编号为2文档
+<ul>
+<li><code>name</code>字段设置为<code>Jason Response</code></li>
+<li><code>programming_languages</code> 字段为 <code>[&quot;php&quot;,&quot;java&quot;]</code></li>
+<li><code>required_matches</code>字段为 1</li>
+</ul>
+</li>
+</ul>
+<pre><code>PUT /job-candidates/_doc/1?refresh
+{
+    &quot;name&quot;: &quot;Jason Response&quot;,
+    &quot;programming_languages&quot;: [&quot;php&quot;, &quot;java&quot;],
+    &quot;required_matches&quot;: 1
+}
+</code></pre>
+<h4 id="测试请求">测试请求</h4>
+<p> 搜索语言为<code>c++</code>,<code>java</code>, <code>php</code>的</p>
+<pre><code>GET /job-candidates/_search
+{
+    &quot;query&quot;: {
+        &quot;terms_set&quot;: {
+            &quot;programming_languages&quot;: {
+                &quot;terms&quot;: [&quot;c++&quot;, &quot;java&quot;, &quot;php&quot;],
+                &quot;minimum_should_match_field&quot;: &quot;required_matches&quot;
+            }
+        }
+    }
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;took&quot; : 2,
+  &quot;timed_out&quot; : false,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 1,
+    &quot;successful&quot; : 1,
+    &quot;skipped&quot; : 0,
+    &quot;failed&quot; : 0
+  },
+  &quot;hits&quot; : {
+    &quot;total&quot; : {
+      &quot;value&quot; : 2,
+      &quot;relation&quot; : &quot;eq&quot;
+    },
+    &quot;max_score&quot; : 1.1005894,
+    &quot;hits&quot; : [
+      {
+        &quot;_index&quot; : &quot;job-candidates&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_score&quot; : 1.1005894,
+        &quot;_source&quot; : {
+          &quot;name&quot; : &quot;Jane Smith&quot;,
+          &quot;programming_languages&quot; : [
+            &quot;c++&quot;,
+            &quot;java&quot;
+          ],
+          &quot;required_matches&quot; : 2
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;job-candidates&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_score&quot; : 1.1005894,
+        &quot;_source&quot; : {
+          &quot;name&quot; : &quot;Jason Response&quot;,
+          &quot;programming_languages&quot; : [
+            &quot;java&quot;,
+            &quot;php&quot;
+          ],
+          &quot;required_matches&quot; : 1
+        }
+      }
+    ]
+  }
+}
+</code></pre>
+<ul>
+<li>第一条数据的匹配的数量是2个，语言<code>c++</code>,<code>java</code>在查询条件中，所以能匹配</li>
+<li>第二条数据匹配数量是1个，就是说，<code>java</code>或者是<code>php</code> 其中一个就可以，满足条件，所以能匹配</li>
+</ul>
+<p> 搜索语言为<code>c++</code>,<code>php</code>的</p>
+<pre><code>GET /job-candidates/_search
+{
+    &quot;query&quot;: {
+        &quot;terms_set&quot;: {
+            &quot;programming_languages&quot;: {
+                &quot;terms&quot;: [&quot;c++&quot;,&quot;php&quot;],
+                &quot;minimum_should_match_field&quot;: &quot;required_matches&quot;
+            }
+        }
+    }
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;took&quot; : 1,
+  &quot;timed_out&quot; : false,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 1,
+    &quot;successful&quot; : 1,
+    &quot;skipped&quot; : 0,
+    &quot;failed&quot; : 0
+  },
+  &quot;hits&quot; : {
+    &quot;total&quot; : {
+      &quot;value&quot; : 1,
+      &quot;relation&quot; : &quot;eq&quot;
+    },
+    &quot;max_score&quot; : 0.8713851,
+    &quot;hits&quot; : [
+      {
+        &quot;_index&quot; : &quot;job-candidates&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_score&quot; : 0.8713851,
+        &quot;_source&quot; : {
+          &quot;name&quot; : &quot;Jason Response&quot;,
+          &quot;programming_languages&quot; : [
+            &quot;java&quot;,
+            &quot;php&quot;
+          ],
+          &quot;required_matches&quot; : 1
+        }
+      }
+    ]
+  }
+}
+</code></pre>
+<ul>
+<li>第一条数据的匹配的数量是2个，只有语言<code>c++</code>在查询条件中，所以不能匹配</li>
+<li>第二条数据匹配数量是1个，就是说，<code>java</code>或者是<code>php</code> 其中一个就可以，满足条件，所以能匹配</li>
+</ul>
+<h3 id="顶级参数-9">顶级参数</h3>
+<p>  <code>&lt;field&gt;</code>: ( 必填 , 对象 ) 你要搜索的字段。</p>
+<h4 id="field-参数-6"><code>&lt;field&gt;</code> 参数</h4>
+<ul>
+<li><code>terms</code> :（必需，字符串数组) 您希望在提供的术语中找到的术语数组 <code>&lt;field&gt;</code>。要返回文档，所需数量的术语必须与字段值完全匹配，包括空格和大小写。</li>
+<li><code>minimum_should_match_field</code> : ( 可选，字符串）<strong>数字</strong> 字段，包含返回文档所需的匹配项数。</li>
+<li><code>minimum_should_match_script</code> : ( 可选，字符串）自定义脚本，包含返回文档所需的匹配项数。</li>
+</ul>
+<h3 id="备注-4">备注</h3>
+<h4 id="如何使用minimum_should_match_script参数编辑">如何使用<code>minimum_should_match_script</code>参数编辑</h4>
+<p>您可以使用<code>minimum_should_match_script</code>脚本定义所需的匹配术语数。如果您需要动态设置所需术语的数量，这非常有用。</p>
+<h4 id="使用编辑的示例查询minimum_should_match_script">使用编辑的示例查询<code>minimum_should_match_script</code></h4>
+<p>以下搜索返回该<code>programming_languages</code>字段至少包含以下两个术语的文档：<br>
+<code>c++</code>、<code>php</code></p>
+<pre><code>GET /job-candidates/_search
+{
+    &quot;query&quot;: {
+        &quot;terms_set&quot;: {
+            &quot;programming_languages&quot;: {
+                &quot;terms&quot;: [&quot;c++&quot;, &quot;php&quot;],
+                &quot;minimum_should_match_script&quot;: {
+                   &quot;source&quot;: &quot;2&quot;
+                },
+                &quot;boost&quot;: 1.0
+            }
+        }
+    }
+}
+</code></pre>
+<p><strong>没有匹配</strong></p>
+<hr>
+<h2 id="参考资料">参考资料</h2>
+<ul>
+<li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/term-level-queries.html">Elasticsearch文档:Term-level-queries</a></li>
+<li><a href="https://time.geekbang.org/course/intro/197">极客时间:Elasticsearch核心技术与实战</a></li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Elasticsearch Mapping (映射)]]></title>
+        <id>http://kingofzihua.github.io/post/elasticsearch-mapping-ying-she</id>
+        <link href="http://kingofzihua.github.io/post/elasticsearch-mapping-ying-she">
+        </link>
+        <updated>2019-09-05T04:56:52.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<p>为了能够将时间域视为时间，数字域视为数字，字符串域视为全文或精确值字符串， Elasticsearch 需要知道每个域中数据的类型。这个信息包含在映射中。</p>
+</blockquote>
+]]></summary>
+        <content type="html"><![CDATA[<blockquote>
+<p>为了能够将时间域视为时间，数字域视为数字，字符串域视为全文或精确值字符串， Elasticsearch 需要知道每个域中数据的类型。这个信息包含在映射中。</p>
+</blockquote>
+ <!-- more -->
+<h2 id="什么是mapping">什么是Mapping</h2>
+<ul>
+<li>Mapping类似数据库中等Schema的定义
+<ul>
+<li>定义索引中字段的名称</li>
+<li>定义字段的数据类型，例如字符串，数字，布尔 。。。</li>
+<li>字段、倒排索引的相关配置，（Analyzed or Not Analyzed，Analyzer）</li>
+</ul>
+</li>
+<li>Mapping会把JSON文档映射成Lucene所需要的扁平格式</li>
+<li>一个Mapping属于一个Type
+<ul>
+<li>每个文档都属于一个Type</li>
+<li>一个Type有一个Mapping定义</li>
+<li>7.0 开始，不需要在Mapping定义中指定Type信息</li>
+</ul>
+</li>
+</ul>
+<h2 id="字段的数据类型">字段的数据类型</h2>
+<h3 id="简单类型">简单类型</h3>
+<ul>
+<li>Text / Keyword</li>
+<li>Date</li>
+<li>Integer /Floating</li>
+<li>Boolean</li>
+<li>IPv4 &amp; IPv6</li>
+</ul>
+<h3 id="复杂类型-对象和嵌套数组">复杂类型 -对象和嵌套数组</h3>
+<ul>
+<li>对象类型 / 嵌套类型</li>
+</ul>
+<h3 id="特殊类型">特殊类型</h3>
+<ul>
+<li>geo_point &amp; geo_shape / percolator</li>
+</ul>
+<h2 id="什么是-dynamic-mapping-动态映射">什么是 Dynamic Mapping （动态映射）</h2>
+<ul>
+<li>在写入文档的时候，如果索引不存在，会自动创建索引</li>
+<li>Dynameic Mapping 的机制，使得我们无需手动定义Mappings。Elasticsearch会自动根据文档信息，推算出字段的类型</li>
+<li>但有时候会推算的不对，例如地理位置信息</li>
+<li>当类型如果设置不对时，会导致一些功能无法正常运行，例如 Range查询</li>
+</ul>
+<h3 id="类型的自动识别">类型的自动识别</h3>
+<table>
+<thead>
+<tr>
+<th>JSON类型</th>
+<th>Elasticsearch</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>字符串</td>
+<td>●  匹配日期格式，设置成Date<br> ●配置数字设置为float或者long，该选项默认关闭<br>● 设置为Text，并增加keyword子字段</td>
+</tr>
+<tr>
+<td>布尔值</td>
+<td>boolean</td>
+</tr>
+<tr>
+<td>浮点数</td>
+<td>float</td>
+</tr>
+<tr>
+<td>整数</td>
+<td>long</td>
+</tr>
+<tr>
+<td>对象</td>
+<td>Object</td>
+</tr>
+<tr>
+<td>数组</td>
+<td>由第一个非空数值的类型所决定</td>
+</tr>
+<tr>
+<td>空值</td>
+<td>忽略</td>
+</tr>
+</tbody>
+</table>
+<h3 id="能否更改-mapping-的字段类型">能否更改 Mapping 的字段类型</h3>
+<h4 id="新增加字段">新增加字段</h4>
+<ul>
+<li>Dynameic 设为<code>true</code>时，一旦有新增字段的文档写入,Mapping也同时被更新</li>
+<li>Dyname 设置为<code>false</code>时，Mapping不会被更新，新增字段的数据无法被索引，但是信息会出现在<code>_source</code>中</li>
+<li>Dynameic 设置成Strice，文档写入失败</li>
+</ul>
+<h4 id="已有字段类型">已有字段类型</h4>
+<p>一旦有数据写入，就不再支持修改字段定义</p>
+<ul>
+<li>Lucene 实现的倒排索引，一旦生成后，就不允许修改</li>
+</ul>
+<h4 id="修改-mapping的字段类型">修改 Mapping的字段类型</h4>
+<p><strong>如果希望改变字段类型，必须Reindex API，重建索引</strong><br>
+原因 :</p>
+<ul>
+<li>如果修改了字段的数据类型，会导致一杯索引的属于无法被搜索</li>
+<li>但是如果是增加新的字段，就不会有这样的影响</li>
+</ul>
+<h3 id="控制-dynameic-mappings">控制 Dynameic Mappings</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>true</th>
+<th>false</th>
+<th>strict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>文档可索引</td>
+<td>yes</td>
+<td>yes</td>
+<td>no</td>
+</tr>
+<tr>
+<td>字段可索引</td>
+<td>yes</td>
+<td>no</td>
+<td>no</td>
+</tr>
+<tr>
+<td>Mapping 被更新</td>
+<td>yes</td>
+<td>no</td>
+<td>no</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>当 Dynameic 被设置成false时候，存在新增字段的数据写入，该数据可以被索引，但是新增字段被丢弃</li>
+<li>当设置成Strict模式的时候，数据写入直接出错</li>
+</ul>
+<h2 id="如何显式定义一个mapping">如何显式定义一个Mapping</h2>
+<pre><code>PUT movies
+{
+  &quot;mappings&quot;: {
+    //define your mappings here
+  }
+}
+</code></pre>
+<h3 id="自定义-mapping-的一些建议">自定义 Mapping 的一些建议</h3>
+<ul>
+<li>可以参考API 手册，纯手写</li>
+<li>为了减少输入的工作量，减少出错概率，可以依照一下步骤
+<ul>
+<li>创建一个临时的index,写入一些样本数据</li>
+<li>通过访问 Mapping API 获得该临时文件的动态 Mapping 定义</li>
+<li>修改后用，使用该配置创建你的索引</li>
+<li>删除临时索引</li>
+</ul>
+</li>
+</ul>
+<h3 id="控制当前字段是否被索引">控制当前字段是否被索引</h3>
+<ul>
+<li>Index - 控制当前字段是否被索引。默认为true。如果设置成false，该字段不可被搜索
+<ul>
+<li>可以减少倒排索引的开销，不会创建索引！</li>
+</ul>
+</li>
+</ul>
+<h3 id="index-options">Index Options</h3>
+<ul>
+<li>四种不同级别的 Index Options 配置 ，可以控制倒排索引记录的内容
+<ul>
+<li>docs -记录 doc id</li>
+<li>freqs - 记录 doc id 和 term frequencies</li>
+<li>positions - 记录doc id / term frequencies / term position</li>
+<li>offsets - doc id / term frequencies / term position / character offects</li>
+</ul>
+</li>
+<li>Text 类型默认记录Postions ，其他默认为docs</li>
+<li>记录内容越多，占用存储空间越大</li>
+</ul>
+<h3 id="null_value">null_value</h3>
+<ul>
+<li>需要对 Null 值实现搜索</li>
+<li>只有keyword 类型支持设定 Null_Value</li>
+</ul>
+<h3 id="copy_to-设置">copy_to 设置</h3>
+<ul>
+<li>_all 在7 中被copy_to所替代</li>
+<li>满足一些特定对搜索要求</li>
+<li>copy_to 将字段对数值拷贝到目标字段，实现类似_all的作用</li>
+<li>copy_to 的目标字段不出现在_source 中</li>
+</ul>
+<h3 id="数组类型">数组类型</h3>
+<ul>
+<li>Elasticsearch 中不提供专门的数组类型。但是任何字段，都可以包含多个相同类型的数值</li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Elasticsearch Analyzer (分词器)]]></title>
+        <id>http://kingofzihua.github.io/post/elasticsearch-analyzer-fen-ci-qi</id>
+        <link href="http://kingofzihua.github.io/post/elasticsearch-analyzer-fen-ci-qi">
+        </link>
+        <updated>2019-09-04T02:55:57.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<p>在Elasticsearch中，索引分析模块是可以通过注册分词器（analyzer）来进行配置。分词器的作用是当一个文档被索引的时候分词器从文档中提取出若干词元(token)来支持索引的存储和搜索。</p>
+</blockquote>
+]]></summary>
+        <content type="html"><![CDATA[<blockquote>
+<p>在Elasticsearch中，索引分析模块是可以通过注册分词器（analyzer）来进行配置。分词器的作用是当一个文档被索引的时候分词器从文档中提取出若干词元(token)来支持索引的存储和搜索。</p>
+</blockquote>
+<!-- more -->
+<h2 id="analysis-与analyzer">Analysis 与Analyzer</h2>
+<ul>
+<li>Analysis -文本分析是把全文本转换为一系列索引词（<code>term</code>）/词元（ <code>token</code>）的过程，也叫分词</li>
+<li>Analysis 是通过Analyer 来实现的
+<ul>
+<li>可使用 Elasticsearch 内置的分析器/ 或者按需定制化分析器</li>
+</ul>
+</li>
+<li>除了在数据写入时转换词条，匹配Query语句时候也需要用相同的分析器对查询语句进行分析</li>
+<li></li>
+</ul>
+<h2 id="analyzer-分词器的组成">Analyzer （分词器）的组成</h2>
+<blockquote>
+<p>分词器是专门处理分词的组件，分词器(analyzer)是由字符过滤器（Character Filters）、一个分解器(tokenizer)、零个或多个词元过滤器(token filters)组成。</p>
+</blockquote>
+<figure data-type="image" tabindex="1"><img src="http://kingofzihua.github.io/post-images/1567573386582.jpg" alt="" loading="lazy"></figure>
+<h3 id="character-filters-字符过滤器">Character Filters （字符过滤器）</h3>
+<pre><code>在分解器（Tokenizer）之前对文本进行预处理。处理的算法称谓字符过滤器（Character Filters）	
+</code></pre>
+<p>一个分解器（Tokenizer）会有一个或多个字符过滤器（Character Filters）。针对原始文本处理。会影响分解器（Tokenizer）的position和offset信息。</p>
+<h4 id="elasticsearch-自带的-character-filters">Elasticsearch 自带的 Character Filters</h4>
+<ul>
+<li>HTML strip - 去除html标签</li>
+<li>Mapping - 字符串替换</li>
+<li>Pattern replace - 正则匹配替换</li>
+</ul>
+<h4 id="例子">例子</h4>
+<h5 id="将文本中的-中划线-替换成-下划线-_">将文本中的 中划线[ - ] 替换成 下划线 [ _ ]</h5>
+<pre><code>GET _analyze
+{
+  &quot;char_filter&quot;: [
+      {
+        &quot;type&quot;:&quot;mapping&quot;,
+        &quot;mappings&quot;:[&quot;- =&gt; _&quot;]
+      }
+    ],
+  &quot;text&quot;: &quot;123-456&quot;
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;tokens&quot; : [
+    {
+      &quot;token&quot; : &quot;123_456&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 8,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    }
+  ]
+}
+</code></pre>
+<h5 id="替换表情符号">替换表情符号</h5>
+<pre><code>GET _analyze
+{
+  &quot;char_filter&quot;: [
+      {
+        &quot;type&quot;:&quot;mapping&quot;,
+        &quot;mappings&quot;:[&quot;:) =&gt; happy&quot;,&quot;:( =&gt; sad&quot;]
+      }
+    ],
+  &quot;text&quot;: [&quot;I am felling :)&quot;,&quot;Feeling :( today&quot;]
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;tokens&quot; : [
+    {
+      &quot;token&quot; : &quot;I am felling happy&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 15,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    },
+    {
+      &quot;token&quot; : &quot;Feeling sad today&quot;,
+      &quot;start_offset&quot; : 16,
+      &quot;end_offset&quot; : 32,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 1
+    }
+  ]
+}
+</code></pre>
+<h5 id="正则表达式">正则表达式</h5>
+<pre><code>GET _analyze
+{
+  &quot;char_filter&quot;: [
+      {
+        &quot;type&quot;:&quot;pattern_replace&quot;,
+        &quot;pattern&quot;:&quot;http://(.*)&quot;,
+        &quot;replacement&quot;:&quot;$1&quot;
+      }
+    ],
+  &quot;text&quot;: &quot;http://www.elastic.co&quot;
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;tokens&quot; : [
+    {
+      &quot;token&quot; : &quot;www.elastic.co&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 21,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    }
+  ]
+}
+</code></pre>
+<h3 id="tokenizer分解器">tokenizer（分解器）</h3>
+<pre><code>按照规则切分为单词，把字符串分解成一系列词元。
+</code></pre>
+<p>一个简单的分解器是把一个橘子当遇到空格或标点符号时，分解成一个个的索引词。</p>
+<h4 id="elasticsearch-内置的-tokenizers">Elasticsearch 内置的 Tokenizers</h4>
+<ul>
+<li>whitespace</li>
+<li>standard</li>
+<li>uax_url_email</li>
+<li>pattern</li>
+<li>keyword</li>
+<li>path hierarchy 文件路径</li>
+</ul>
+<p><strong>可以用 Java 开发插件，实现自己的Tokenizer</strong></p>
+<h4 id="例子-2">例子</h4>
+<h5 id="path_hierarchy">path_hierarchy</h5>
+<pre><code>GET _analyze
+{
+  &quot;tokenizer&quot;: &quot;path_hierarchy&quot;,
+  &quot;text&quot;: &quot;/usr/local/bin&quot;
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;tokens&quot; : [
+    {
+      &quot;token&quot; : &quot;/usr&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 4,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    },
+    {
+      &quot;token&quot; : &quot;/usr/local&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 10,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    },
+    {
+      &quot;token&quot; : &quot;/usr/local/bin&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 14,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    }
+  ]
+}
+</code></pre>
+<h3 id="token-filters-词元过滤器">token filters  (词元过滤器)</h3>
+<pre><code>对分词器提取出来的单词、词元做进一步的处理。
+</code></pre>
+<p>将切分的单词进行加工，例如：小写，删除 stopwords，增加同义词</p>
+<h4 id="elasticsearch-自带的token-filters">Elasticsearch 自带的token filters</h4>
+<ul>
+<li>lowercase (小写处理)</li>
+<li>stop （删除修饰性词语）</li>
+<li>synonym（添加近义词）</li>
+</ul>
+<h4 id="例子-3">例子</h4>
+<h5 id="stop">stop</h5>
+<p><strong>不能只使用 filter，所以我们用都使用whitespace tokenizer 来做个对比</strong></p>
+<ul>
+<li>不使用 stop filter</li>
+</ul>
+<pre><code>GET _analyze
+{
+  &quot;tokenizer&quot;: &quot;whitespace&quot;, 
+  &quot;text&quot;: &quot;The rain in Spain falls mainly on the plain.&quot;
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;tokens&quot; : [
+    {
+      &quot;token&quot; : &quot;The&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 3,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    },
+    {
+      &quot;token&quot; : &quot;rain&quot;,
+      &quot;start_offset&quot; : 4,
+      &quot;end_offset&quot; : 8,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 1
+    },
+    {
+      &quot;token&quot; : &quot;in&quot;,
+      &quot;start_offset&quot; : 9,
+      &quot;end_offset&quot; : 11,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 2
+    },
+    {
+      &quot;token&quot; : &quot;Spain&quot;,
+      &quot;start_offset&quot; : 12,
+      &quot;end_offset&quot; : 17,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 3
+    },
+    {
+      &quot;token&quot; : &quot;falls&quot;,
+      &quot;start_offset&quot; : 18,
+      &quot;end_offset&quot; : 23,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 4
+    },
+    {
+      &quot;token&quot; : &quot;mainly&quot;,
+      &quot;start_offset&quot; : 24,
+      &quot;end_offset&quot; : 30,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 5
+    },
+    {
+      &quot;token&quot; : &quot;on&quot;,
+      &quot;start_offset&quot; : 31,
+      &quot;end_offset&quot; : 33,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 6
+    },
+    {
+      &quot;token&quot; : &quot;the&quot;,
+      &quot;start_offset&quot; : 34,
+      &quot;end_offset&quot; : 37,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 7
+    },
+    {
+      &quot;token&quot; : &quot;plain.&quot;,
+      &quot;start_offset&quot; : 38,
+      &quot;end_offset&quot; : 44,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 8
+    }
+  ]
+}
+</code></pre>
+<ul>
+<li>使用 stop filter</li>
+</ul>
+<pre><code>GET _analyze
+{
+  &quot;tokenizer&quot;: &quot;whitespace&quot;, 
+  &quot;filter&quot;: [&quot;stop&quot;],
+  &quot;text&quot;: &quot;The rain in Spain falls mainly on the plain.&quot;
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;tokens&quot; : [
+    {
+      &quot;token&quot; : &quot;The&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 3,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    },
+    {
+      &quot;token&quot; : &quot;rain&quot;,
+      &quot;start_offset&quot; : 4,
+      &quot;end_offset&quot; : 8,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 1
+    },
+    {
+      &quot;token&quot; : &quot;Spain&quot;,
+      &quot;start_offset&quot; : 12,
+      &quot;end_offset&quot; : 17,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 3
+    },
+    {
+      &quot;token&quot; : &quot;falls&quot;,
+      &quot;start_offset&quot; : 18,
+      &quot;end_offset&quot; : 23,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 4
+    },
+    {
+      &quot;token&quot; : &quot;mainly&quot;,
+      &quot;start_offset&quot; : 24,
+      &quot;end_offset&quot; : 30,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 5
+    },
+    {
+      &quot;token&quot; : &quot;plain.&quot;,
+      &quot;start_offset&quot; : 38,
+      &quot;end_offset&quot; : 44,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 8
+    }
+  ]
+}
+
+</code></pre>
+<h2 id="使用-_analyzer-api">使用 _analyzer API</h2>
+<h3 id="直接指定analyzer-进行测试">直接指定Analyzer 进行测试</h3>
+<pre><code>GET /_analyze
+{
+  &quot;analyzer&quot;: &quot;standard&quot;,
+  &quot;text&quot;: &quot;2 running Quick brown-foxes leap over lazy dogs in the summer evening.&quot;
+}
+</code></pre>
+<h3 id="指定索引的字段进行测试">指定索引的字段进行测试</h3>
+<pre><code>POST books/_analyze
+{
+  &quot;field&quot;: &quot;title&quot;,
+  &quot;text&quot;: &quot;Mastering Elasticsearch&quot;
+}
+</code></pre>
+<h3 id="自定义分词器进行测试">自定义分词器进行测试</h3>
+<pre><code>POST /_analyze
+{
+  &quot;tokenizer&quot;: &quot;standard&quot;,
+  &quot;filter&quot;: [&quot;lowercase&quot;],
+  &quot;text&quot;: &quot;Mastering Elasticsearch&quot;
+}
+</code></pre>
+<h2 id="elasticsearch的内置分词器">Elasticsearch的内置分词器</h2>
+<h3 id="standard-analyzer">Standard Analyzer</h3>
+<ul>
+<li>elasticsearch 默认的分词器</li>
+<li>按词切分</li>
+<li>小写处理</li>
+</ul>
+<figure data-type="image" tabindex="2"><img src="http://kingofzihua.github.io/post-images/1567574028769.jpg" alt="" loading="lazy"></figure>
+<pre><code>GET _analyze
+{
+ &quot;analyzer&quot;: &quot;standard&quot;,
+ &quot;text&quot;: &quot;2 running Quick brown-foxes leap over lazy dogs in the summer evening.&quot;
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;tokens&quot; : [
+    {
+      &quot;token&quot; : &quot;2&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 1,
+      &quot;type&quot; : &quot;&lt;NUM&gt;&quot;,
+      &quot;position&quot; : 0
+    },
+    {
+      &quot;token&quot; : &quot;running&quot;,
+      &quot;start_offset&quot; : 2,
+      &quot;end_offset&quot; : 9,
+      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,
+      &quot;position&quot; : 1
+    },
+    {
+      &quot;token&quot; : &quot;quick&quot;,
+      &quot;start_offset&quot; : 10,
+      &quot;end_offset&quot; : 15,
+      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,
+      &quot;position&quot; : 2
+    },
+    {
+      &quot;token&quot; : &quot;brown&quot;,
+      &quot;start_offset&quot; : 16,
+      &quot;end_offset&quot; : 21,
+      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,
+      &quot;position&quot; : 3
+    },
+    {
+      &quot;token&quot; : &quot;foxes&quot;,
+      &quot;start_offset&quot; : 22,
+      &quot;end_offset&quot; : 27,
+      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,
+      &quot;position&quot; : 4
+    },
+    {
+      &quot;token&quot; : &quot;leap&quot;,
+      &quot;start_offset&quot; : 28,
+      &quot;end_offset&quot; : 32,
+      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,
+      &quot;position&quot; : 5
+    },
+    {
+      &quot;token&quot; : &quot;over&quot;,
+      &quot;start_offset&quot; : 33,
+      &quot;end_offset&quot; : 37,
+      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,
+      &quot;position&quot; : 6
+    },
+    {
+      &quot;token&quot; : &quot;lazy&quot;,
+      &quot;start_offset&quot; : 38,
+      &quot;end_offset&quot; : 42,
+      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,
+      &quot;position&quot; : 7
+    },
+    {
+      &quot;token&quot; : &quot;dogs&quot;,
+      &quot;start_offset&quot; : 43,
+      &quot;end_offset&quot; : 47,
+      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,
+      &quot;position&quot; : 8
+    },
+    {
+      &quot;token&quot; : &quot;in&quot;,
+      &quot;start_offset&quot; : 48,
+      &quot;end_offset&quot; : 50,
+      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,
+      &quot;position&quot; : 9
+    },
+    {
+      &quot;token&quot; : &quot;the&quot;,
+      &quot;start_offset&quot; : 51,
+      &quot;end_offset&quot; : 54,
+      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,
+      &quot;position&quot; : 10
+    },
+    {
+      &quot;token&quot; : &quot;summer&quot;,
+      &quot;start_offset&quot; : 55,
+      &quot;end_offset&quot; : 61,
+      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,
+      &quot;position&quot; : 11
+    },
+    {
+      &quot;token&quot; : &quot;evening&quot;,
+      &quot;start_offset&quot; : 62,
+      &quot;end_offset&quot; : 69,
+      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,
+      &quot;position&quot; : 12
+    }
+  ]
+}
+</code></pre>
+<h3 id="simple-analyzer">Simple Analyzer</h3>
+<ul>
+<li>按照非字母切分，非字母对都被去除</li>
+<li>小写处理</li>
+</ul>
+<figure data-type="image" tabindex="3"><img src="http://kingofzihua.github.io/post-images/1567574087251.jpg" alt="" loading="lazy"></figure>
+<pre><code>GET _analyze
+  {
+    &quot;analyzer&quot;: &quot;simple&quot;,
+    &quot;text&quot;: &quot;2 running Quick brown-foxes leap over lazy dogs in the summer evening.&quot;
+  }
+</code></pre>
+<p>返回结果：</p>
+<pre><code>	{
+  &quot;tokens&quot; : [
+    {
+      &quot;token&quot; : &quot;running&quot;,
+      &quot;start_offset&quot; : 2,
+      &quot;end_offset&quot; : 9,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    },
+    {
+      &quot;token&quot; : &quot;quick&quot;,
+      &quot;start_offset&quot; : 10,
+      &quot;end_offset&quot; : 15,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 1
+    },
+    {
+      &quot;token&quot; : &quot;brown&quot;,
+      &quot;start_offset&quot; : 16,
+      &quot;end_offset&quot; : 21,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 2
+    },
+    {
+      &quot;token&quot; : &quot;foxes&quot;,
+      &quot;start_offset&quot; : 22,
+      &quot;end_offset&quot; : 27,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 3
+    },
+    {
+      &quot;token&quot; : &quot;leap&quot;,
+      &quot;start_offset&quot; : 28,
+      &quot;end_offset&quot; : 32,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 4
+    },
+    {
+      &quot;token&quot; : &quot;over&quot;,
+      &quot;start_offset&quot; : 33,
+      &quot;end_offset&quot; : 37,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 5
+    },
+    {
+      &quot;token&quot; : &quot;lazy&quot;,
+      &quot;start_offset&quot; : 38,
+      &quot;end_offset&quot; : 42,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 6
+    },
+    {
+      &quot;token&quot; : &quot;dogs&quot;,
+      &quot;start_offset&quot; : 43,
+      &quot;end_offset&quot; : 47,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 7
+    },
+    {
+      &quot;token&quot; : &quot;in&quot;,
+      &quot;start_offset&quot; : 48,
+      &quot;end_offset&quot; : 50,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 8
+    },
+    {
+      &quot;token&quot; : &quot;the&quot;,
+      &quot;start_offset&quot; : 51,
+      &quot;end_offset&quot; : 54,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 9
+    },
+    {
+      &quot;token&quot; : &quot;summer&quot;,
+      &quot;start_offset&quot; : 55,
+      &quot;end_offset&quot; : 61,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 10
+    },
+    {
+      &quot;token&quot; : &quot;evening&quot;,
+      &quot;start_offset&quot; : 62,
+      &quot;end_offset&quot; : 69,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 11
+    }
+  ]
+}
+</code></pre>
+<h3 id="whitespace-analyzer">Whitespace Analyzer</h3>
+<ul>
+<li>按照空格切分</li>
+</ul>
+<figure data-type="image" tabindex="4"><img src="http://kingofzihua.github.io/post-images/1567574121683.jpg" alt="" loading="lazy"></figure>
+<pre><code>GET _analyze
+{
+  &quot;analyzer&quot;: &quot;whitespace&quot;,
+  &quot;text&quot;: &quot;2 running Quick brown-foxes leap over lazy dogs in the summer evening.&quot;
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;tokens&quot; : [
+    {
+      &quot;token&quot; : &quot;2&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 1,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    },
+    {
+      &quot;token&quot; : &quot;running&quot;,
+      &quot;start_offset&quot; : 2,
+      &quot;end_offset&quot; : 9,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 1
+    },
+    {
+      &quot;token&quot; : &quot;Quick&quot;,
+      &quot;start_offset&quot; : 10,
+      &quot;end_offset&quot; : 15,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 2
+    },
+    {
+      &quot;token&quot; : &quot;brown-foxes&quot;,
+      &quot;start_offset&quot; : 16,
+      &quot;end_offset&quot; : 27,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 3
+    },
+    {
+      &quot;token&quot; : &quot;leap&quot;,
+      &quot;start_offset&quot; : 28,
+      &quot;end_offset&quot; : 32,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 4
+    },
+    {
+      &quot;token&quot; : &quot;over&quot;,
+      &quot;start_offset&quot; : 33,
+      &quot;end_offset&quot; : 37,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 5
+    },
+    {
+      &quot;token&quot; : &quot;lazy&quot;,
+      &quot;start_offset&quot; : 38,
+      &quot;end_offset&quot; : 42,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 6
+    },
+    {
+      &quot;token&quot; : &quot;dogs&quot;,
+      &quot;start_offset&quot; : 43,
+      &quot;end_offset&quot; : 47,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 7
+    },
+    {
+      &quot;token&quot; : &quot;in&quot;,
+      &quot;start_offset&quot; : 48,
+      &quot;end_offset&quot; : 50,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 8
+    },
+    {
+      &quot;token&quot; : &quot;the&quot;,
+      &quot;start_offset&quot; : 51,
+      &quot;end_offset&quot; : 54,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 9
+    },
+    {
+      &quot;token&quot; : &quot;summer&quot;,
+      &quot;start_offset&quot; : 55,
+      &quot;end_offset&quot; : 61,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 10
+    },
+    {
+      &quot;token&quot; : &quot;evening.&quot;,
+      &quot;start_offset&quot; : 62,
+      &quot;end_offset&quot; : 70,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 11
+    }
+  ]
+}
+</code></pre>
+<h3 id="stop-analyzer">Stop Analyzer</h3>
+<ul>
+<li>相比 Simple Analyzer 多了stop filter
+<ul>
+<li>会把 <code>the</code>， <code>a</code>，<code>is</code> 等修饰性词语去除</li>
+</ul>
+</li>
+</ul>
+<figure data-type="image" tabindex="5"><img src="http://kingofzihua.github.io/post-images/1567574149862.png" alt="" loading="lazy"></figure>
+<pre><code>GET _analyze
+{
+  &quot;analyzer&quot;: &quot;stop&quot;,
+  &quot;text&quot;: &quot;2 running Quick brown-foxes leap over lazy dogs in the summer evening.&quot;
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;tokens&quot; : [
+    {
+      &quot;token&quot; : &quot;running&quot;,
+      &quot;start_offset&quot; : 2,
+      &quot;end_offset&quot; : 9,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    },
+    {
+      &quot;token&quot; : &quot;quick&quot;,
+      &quot;start_offset&quot; : 10,
+      &quot;end_offset&quot; : 15,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 1
+    },
+    {
+      &quot;token&quot; : &quot;brown&quot;,
+      &quot;start_offset&quot; : 16,
+      &quot;end_offset&quot; : 21,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 2
+    },
+    {
+      &quot;token&quot; : &quot;foxes&quot;,
+      &quot;start_offset&quot; : 22,
+      &quot;end_offset&quot; : 27,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 3
+    },
+    {
+      &quot;token&quot; : &quot;leap&quot;,
+      &quot;start_offset&quot; : 28,
+      &quot;end_offset&quot; : 32,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 4
+    },
+    {
+      &quot;token&quot; : &quot;over&quot;,
+      &quot;start_offset&quot; : 33,
+      &quot;end_offset&quot; : 37,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 5
+    },
+    {
+      &quot;token&quot; : &quot;lazy&quot;,
+      &quot;start_offset&quot; : 38,
+      &quot;end_offset&quot; : 42,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 6
+    },
+    {
+      &quot;token&quot; : &quot;dogs&quot;,
+      &quot;start_offset&quot; : 43,
+      &quot;end_offset&quot; : 47,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 7
+    },
+    {
+      &quot;token&quot; : &quot;summer&quot;,
+      &quot;start_offset&quot; : 55,
+      &quot;end_offset&quot; : 61,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 10
+    },
+    {
+      &quot;token&quot; : &quot;evening&quot;,
+      &quot;start_offset&quot; : 62,
+      &quot;end_offset&quot; : 69,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 11
+    }
+  ]
+}
+</code></pre>
+<h3 id="keyword-analyzer">Keyword Analyzer</h3>
+<ul>
+<li>不分词，直接将输入当一个<code>term</code>输出</li>
+</ul>
+<figure data-type="image" tabindex="6"><img src="http://kingofzihua.github.io/post-images/1567574187183.jpg" alt="" loading="lazy"></figure>
+<pre><code>GET _analyze
+{
+  &quot;analyzer&quot;: &quot;keyword&quot;,
+  &quot;text&quot;: &quot;2 running Quick brown-foxes leap over lazy dogs in the summer evening.&quot;
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;tokens&quot; : [
+    {
+      &quot;token&quot; : &quot;2 running Quick brown-foxes leap over lazy dogs in the summer evening.&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 70,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    }
+  ]
+}
+</code></pre>
+<p><em>没有做任何的处理，直接把结果按一个<code>term</code>输出了</em></p>
+<h3 id="pattern-analyzer">Pattern Analyzer</h3>
+<figure data-type="image" tabindex="7"><img src="http://kingofzihua.github.io/post-images/1567571888516.jpg" alt="" loading="lazy"></figure>
+<ul>
+<li>通过正则表达式进行分词</li>
+<li>默认是\W+，非字符的符号进行分隔</li>
+</ul>
+<pre><code>GET _analyze
+{
+  &quot;analyzer&quot;: &quot;pattern&quot;,
+  &quot;text&quot;: &quot;2 running Quick brown-foxes leap over lazy dogs in the summer evening.&quot;
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;tokens&quot; : [
+    {
+      &quot;token&quot; : &quot;2&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 1,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    },
+    {
+      &quot;token&quot; : &quot;running&quot;,
+      &quot;start_offset&quot; : 2,
+      &quot;end_offset&quot; : 9,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 1
+    },
+    {
+      &quot;token&quot; : &quot;quick&quot;,
+      &quot;start_offset&quot; : 10,
+      &quot;end_offset&quot; : 15,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 2
+    },
+    {
+      &quot;token&quot; : &quot;brown&quot;,
+      &quot;start_offset&quot; : 16,
+      &quot;end_offset&quot; : 21,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 3
+    },
+    {
+      &quot;token&quot; : &quot;foxes&quot;,
+      &quot;start_offset&quot; : 22,
+      &quot;end_offset&quot; : 27,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 4
+    },
+    {
+      &quot;token&quot; : &quot;leap&quot;,
+      &quot;start_offset&quot; : 28,
+      &quot;end_offset&quot; : 32,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 5
+    },
+    {
+      &quot;token&quot; : &quot;over&quot;,
+      &quot;start_offset&quot; : 33,
+      &quot;end_offset&quot; : 37,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 6
+    },
+    {
+      &quot;token&quot; : &quot;lazy&quot;,
+      &quot;start_offset&quot; : 38,
+      &quot;end_offset&quot; : 42,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 7
+    },
+    {
+      &quot;token&quot; : &quot;dogs&quot;,
+      &quot;start_offset&quot; : 43,
+      &quot;end_offset&quot; : 47,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 8
+    },
+    {
+      &quot;token&quot; : &quot;in&quot;,
+      &quot;start_offset&quot; : 48,
+      &quot;end_offset&quot; : 50,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 9
+    },
+    {
+      &quot;token&quot; : &quot;the&quot;,
+      &quot;start_offset&quot; : 51,
+      &quot;end_offset&quot; : 54,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 10
+    },
+    {
+      &quot;token&quot; : &quot;summer&quot;,
+      &quot;start_offset&quot; : 55,
+      &quot;end_offset&quot; : 61,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 11
+    },
+    {
+      &quot;token&quot; : &quot;evening&quot;,
+      &quot;start_offset&quot; : 62,
+      &quot;end_offset&quot; : 69,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 12
+    }
+  ]
+}
+</code></pre>
+<h3 id="language-提供了30多种常见语言的分词器">Language - 提供了30多种常见语言的分词器</h3>
+<p>针对不同的语言. 支持以下类型:</p>
+<ul>
+<li>arabic</li>
+<li>armenian</li>
+<li>basque</li>
+<li>bengali</li>
+<li>brazilian</li>
+<li>bulgarian</li>
+<li>catalan</li>
+<li>cjk</li>
+<li>czech</li>
+<li>danish</li>
+<li>dutch</li>
+<li>english</li>
+<li>finnish</li>
+<li>french</li>
+<li>galician</li>
+<li>german</li>
+<li>greek</li>
+<li>hindi</li>
+<li>hungarian</li>
+<li>indonesian</li>
+<li>irish</li>
+<li>italian</li>
+<li>latvian</li>
+<li>lithuanian</li>
+<li>norwegian</li>
+<li>persian</li>
+<li>portuguese</li>
+<li>romanian</li>
+<li>russian</li>
+<li>sorani</li>
+<li>spanish</li>
+<li>swedish</li>
+<li>turkish</li>
+<li>thai</li>
+</ul>
+<h2 id="自定义分词器">自定义分词器</h2>
+<p><strong>自定义分析器标准格式：</strong></p>
+<pre><code>PUT /my_index
+{
+    &quot;settings&quot;: {
+        &quot;analysis&quot;: {
+            &quot;char_filter&quot;: { ... custom character filters ... },//字符过滤器
+            &quot;tokenizer&quot;: { ... custom tokenizers ... },//分词器
+            &quot;filter&quot;: { ... custom token filters ... }, //词单元过滤器
+            &quot;analyzer&quot;: { ... custom analyzers ... }
+        }
+    }
+}
+</code></pre>
+<p><a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/analysis-custom-analyzer.html">》官方文档介绍《</a></p>
+<h3 id="my_custom_analyzer">my_custom_analyzer</h3>
+<blockquote>
+<p>在一个索引（test_custom_analyzer）上定义一个自定义的分词器（my_custom_analyzer）。分词器使用的自定义的字符过滤器（emoticons）、自定义的分解器（punctuation）、自定义的词元过滤器（english_stop）和系统内置的（lowercase）。</p>
+</blockquote>
+<h4 id="定义分词器">定义分词器</h4>
+<pre><code>PUT test_custom_analyzer
+{
+  &quot;settings&quot;: {
+    &quot;analysis&quot;: {
+      &quot;analyzer&quot;: {
+        &quot;my_custom_analyzer&quot;:{
+          &quot;type&quot;:&quot;custom&quot;,
+          &quot;char_filter&quot;:[
+            &quot;emoticons&quot;  
+          ],
+          &quot;tokenizer&quot;:&quot;punctuation&quot;,
+          &quot;filter&quot;:[
+            &quot;lowercase&quot;,
+            &quot;english_stop&quot;
+          ]
+        }
+      },
+      &quot;tokenizer&quot;: {
+        &quot;punctuation&quot;:{
+          &quot;type&quot;:&quot;pattern&quot;,
+          &quot;pattern&quot;:&quot;[ .,!?]&quot;
+        }
+      },
+      &quot;char_filter&quot;: {
+        &quot;emoticons&quot;:{
+          &quot;type&quot;:&quot;mapping&quot;,
+          &quot;mappings&quot;:[&quot;:) =&gt; _happy_&quot;,&quot;:( =&gt; _sad_&quot;]
+        }
+      },
+      &quot;filter&quot;: {
+        &quot;english_stop&quot;:{
+          &quot;type&quot;:&quot;stop&quot;,
+          &quot;stopwords&quot;:&quot;_english_&quot;
+        }
+      }
+    }
+  }
+}
+</code></pre>
+<h4 id="测试自定义的分词器">测试自定义的分词器</h4>
+<pre><code>POST test_custom_analyzer/_analyze
+{
+  &quot;analyzer&quot;: &quot;my_custom_analyzer&quot;,
+  &quot;text&quot;: &quot;I'm a :) person, and you? &quot;
+}
+
+</code></pre>
+<h4 id="解析">解析</h4>
+<pre><code>PUT test_custom_analyzer  # 在一个索引上定义一个分词器
+{
+  &quot;settings&quot;: { 
+    &quot;analysis&quot;: {
+      &quot;analyzer&quot;: { # 自定义分词器
+        &quot;my_custom_analyzer&quot;:{  # 分词器名字
+          &quot;type&quot;:&quot;custom&quot;,
+          &quot;char_filter&quot;:[    # 分词器所需要使用的 字符过滤器 
+            &quot;emoticons&quot;     # 字符过滤器的名字，这个是自定义的，在char_filter 里可以看到定义
+          ],
+          &quot;tokenizer&quot;:&quot;punctuation&quot;,  # 分词器所需要使用的 分解器
+          &quot;filter&quot;:[   # 分解器所调用的 词元过滤器 
+            &quot;lowercase&quot;,
+            &quot;english_stop&quot; # 词元过滤器 这个是自定义的 在filter里可以看到定义
+          ]
+        }
+      },
+      &quot;tokenizer&quot;: {    # 自定义  分解器
+        &quot;punctuation&quot;:{ #  分解器的名字
+          &quot;type&quot;:&quot;pattern&quot;,
+          &quot;pattern&quot;:&quot;[ .,!?]&quot;
+        }
+      },
+      &quot;char_filter&quot;: { #自定义字符过滤器
+        &quot;emoticons&quot;:{ # 字符过滤器的名字
+          &quot;type&quot;:&quot;mapping&quot;,
+          &quot;mappings&quot;:[&quot;:) =&gt; _happy_&quot;,&quot;:( =&gt; _sad_&quot;]
+        }
+      },
+      &quot;filter&quot;: { # 自定义 词元过滤器
+        &quot;english_stop&quot;:{ # 词元过滤器的名字
+          &quot;type&quot;:&quot;stop&quot;,
+          &quot;stopwords&quot;:&quot;_english_&quot;
+        }
+      }
+    }
+  }
+}
+</code></pre>
+<h2 id="其他分词器">其他分词器</h2>
+<h3 id="analysis-icu">Analysis-ICU</h3>
+<pre><code>提供了Unicode的支持，更好的支持亚洲语言
+</code></pre>
+<ul>
+<li>https://github.com/elastic/elasticsearch-analysis-icu</li>
+</ul>
+<figure data-type="image" tabindex="8"><img src="http://kingofzihua.github.io/post-images/1567576048362.png" alt="" loading="lazy"></figure>
+<h4 id="安装">安装</h4>
+<pre><code># 需要找到你的elasticsearch-plugin命令所在位置
+sudo /you-path/elasticsearch-plugin install analysis-icu
+</code></pre>
+<h3 id="analysis-ik-中文分词插件">Analysis-IK （中文分词插件）</h3>
+<pre><code>支持自定义词库，支持热更新分词字典
+</code></pre>
+<ul>
+<li>https://github.com/medcl/elasticsearch-analysis-ik</li>
+</ul>
+<h4 id="安装-2">安装</h4>
+<pre><code># 需要找到你的elasticsearch-plugin命令所在位置
+sudo /you-path/elasticsearch-plugin list
+analysis-ik
+</code></pre>
+<h3 id="hanlp-中文分词插件">HanLP （中文分词插件）</h3>
+<pre><code> 面向生产环境的自然语言处理工具
+</code></pre>
+<ul>
+<li>http://hanlp.com/</li>
+<li>https://github.com/KennFalcon/elasticsearch-analysis-hanlp</li>
+</ul>
+<h4 id="安装-3">安装</h4>
+<pre><code># 需要找到你的elasticsearch-plugin命令所在位置
+sudo /you-path/elasticsearch-plugin install https://github.com/KennFalcon/elasticsearch-analysis-hanlp/releases/download/v7.2.0/elasticsearch-analysis-hanlp-7.2.0.zip
+</code></pre>
+<h3 id="pinyin-拼音">Pinyin （拼音）</h3>
+<ul>
+<li>https://github.com/medcl/elasticsearch-analysis-pinyin</li>
+</ul>
+<h4 id="安装-4">安装</h4>
+<pre><code># 需要找到你的elasticsearch-plugin命令所在位置
+sudo /you-path/elasticsearch-plugin install https://github.com/medcl/elasticsearch-analysis-pinyin/releases/download/v7.2.0/elasticsearch-analysis-pinyin-7.2.0.zip
+</code></pre>
+<hr>
+<h2 id="参考资料">参考资料</h2>
+<ul>
+<li><a href="https://e.jd.com/30318357.html">Elasticsearch技术解析与实战</a></li>
+<li><a href="https://time.geekbang.org/course/intro/197">极客时间:Elasticsearch核心技术与实战</a></li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Elasticsearch REST API]]></title>
+        <id>http://kingofzihua.github.io/post/elasticsearch-rest-api</id>
+        <link href="http://kingofzihua.github.io/post/elasticsearch-rest-api">
+        </link>
+        <updated>2019-09-03T07:34:54.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<p>为了方便其他语言的整合Elasticsearch为开发者提供了一套基于Http协议的Restful接口，只需要构造rest请求并解析请求返回的json即可实现访问Elasticsearch服务器。Elasticsearch的API接口功能丰富，包含集群、监控、部署管理等，也包含常用的文档、索引操作。</p>
+</blockquote>
+]]></summary>
+        <content type="html"><![CDATA[<blockquote>
+<p>为了方便其他语言的整合Elasticsearch为开发者提供了一套基于Http协议的Restful接口，只需要构造rest请求并解析请求返回的json即可实现访问Elasticsearch服务器。Elasticsearch的API接口功能丰富，包含集群、监控、部署管理等，也包含常用的文档、索引操作。</p>
+</blockquote>
+<!-- more -->
+<h1 id="rest-api-很容易被各种语言调用">REST API - 很容易被各种语言调用</h1>
+<figure data-type="image" tabindex="1"><img src="http://kingofzihua.github.io/post-images/1567409800687.jpg" alt="" loading="lazy"></figure>
+<h2 id="文档的操作">文档的操作</h2>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>REST API</th>
+<th>参数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Index</td>
+<td>PUT my_index/_doc/1</td>
+<td><code>{&quot;user&quot;:&quot;mike&quot;,&quot;comment&quot;:&quot;You Konw,for search&quot;}</code></td>
+</tr>
+<tr>
+<td>Create</td>
+<td>PUT my_index/_create/1<br>POST my_index/_doc(不指定ID，自动生成)</td>
+<td><code>{&quot;user&quot;:&quot;mike&quot;,&quot;comment&quot;:&quot;You Konw,for search&quot;}</code><br><code>{&quot;user&quot;:&quot;mike&quot;,&quot;comment&quot;:&quot;You Konw,for search&quot;}</code></td>
+</tr>
+<tr>
+<td>Read</td>
+<td>GET my_index/_doc/1</td>
+<td></td>
+</tr>
+<tr>
+<td>Update</td>
+<td>POST my_index/_update/1</td>
+<td><code>{&quot;doc&quot;:{&quot;user&quot;:&quot;mike&quot;,&quot;comment&quot;:&quot;You Konw,for search&quot;}}</code></td>
+</tr>
+<tr>
+<td>Delete</td>
+<td>DELETE my_index/_doc/1</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Type 名，约定都用<code>_doc</code></li>
+<li>Create - 如果ID已经存在，会失败</li>
+<li>Index - 如果 ID 不存在 ，创建新的文档。否则，先删除现有的文档，再创建新的文档，版本会增加</li>
+<li>Update -文档必须已经存在，更新只会对相应字段做增量修改</li>
+</ul>
+<h3 id="create-一个文档">Create 一个文档</h3>
+<h4 id="指定文档id">指定文档ID</h4>
+<pre><code>PUT users/_create/1
+{
+  &quot;firstName&quot;:&quot;Jack&quot;,
+  &quot;lastName&quot;:&quot;Johnson&quot;,
+  &quot;tags&quot;:[&quot;guitar&quot;,&quot;skateboard&quot;]
+}
+or # 手动设置 type 是 create
+PUT users/_doc/1?op_type=create
+{
+  &quot;firstName&quot;:&quot;Jack&quot;,
+  &quot;lastName&quot;:&quot;Johnson&quot;,
+  &quot;tags&quot;:[&quot;guitar&quot;,&quot;skateboard&quot;]
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;_index&quot; : &quot;users&quot;,
+  &quot;_type&quot; : &quot;_doc&quot;,
+  &quot;_id&quot; : &quot;1&quot;, # 手动指定的文档编号
+  &quot;_version&quot; : 1,
+  &quot;result&quot; : &quot;created&quot;,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 2,
+    &quot;successful&quot; : 1,
+    &quot;failed&quot; : 0
+  },
+  &quot;_seq_no&quot; : 0,
+  &quot;_primary_term&quot; : 1
+}
+</code></pre>
+<p>如果已经存在会报错：</p>
+<pre><code>{
+  &quot;error&quot;: {
+    &quot;root_cause&quot;: [
+      {
+        &quot;type&quot;: &quot;version_conflict_engine_exception&quot;,
+        &quot;reason&quot;: &quot;[1]: version conflict, document already exists (current version [1])&quot;,
+        &quot;index_uuid&quot;: &quot;nzRRiahvRtSNNSf7oohKEQ&quot;,
+        &quot;shard&quot;: &quot;0&quot;,
+        &quot;index&quot;: &quot;users&quot;
+      }
+    ],
+    &quot;type&quot;: &quot;version_conflict_engine_exception&quot;,
+    &quot;reason&quot;: &quot;[1]: version conflict, document already exists (current version [1])&quot;,
+    &quot;index_uuid&quot;: &quot;nzRRiahvRtSNNSf7oohKEQ&quot;,
+    &quot;shard&quot;: &quot;0&quot;,
+    &quot;index&quot;: &quot;users&quot;
+  },
+  &quot;status&quot;: 409
+}
+</code></pre>
+<h4 id="自动生成id">自动生成ID</h4>
+<pre><code>POST users/_doc
+{
+  &quot;firstName&quot;:&quot;Tom&quot;,
+  &quot;lastName&quot;:&quot;Jerry&quot;,
+  &quot;tags&quot;:[&quot;cat&quot;,&quot;rat&quot;]
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;_index&quot; : &quot;users&quot;,
+  &quot;_type&quot; : &quot;_doc&quot;,
+  &quot;_id&quot; : &quot;VWsV9WwBOKERAIDEZ-sc&quot;, # 自动生成的文档编号
+  &quot;_version&quot; : 1,
+  &quot;result&quot; : &quot;created&quot;,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 2,
+    &quot;successful&quot; : 1,
+    &quot;failed&quot; : 0
+  },
+  &quot;_seq_no&quot; : 1,
+  &quot;_primary_term&quot; : 1
+}
+</code></pre>
+<h3 id="get-一个文档">Get 一个文档</h3>
+<h4 id="找到文档返回-http-200">找到文档，返回 HTTP 200</h4>
+<ul>
+<li>文档元信息
+<ul>
+<li>_index/_type/</li>
+<li>版本信息，同一个ID的文档 即使被删除 Version号也会不断增加</li>
+<li>source 中默认包含了 文档的所有原始信息</li>
+</ul>
+</li>
+</ul>
+<pre><code>GET users/_doc/1
+</code></pre>
+<p>返回结果</p>
+<pre><code>{
+  &quot;_index&quot; : &quot;users&quot;, # 索引名称
+  &quot;_type&quot; : &quot;_doc&quot;, # type
+  &quot;_id&quot; : &quot;1&quot;, # 主键
+  &quot;_version&quot; : 1, # 版本
+  &quot;_seq_no&quot; : 0,
+  &quot;_primary_term&quot; : 1,
+  &quot;found&quot; : true,
+  &quot;_source&quot; : { # 原始信息
+    &quot;firstName&quot; : &quot;Jack&quot;,
+    &quot;lastName&quot; : &quot;Johnson&quot;,
+    &quot;tags&quot; : [
+      &quot;guitar&quot;,
+      &quot;skateboard&quot;
+    ]
+  }
+}
+</code></pre>
+<h4 id="找不到文档返回http-404">找不到文档，返回HTTP 404</h4>
+<pre><code>GET users/_doc/2
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;_index&quot; : &quot;users&quot;,
+  &quot;_type&quot; : &quot;_doc&quot;,
+  &quot;_id&quot; : &quot;2&quot;,
+  &quot;found&quot; : false
+}
+</code></pre>
+<h3 id="index索引-文档">Index(索引) 文档</h3>
+<p>Index 和Create 不一样的地方： 如果文档不存在，就索引新的文档。否则现有文档会被删除，新的文档被索引。版本信息+1；</p>
+<h4 id="put-文档">put 文档</h4>
+<pre><code>PUT users/_doc/1
+{
+  &quot;tags&quot;:[&quot;guitar&quot;,&quot;skateboard&quot;,&quot;reading&quot;]
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;_index&quot; : &quot;users&quot;,
+  &quot;_type&quot; : &quot;_doc&quot;,
+  &quot;_id&quot; : &quot;1&quot;,
+  &quot;_version&quot; : 2,
+  &quot;result&quot; : &quot;updated&quot;,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 2,
+    &quot;successful&quot; : 1,
+    &quot;failed&quot; : 0
+  },
+  &quot;_seq_no&quot; : 2,
+  &quot;_primary_term&quot; : 1
+}
+</code></pre>
+<h4 id="获取操作后的文档">获取操作后的文档</h4>
+<pre><code>GET users/_doc/1
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;_index&quot; : &quot;users&quot;,
+  &quot;_type&quot; : &quot;_doc&quot;,
+  &quot;_id&quot; : &quot;1&quot;,
+  &quot;_version&quot; : 2,
+  &quot;_seq_no&quot; : 2,
+  &quot;_primary_term&quot; : 1,
+  &quot;found&quot; : true,
+  &quot;_source&quot; : {
+    &quot;tags&quot; : [
+      &quot;guitar&quot;,
+      &quot;skateboard&quot;,
+      &quot;reading&quot;
+    ]
+  }
+}
+</code></pre>
+<h3 id="update-文档">Update 文档</h3>
+<ul>
+<li>Update方法不会删除原来的文档，而是实现真正的数据更新</li>
+<li>Post方法 / Payload 需要包含在 <code>doc</code>中</li>
+</ul>
+<h4 id="更新文档">更新文档</h4>
+<pre><code>POST users/_update/1
+{
+  &quot;doc&quot;:{
+    &quot;albums&quot;:[&quot;album1&quot;,&quot;album2&quot;]
+  }
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;_index&quot; : &quot;users&quot;,
+  &quot;_type&quot; : &quot;_doc&quot;,
+  &quot;_id&quot; : &quot;1&quot;,
+  &quot;_version&quot; : 3,
+  &quot;result&quot; : &quot;updated&quot;,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 2,
+    &quot;successful&quot; : 1,
+    &quot;failed&quot; : 0
+  },
+  &quot;_seq_no&quot; : 3,
+  &quot;_primary_term&quot; : 1
+}
+</code></pre>
+<h4 id="获取更新后的文档">获取更新后的文档</h4>
+<pre><code>GET users/_doc/1
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;_index&quot; : &quot;users&quot;,
+  &quot;_type&quot; : &quot;_doc&quot;,
+  &quot;_id&quot; : &quot;1&quot;,
+  &quot;_version&quot; : 3,
+  &quot;_seq_no&quot; : 3,
+  &quot;_primary_term&quot; : 1,
+  &quot;found&quot; : true,
+  &quot;_source&quot; : {
+    &quot;tags&quot; : [
+      &quot;guitar&quot;,
+      &quot;skateboard&quot;,
+      &quot;reading&quot;
+    ],
+    &quot;albums&quot; : [
+      &quot;album1&quot;,
+      &quot;album2&quot;
+    ]
+  }
+}
+</code></pre>
+<h4 id="put-和-update-的区别">put 和 update 的区别</h4>
+<ul>
+<li>update 会将数据更新，未修改的字段保持愿值</li>
+<li>put 会直接覆盖掉元数据(元数据删除掉后，重新索引)</li>
+</ul>
+<h3 id="delete-文档">delete 文档</h3>
+<pre><code>DELETE users/_doc/1
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;_index&quot; : &quot;users&quot;,
+  &quot;_type&quot; : &quot;_doc&quot;,
+  &quot;_id&quot; : &quot;1&quot;,
+  &quot;_version&quot; : 7,
+  &quot;result&quot; : &quot;deleted&quot;,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 2,
+    &quot;successful&quot; : 1,
+    &quot;failed&quot; : 0
+  },
+  &quot;_seq_no&quot; : 7,
+  &quot;_primary_term&quot; : 3
+}
+</code></pre>
+<h2 id="indices">Indices</h2>
+<h3 id="创建索引">创建索引</h3>
+<pre><code>PUT movies
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;acknowledged&quot; : true,
+  &quot;shards_acknowledged&quot; : true,
+  &quot;index&quot; : &quot;movies&quot;
+}
+</code></pre>
+<h3 id="删除索引">删除索引</h3>
+<pre><code>DELETE movies
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;acknowledged&quot; : true
+}
+</code></pre>
+<h2 id="批量操作">批量操作</h2>
+<h3 id="bulk-api">Bulk API</h3>
+<blockquote>
+<p>在一个REST请求的时候，重新建立网络开销是非常损耗性能的，Bulk API的核心思想就是，在一次请求中，做不同的操作。</p>
+</blockquote>
+<ul>
+<li>支持在一次API 调用中，对不同对索引进行操作</li>
+<li>支持四种类型操作
+<ul>
+<li>Index</li>
+<li>Create</li>
+<li>Update</li>
+<li>Delete</li>
+</ul>
+</li>
+<li>可以在URI中指定Index，也可以在请求的Payload中进行</li>
+<li>操作中单条操作失败，并不会影响其他操作</li>
+<li>返回结果包括了每一条操作执行的结果</li>
+</ul>
+<h4 id="demo">Demo</h4>
+<pre><code>POST _bulk
+{&quot;index&quot;:{&quot;_index&quot;:&quot;test&quot;,&quot;_id&quot;:&quot;1&quot;}}
+{&quot;field1&quot;:&quot;value1&quot;}
+{&quot;delete&quot;:{&quot;_index&quot;:&quot;test&quot;,&quot;_id&quot;:&quot;2&quot;}}
+{&quot;create&quot;:{&quot;_index&quot;:&quot;test2&quot;,&quot;_id&quot;:&quot;3&quot;}}
+{&quot;field1&quot;:&quot;value3&quot;}
+{&quot;update&quot;:{&quot;_index&quot;:&quot;test&quot;,&quot;_id&quot;:&quot;1&quot;}}
+{&quot;doc&quot;: {&quot;field2&quot;:&quot;value2&quot;}}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;took&quot; : 288,
+  &quot;errors&quot; : false,
+  &quot;items&quot; : [
+    {
+      &quot;index&quot; : {
+        &quot;_index&quot; : &quot;test&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_version&quot; : 1,
+        &quot;result&quot; : &quot;created&quot;,
+        &quot;_shards&quot; : {
+          &quot;total&quot; : 2,
+          &quot;successful&quot; : 1,
+          &quot;failed&quot; : 0
+        },
+        &quot;_seq_no&quot; : 0,
+        &quot;_primary_term&quot; : 1,
+        &quot;status&quot; : 201
+      }
+    },
+    {
+      &quot;delete&quot; : {
+        &quot;_index&quot; : &quot;test&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_version&quot; : 1,
+        &quot;result&quot; : &quot;not_found&quot;,
+        &quot;_shards&quot; : {
+          &quot;total&quot; : 2,
+          &quot;successful&quot; : 1,
+          &quot;failed&quot; : 0
+        },
+        &quot;_seq_no&quot; : 1,
+        &quot;_primary_term&quot; : 1,
+        &quot;status&quot; : 404
+      }
+    },
+    {
+      &quot;create&quot; : {
+        &quot;_index&quot; : &quot;test2&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;3&quot;,
+        &quot;_version&quot; : 1,
+        &quot;result&quot; : &quot;created&quot;,
+        &quot;_shards&quot; : {
+          &quot;total&quot; : 2,
+          &quot;successful&quot; : 1,
+          &quot;failed&quot; : 0
+        },
+        &quot;_seq_no&quot; : 0,
+        &quot;_primary_term&quot; : 1,
+        &quot;status&quot; : 201
+      }
+    },
+    {
+      &quot;update&quot; : {
+        &quot;_index&quot; : &quot;test&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_version&quot; : 2,
+        &quot;result&quot; : &quot;updated&quot;,
+        &quot;_shards&quot; : {
+          &quot;total&quot; : 2,
+          &quot;successful&quot; : 1,
+          &quot;failed&quot; : 0
+        },
+        &quot;_seq_no&quot; : 2,
+        &quot;_primary_term&quot; : 1,
+        &quot;status&quot; : 200
+      }
+    }
+  ]
+}
+</code></pre>
+<h5 id="请求解析">请求解析</h5>
+<pre><code>POST _bulk # 这个是请求地址
+# 索引一个文档  指明索引是test 文档编号(主键)是 1 字段名为 field1 值为 value1
+{&quot;index&quot;:{&quot;_index&quot;:&quot;test&quot;,&quot;_id&quot;:&quot;1&quot;}}
+{&quot;field1&quot;:&quot;value1&quot;}
+
+# 删除 一个文档 指明索引是 test 文档编号(主键)是2
+{&quot;delete&quot;:{&quot;_index&quot;:&quot;test&quot;,&quot;_id&quot;:&quot;2&quot;}}
+
+# 创建一个文档，指明索引是test2 文档编号(主键)是 3  字段名为 field1 值为 value3
+{&quot;create&quot;:{&quot;_index&quot;:&quot;test2&quot;,&quot;_id&quot;:&quot;3&quot;}}
+{&quot;field1&quot;:&quot;value3&quot;}
+
+# 更新一个文档 指明索引是test 文档编号(主键)是1 修改的字段是 field2 值为 value2
+{&quot;update&quot;:{&quot;_index&quot;:&quot;test&quot;,&quot;_id&quot;:&quot;1&quot;}}
+{&quot;doc&quot;: {&quot;field2&quot;:&quot;value2&quot;}}
+</code></pre>
+<h5 id="响应解析">响应解析</h5>
+<pre><code>{
+  &quot;took&quot; : 288,
+  &quot;errors&quot; : false,
+  &quot;items&quot; : [
+	# 第一个操作的返回值 创建成功，HTTP响应 201
+    {
+      &quot;index&quot; : {
+        &quot;_index&quot; : &quot;test&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_version&quot; : 1,
+        &quot;result&quot; : &quot;created&quot;,  # 创建成功
+        &quot;_shards&quot; : {
+          &quot;total&quot; : 2,
+          &quot;successful&quot; : 1,
+          &quot;failed&quot; : 0
+        },
+        &quot;_seq_no&quot; : 0,
+        &quot;_primary_term&quot; : 1,
+        &quot;status&quot; : 201 # HTTP响应码
+      }
+    },
+	# 第二个操作的返回值 删除失败，HTTP响应 404
+    {
+      &quot;delete&quot; : {
+        &quot;_index&quot; : &quot;test&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_version&quot; : 1,
+        &quot;result&quot; : &quot;not_found&quot;, # 文档不存在
+        &quot;_shards&quot; : {
+          &quot;total&quot; : 2,
+          &quot;successful&quot; : 1,
+          &quot;failed&quot; : 0
+        },
+        &quot;_seq_no&quot; : 1,
+        &quot;_primary_term&quot; : 1,
+        &quot;status&quot; : 404 # HTTP响应码
+      }
+    },
+		# 第三个操作的返回值 创建成功，HTTP响应 201
+    {
+      &quot;create&quot; : {
+        &quot;_index&quot; : &quot;test2&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;3&quot;,
+        &quot;_version&quot; : 1,
+        &quot;result&quot; : &quot;created&quot;, # 创建成功
+        &quot;_shards&quot; : {
+          &quot;total&quot; : 2,
+          &quot;successful&quot; : 1,
+          &quot;failed&quot; : 0
+        },
+        &quot;_seq_no&quot; : 0,
+        &quot;_primary_term&quot; : 1,
+        &quot;status&quot; : 201  # HTTP响应码
+      }
+    },
+		# 第四个操作的返回值 更新成功，HTTP响应 200
+    {
+      &quot;update&quot; : {
+        &quot;_index&quot; : &quot;test&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_version&quot; : 2,
+        &quot;result&quot; : &quot;updated&quot;, # 更新成功
+        &quot;_shards&quot; : {
+          &quot;total&quot; : 2,
+          &quot;successful&quot; : 1,
+          &quot;failed&quot; : 0
+        },
+        &quot;_seq_no&quot; : 2,
+        &quot;_primary_term&quot; : 1,
+        &quot;status&quot; : 200 # HTTP响应码
+      }
+    }
+  ]
+}
+</code></pre>
+<h1 id="常见错误返回">常见错误返回</h1>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>无法连接</td>
+<td>网络故障或集群挂了</td>
+</tr>
+<tr>
+<td>连接无法关闭</td>
+<td>网络故障或节点出错</td>
+</tr>
+<tr>
+<td>429</td>
+<td>集群过于繁忙</td>
+</tr>
+<tr>
+<td>4xx</td>
+<td>请求体格式有错</td>
+</tr>
+<tr>
+<td>500</td>
+<td>集群内部错误</td>
+</tr>
+</tbody>
+</table>
+<h1 id="参考链接">参考链接</h1>
+<ul>
+<li><a href="https://e.jd.com/30318357.html">Elasticsearch技术解析与实战</a></li>
+<li><a href="https://time.geekbang.org/course/intro/197">极客时间:Elasticsearch核心技术与实战</a></li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Elasticsearch 基本概念]]></title>
+        <id>http://kingofzihua.github.io/post/elasticsearch-ji-ben-gai-nian</id>
+        <link href="http://kingofzihua.github.io/post/elasticsearch-ji-ben-gai-nian">
+        </link>
+        <updated>2019-09-02T03:30:29.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<p>Elasticsearch 是一个分布式的搜索和分析引擎，可以用于全文检索、结构化检索和分析，并能将这三者结合起来。Elasticsearch 基于 Lucene 开发，是 Lucene 的封装，提供了 REST API 的操作接口，开箱即用。现在是使用最广的开源搜索引擎之一，Wikipedia、Stack Overflow、GitHub 等都基于 Elasticsearch 来构建他们的搜索引擎。</p>
+</blockquote>
+]]></summary>
+        <content type="html"><![CDATA[<blockquote>
+<p>Elasticsearch 是一个分布式的搜索和分析引擎，可以用于全文检索、结构化检索和分析，并能将这三者结合起来。Elasticsearch 基于 Lucene 开发，是 Lucene 的封装，提供了 REST API 的操作接口，开箱即用。现在是使用最广的开源搜索引擎之一，Wikipedia、Stack Overflow、GitHub 等都基于 Elasticsearch 来构建他们的搜索引擎。</p>
+</blockquote>
+<!-- more -->
+<h2 id="基础知识">基础知识</h2>
+<h3 id="索引词term">索引词（term）</h3>
+<p>在<code>Elasticsearch</code> 中 索引词(<code>term</code>)是一个能够被索引的精确值。<br>
+foo、Foo、FOO几个单词是不同的索引词。索引词（<code>term</code>）是可以通过<code>term</code>查询进行准确的搜索。</p>
+<h3 id="文本text">文本（text）</h3>
+<p>文本是一段普通的非结构化的文字。通常，文本会被分析成一个个的索引词，存储在<code>Elasticsearch</code> 的索引库中。为了让文本能够进行搜索，文本字段需要实现进行分析；当对文本中的关键词进行查询的时候，搜索引擎应该根据搜索条件搜索出原文本</p>
+<h3 id="分析analysis">分析(analysis)</h3>
+<p>分析是将文本转化为索引词的过程，分析的结果依赖于分词器。比如FOO BAR、Foo-Bar 和 foo bar 这几个单词有可能会被分析称相同的索引词foo和bar，这些索引词存储在<code>Elasticsearch</code>的索引库中。当用FoO:bAR 进行全文搜索的时候，搜索引擎根据匹配计算也能在索引库中搜索出之前的内容。这就是Elasticsearch的搜索分析</p>
+<h3 id="集群cluster">集群(cluster)</h3>
+<blockquote>
+<p>集群由一个或多个节点组成，对外提供服务，对外提供索引和搜索功能。</p>
+</blockquote>
+<ul>
+<li>在所有节点，一个集群有一个唯一的名称默认为<code>Elasticsearch</code>。</li>
+<li>因为每个节点只能是集群的一部分，当该节点被设置为相同的集群名称时，就会自动加入集群。</li>
+<li>当需要有多个集群的时候，要确保每个集群的名称不能重复，否则，节点可能加入错误的集群。</li>
+</ul>
+<p><em>请注意，一个节点只能加入一个集群。此外，你还可以拥有多个独立的集群，每个集群都有起不同的集群名称。例如，在开发过程中，你可以建立开发集群库和测试集群库，分别为开发、测试服务。</em></p>
+<h4 id="elasticsearch集群结构">Elasticsearch集群结构</h4>
+<figure data-type="image" tabindex="1"><img src="http://kingofzihua.github.io/post-images/1567420390519.jpg" alt="" loading="lazy"></figure>
+<h3 id="节点node">节点(node)</h3>
+<p>一个节点是一个逻辑上独立的服务，他是集群的一部分，可以存储数据，并参与集群的索引和搜索功能。</p>
+<ul>
+<li>节点是一个<code>Elasticsearch</code>的实例
+<ul>
+<li>本质上就是一个java进程</li>
+<li>一台机器上可以运行多个<code>Elasticsearch</code>进程，但是生产环境一般建议一台机器上只运行一个<code>Elasticsearch</code>实例</li>
+</ul>
+</li>
+<li>每一个节点都有名字，通过配置文件配置，或者启动的时候 -E node.name=node1 指定</li>
+<li>每一个节点在启动之后，会分配一个UID，保存在data目录下</li>
+</ul>
+<h4 id="master-eligible-nodes-和-masternode">Master-eligible nodes 和 MasterNode</h4>
+<ul>
+<li>每个节点启动后，默认就是一个Master eligible节点
+<ul>
+<li>可以设置 node.master:false 禁止</li>
+</ul>
+</li>
+<li>Master-eligible 节点可以参加选主流程，成为Master节点</li>
+<li>当第一个节点启动当时候，他会将自己选举为Master节点</li>
+<li>每个节点上都保存了集群都状态人，只有Master节点才能修改集群都状态信息
+<ul>
+<li>集群状态（Cluster State）维护了一个集群中必要的信息
+<ul>
+<li>所有的节点新</li>
+<li>所有的索引和其相关的Mapping与Setting 信息</li>
+<li>分片的路由信息</li>
+</ul>
+</li>
+<li>任意节点都能修改信息会导致数据的不一致性，<br>
+<strong>所以只有Master节点才能修改集群的状态信息</strong></li>
+</ul>
+</li>
+</ul>
+<h4 id="date-node-coordinating-node">Date Node &amp; Coordinating Node</h4>
+<ul>
+<li>Data Node
+<ul>
+<li>可以保存数据的节点，叫做 Data Node 负责保存分片数据。在数据扩展上起到了至关重要的作用</li>
+</ul>
+</li>
+<li>Coordinating Node
+<ul>
+<li>负责接受Client的请求，将请求分发到合适的节点，最终把结果汇集到一起</li>
+<li>每个节点默认都起到了 Coordinating Node 的职责</li>
+</ul>
+</li>
+</ul>
+<h4 id="其他的节点类型">其他的节点类型</h4>
+<ul>
+<li>Hot &amp; Warm Node （冷热节点）
+<ul>
+<li>不同的硬件配置的Data Node，用来实现 Hot &amp; Warn 架构，降低集群部署的成本</li>
+</ul>
+</li>
+<li>Machine Learning Node
+<ul>
+<li>负责跑机器学习的Job，用来做异常检测</li>
+</ul>
+</li>
+<li>Tribe Node
+<ul>
+<li>（5.3 开始使用Cross Cluster Serarch）Tribe Node 连接到不同的Elasticsearch 集群，并且支持将这些集群当成一个单独的集群处理</li>
+</ul>
+</li>
+</ul>
+<h4 id="配置节点类型">配置节点类型</h4>
+<ul>
+<li>开发环境中一个节点可以承担多种角色</li>
+<li>生产环境中，应该设置单一的角色的节点（dedicated node）</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>节点类型</th>
+<th>配置参数</th>
+<th>默认值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>maste eligible</td>
+<td>node.master</td>
+<td>true</td>
+</tr>
+<tr>
+<td>data</td>
+<td>node.data</td>
+<td>true</td>
+</tr>
+<tr>
+<td>ingest</td>
+<td>node.ingest</td>
+<td>true</td>
+</tr>
+<tr>
+<td>coordinating only</td>
+<td>无</td>
+<td>每个节点默认都是coordinating节点设置其他类型全部为false</td>
+</tr>
+<tr>
+<td>machine learning</td>
+<td>node.ml</td>
+<td>true(需enable x-pack)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="分片shard">分片(shard)</h3>
+<h4 id="主分片primary-shard">主分片(primary shard)</h4>
+<ul>
+<li>一个分片是一个运行的Lucene的实例</li>
+<li>主分片数在索引创建时指定，后续不允许修改，除非 <code>Reindex</code></li>
+</ul>
+<h4 id="副本分片replica-shard">副本分片(replica shard)</h4>
+<ul>
+<li>副本分片数，可以动态调整</li>
+<li>增加副本数，还可以在一定程度上提高服务的可用性（读取的吞吐）</li>
+</ul>
+<h4 id="示例">示例</h4>
+<p><strong>一个三节点的集群中，blogs索引的分片分布情况</strong><br>
+<img src="http://kingofzihua.github.io/post-images/1567417393236.jpg" alt="" loading="lazy"></p>
+<h4 id="分片的设定">分片的设定</h4>
+<p>对于生产环境中分片的设定，需要提现做好容量规划</p>
+<ul>
+<li>分片设置过小
+<ul>
+<li>导致后续无法增加节点实现水平扩展</li>
+<li>单个分片的数据量太大，导致数据重新分配耗时</li>
+</ul>
+</li>
+<li>分片设置过大，<br>
+<em>7.0之前默认分片数是5个，7.0开始，默认主分片设置成1，解决了 <code>over-sharding</code>的问题</em>
+<ul>
+<li>影响搜索结果的相关性打分，影响统计结果的准确性</li>
+<li>单个节点上过多的分片，会导致资源浪费，同时也会影响性能</li>
+</ul>
+</li>
+</ul>
+<h4 id="demo">Demo</h4>
+<p><strong>在Kibana的开发控制台执行</strong></p>
+<ul>
+<li>获取集群状态的接口</li>
+</ul>
+<pre><code>GET _cluster/health 
+</code></pre>
+<p>返回结果:</p>
+<pre><code>{
+  &quot;cluster_name&quot; : &quot;elasticsearch&quot;,
+  &quot;status&quot; : &quot;yellow&quot;, //状态是黄色的
+  &quot;timed_out&quot; : false,
+  &quot;number_of_nodes&quot; : 1, //只有1个节点
+  &quot;number_of_data_nodes&quot; : 1,//data node 
+  &quot;active_primary_shards&quot; : 18, //18个主分片
+  &quot;active_shards&quot; : 18,
+  &quot;relocating_shards&quot; : 0,
+  &quot;initializing_shards&quot; : 0,
+  &quot;unassigned_shards&quot; : 11,
+  &quot;delayed_unassigned_shards&quot; : 0,
+  &quot;number_of_pending_tasks&quot; : 0,
+  &quot;number_of_in_flight_fetch&quot; : 0,
+  &quot;task_max_waiting_in_queue_millis&quot; : 0,
+  &quot;active_shards_percent_as_number&quot; : 62.06896551724138
+}
+</code></pre>
+<ul>
+<li>查看节点信息</li>
+</ul>
+<pre><code>GET _cat/nodes 
+</code></pre>
+<p>返回结果:</p>
+<pre><code> 127.0.0.1 28 74 2 0.08 0.20 0.12 mdi * homestead
+</code></pre>
+<ul>
+<li>查看分片信息</li>
+</ul>
+<pre><code>GET _cat/shards
+</code></pre>
+<p>返回结果:</p>
+<pre><code>...
+products_2    3 r UNASSIGNED                          
+products_2    0 p STARTED        28  17.3kb 127.0.0.1 homestead
+products_2    0 r UNASSIGNED                          
+test_index     2 p STARTED         1   3.5kb    127.0.0.1  homestead
+test_index     2 r UNASSIGNED       
+...
+</code></pre>
+<h3 id="索引index">索引(index)</h3>
+<ul>
+<li>索引是具有相同结构的文章集合
+<ul>
+<li>一个客户信息的索引</li>
+<li>一个产品目录的索引</li>
+<li>一个订单数据的索引</li>
+</ul>
+</li>
+<li>索引的名字全部小写</li>
+<li>单个集群中可以定义多个你想要的索引<br>
+<img src="http://kingofzihua.github.io/post-images/1567407893547.jpg" alt="" loading="lazy"></li>
+</ul>
+<h4 id="索引的不同语意">索引的不同语意</h4>
+<figure data-type="image" tabindex="2"><img src="http://kingofzihua.github.io/post-images/1567408973411.jpg" alt="" loading="lazy"></figure>
+<h3 id="类型-type">类型 (type)</h3>
+<blockquote>
+<p>可以认为是数据库中的一个表</p>
+</blockquote>
+<p>在索引中你可以定义一个或多个类型，类型是索引的逻辑分区。在一般情况下一种类型被定义为具有一组公共字段的文档。例如，让我们假设你运行一个博客平台，并把所有的数据存储在一个索引中。在这个索引中，你可以定义一种类型为用户数据，一种类型为博客数据，另一种类型为评论数据</p>
+<ul>
+<li>6.0开始Types已经被<code>Depressed</code>。</li>
+<li>在7.0之前，一个<code>index</code>可以设置多个Types</li>
+<li><font style="color:red">7.0开始 一个索引只能创建一个Type - “<code>_doc</code>”</font></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>type</th>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>document(文档)</td>
+<td>field（字段）</td>
+<td>field（字段）</td>
+<td>field（字段）</td>
+</tr>
+<tr>
+<td>document(文档)</td>
+<td>field（字段）</td>
+<td>field（字段）</td>
+<td>field（字段）</td>
+</tr>
+<tr>
+<td>document(文档)</td>
+<td>field（字段）</td>
+<td>field（字段）</td>
+<td>field（字段）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="文档document">文档(document)</h3>
+<blockquote>
+<p>可以认为是数据库中的一条记录</p>
+</blockquote>
+<p>文档是存储在<code>Elasticsearch</code>中的一个JSON格式的字符串。它就像在关系数据库中表的一行。每个储存在索引中的一个文档都有一个类型和一个ID，每个文档都是一个JSON对象，存储了零个或者多个字段，或者键值对。原始的JSON文档被存储在一个叫做<code>_source</code>的字段中。当搜索文档的时候默认返回的就是这个字段</p>
+<ul>
+<li><code>Elasticsearch</code>是面向文档的，文档是所有可搜索数据的最小单位
+<ul>
+<li>日志文件中的一条日志</li>
+<li>一本电影的信息 / 一张唱片的详细信息</li>
+<li>MP3播放器里的一首歌 / 一篇PDF文档中的具体内容</li>
+</ul>
+</li>
+<li>文档会被序列化成JSON格式，保存在<code>Elasticsearch</code>中
+<ul>
+<li>JSON对象由字段组成</li>
+<li>每个字段都有对应的字段类型（字符串 / 数值 / 布尔 / 日期 / 二进制 / 范围类型）</li>
+</ul>
+</li>
+<li>每个文档都有一个Unique ID
+<ul>
+<li>你可以自己指定 ID</li>
+<li>或者由<code>Elasticsearch</code> 自动生成</li>
+</ul>
+</li>
+</ul>
+<figure data-type="image" tabindex="3"><img src="http://kingofzihua.github.io/post-images/1567481358672.png" alt="" loading="lazy"></figure>
+<h4 id="json-文档">JSON 文档</h4>
+<ul>
+<li>一篇文档包行列一系列的字段，类似于数据库中的一条数据</li>
+<li>JSON 文档，格式灵活，不需要预先定义格式
+<ul>
+<li>字段类型可以指定或者是通过<code>Elasticsearch</code> 自动推算(不推荐)</li>
+<li>支持数组 / 支持嵌套<br>
+<img src="http://kingofzihua.github.io/post-images/1567408397372.jpg" alt="" loading="lazy"><br>
+<em>CSV的文件 通过 logstash转化并写入elasticsearch</em></li>
+</ul>
+</li>
+</ul>
+<h4 id="文档的元数据">文档的元数据</h4>
+<figure data-type="image" tabindex="4"><img src="http://kingofzihua.github.io/post-images/1567407973203.jpg" alt="" loading="lazy"></figure>
+<h3 id="映射mapping">映射(mapping)</h3>
+<blockquote>
+<p>可以认为是数据库中的表结构</p>
+</blockquote>
+<p>每一个索引都有一个映射，它定义了索引中的每一个字段类型，以及一个索引范围的设置，一个映射可以事先被定义，或者在第一次存储文档的时候自动识别。</p>
+<h3 id="字段field">字段(field)</h3>
+<blockquote>
+<p>字段类似于关系数据库中表的列</p>
+</blockquote>
+<p>文档中包含零个或者多个字段，字段可以是一个简单的值(例如字符串、整数、日期)，也可以是一个数组或队形的嵌套结构。每个字段都对应一个字段类型，例如整数、字符串、对象等。字段还可以指定如何分析该字段等值。</p>
+<h3 id="主键id">主键(ID)</h3>
+<blockquote>
+<p>ID是一个文件的唯一标识。</p>
+</blockquote>
+<p>如果存在库的时候没有提供ID，系统会自动生成一个ID，文档的 id 必须是唯一的。</p>
+<h2 id="传统关系型数据库和elasticsearch的区别">传统关系型数据库和Elasticsearch的区别</h2>
+<p><code>Elasticsearch</code> 本质上是一个数据库，但并不是 Mysql 这种关系型数据库，查询语言也不是 SQL，而且<code>Elasticsearch</code> 自己的一套查询语言。</p>
+<p>既然是数据库，有一些概念是互通的，如下表：</p>
+<table>
+<thead>
+<tr>
+<th>Mysql</th>
+<th>Elasticsearch</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>数据库（Database）</td>
+<td>索引（Index）</td>
+</tr>
+<tr>
+<td>表（Table）</td>
+<td>类型（Type）</td>
+</tr>
+<tr>
+<td>记录（Row）</td>
+<td>文档（Document）</td>
+</tr>
+<tr>
+<td>字段（Column）</td>
+<td>字段（Fields）</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="参考链接">参考链接</h2>
+<ul>
+<li><a href="https://e.jd.com/30318357.html">Elasticsearch技术解析与实战</a></li>
+<li><a href="https://time.geekbang.org/course/intro/197">极客时间:Elasticsearch核心技术与实战</a></li>
+<li><a href="https://learnku.com/index.php/courses/ecommerce-advance/5.8/the-basic-concept-of-elasticsearch/4314">laravel-china: Elasticsearch 基础概念</a></li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[服务器常用端口及应用程序端口作用介绍]]></title>
+        <id>http://kingofzihua.github.io/post/fu-wu-qi-chang-yong-duan-kou-ji-ying-yong-cheng-xu-duan-kou-zuo-yong-jie-shao</id>
+        <link href="http://kingofzihua.github.io/post/fu-wu-qi-chang-yong-duan-kou-ji-ying-yong-cheng-xu-duan-kou-zuo-yong-jie-shao">
+        </link>
+        <updated>2019-09-01T09:06:22.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<p>一台服务器为什么可以同时是Web服务器，也可以是FTP服务器，还可以是邮件服务器等，其中一个很重要的原因是各种服务采用不同的端口分别提供不同的服务，比如：通常TCP/IP协议规定Web采用80号端口，FTP采用21号端口等，而邮件服务器是采用25号端口。这样，通过不同端口，计算机就可以与外界进行互不干扰的通信</p>
+</blockquote>
+]]></summary>
+        <content type="html"><![CDATA[<blockquote>
+<p>一台服务器为什么可以同时是Web服务器，也可以是FTP服务器，还可以是邮件服务器等，其中一个很重要的原因是各种服务采用不同的端口分别提供不同的服务，比如：通常TCP/IP协议规定Web采用80号端口，FTP采用21号端口等，而邮件服务器是采用25号端口。这样，通过不同端口，计算机就可以与外界进行互不干扰的通信</p>
+</blockquote>
+<!-- more --> 
+<h2 id="常用端口整理">常用端口整理</h2>
+<table>
+<thead>
+<tr>
+<th>端口号</th>
+<th>协议</th>
+<th>应用程序及其作用</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>21</td>
+<td>FTP</td>
+<td>FTP端口</td>
+<td>文件上传、下载</td>
+</tr>
+<tr>
+<td>22</td>
+<td>SSH</td>
+<td>SSH远程登陆</td>
+<td>远程登陆</td>
+</tr>
+<tr>
+<td>25</td>
+<td>SMTP</td>
+<td>邮件传输</td>
+<td>邮件传输</td>
+</tr>
+<tr>
+<td>53</td>
+<td>DNS</td>
+<td>DNS域名解析</td>
+<td>域名解析</td>
+</tr>
+<tr>
+<td>80</td>
+<td>HTTP</td>
+<td>HTTP服务默认端口</td>
+<td>nginx、apache 等web服务会需要监听</td>
+</tr>
+<tr>
+<td>443</td>
+<td>HTTPS</td>
+<td>HTTPS协议的默认端口</td>
+<td>HTTPS</td>
+</tr>
+<tr>
+<td>3306</td>
+<td></td>
+<td>mysql</td>
+<td>MySQL、MariaDB</td>
+</tr>
+<tr>
+<td>5601</td>
+<td></td>
+<td>Kibana</td>
+<td>Kibana</td>
+</tr>
+<tr>
+<td>6379</td>
+<td></td>
+<td>Redis</td>
+<td>Redis 默认端口</td>
+</tr>
+<tr>
+<td>8080</td>
+<td></td>
+<td>tomcat</td>
+<td>TOMCAT，默认的端口号</td>
+</tr>
+<tr>
+<td>9000</td>
+<td></td>
+<td>php-fpm</td>
+<td>php-fpm默认端口</td>
+</tr>
+<tr>
+<td>9200</td>
+<td></td>
+<td>elasticsearch</td>
+<td>elasticsearch默认端口</td>
+</tr>
+</tbody>
+</table>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Tideways、xhprof 和 xhgui 打造 PHP 非侵入式监控平台]]></title>
+        <id>http://kingofzihua.github.io/post/tidewaysxhprof-he-xhgui-da-zao-php-fei-qin-ru-shi-jian-kong-ping-tai</id>
+        <link href="http://kingofzihua.github.io/post/tidewaysxhprof-he-xhgui-da-zao-php-fei-qin-ru-shi-jian-kong-ping-tai">
+        </link>
+        <updated>2019-08-30T08:50:24.000Z</updated>
+        <content type="html"><![CDATA[<figure data-type="image" tabindex="1"><img src="http://kingofzihua.github.io/post-images/1567390921096.png" alt="火焰图" loading="lazy"></figure>
+<h2 id="推荐阅读">推荐阅读</h2>
+<ul>
+<li><strong><a href="https://github.com/guanguans/guanguans.github.io/issues/8">Tideways、xhprof 和 xhgui 打造 PHP 非侵入式监控平台</a></strong></li>
+<li><strong><a href="https://github.com/guanguans/notes/blob/master/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%8845%E7%A7%8D%EF%BC%89.md">超全的设计模式简介（45种）</a></strong></li>
+<li><strong><a href="https://github.com/guanguans/design-patterns-for-humans-cn">design-patterns-for-humans 中文版</a></strong></li>
+<li><strong><a href="https://github.com/guanguans/awesome-mongodb-cn">MongoDB 资源、库、工具、应用程序精选列表中文版</a></strong></li>
+<li><strong><a href="https://github.com/guanguans/notes/blob/master/Useful-website.md">有哪些鲜为人知，但是很有意思的网站？</a></strong></li>
+<li><strong><a href="https://github.com/guanguans/notes">一份攻城狮笔记</a></strong></li>
+<li><strong><a href="https://github.com/guanguans/favorite-link">每天搜集 Github 上优秀的项目</a></strong></li>
+<li><strong><a href="https://github.com/folkstory/lingqiu-folk-story/blob/master/README-FULL.md">一些有趣的民间故事</a></strong></li>
+<li><strong><a href="https://www.jianshu.com/p/c13cbe2c4fba">超好用的谷歌浏览器、Sublime Text、Phpstorm、油猴插件合集</a></strong></li>
+</ul>
+<h2 id="环境准备">环境准备</h2>
+<p>安装之前确保已经正确安装了以下软件</p>
+<ul>
+<li>PHP</li>
+<li>Nginx</li>
+<li>Mongodb</li>
+</ul>
+<h2 id="安装-php-mongodb-扩展">安装 PHP mongodb 扩展</h2>
+<pre><code class="language-bash">$ sudo pecl install mongodb
+</code></pre>
+<p>PHP 配置文件中添加</p>
+<pre><code class="language-ini">[mongodb]
+extension=mongodb.so
+</code></pre>
+<h2 id="安装-php-tideaways-扩展">安装 PHP tideaways 扩展</h2>
+<p>常规编译安装</p>
+<pre><code class="language-bash">$ git clone https://github.com/tideways/php-xhprof-extension.git
+$ cd /path/php-xhprof-extension
+$ phpize
+$ ./configure
+$ make
+$ sudo make install
+</code></pre>
+<p>PHP 配置文件中添加</p>
+<pre><code class="language-ini">[tideways]
+extension=tideways_xhprof.so
+; 不需要自动加载，在程序中控制就行
+tideways.auto_prepend_library=0
+; 频率设置为100，在程序调用时可以修改
+tideways.sample_rate=100
+</code></pre>
+<h2 id="安装-xhgui-branchxhgui-的汉化版">安装 xhgui-branch（xhgui 的汉化版）</h2>
+<pre><code class="language-bash">$ git clone https://github.com/laynefyc/xhgui-branch.git
+$ cd xhgui-branch
+$ php install.php
+</code></pre>
+<p>修改 xhgui-branch 配置文件</p>
+<pre><code class="language-php">&lt;?php
+    return array(
+ 	    ...
+        'extension' =&gt; 'tideways_xhprof',
+     	...
+        'save.handler' =&gt; 'mongodb',
+        'db.host' =&gt; 'mongodb://127.0.0.1:27017',
+        'db.db' =&gt; 'xhprof',
+ 	    ...
+    );
+</code></pre>
+<h2 id="启动-mongodb-并设置-xhgui-索引命令如下">启动 mongodb 并设置 xhgui 索引，命令如下：</h2>
+<pre><code class="language-bash">$ mongo
+&gt; use xhprof
+&gt; db.results.ensureIndex( { 'meta.SERVER.REQUEST_TIME' : -1 } )
+&gt; db.results.ensureIndex( { 'profile.main().wt' : -1 } )
+&gt; db.results.ensureIndex( { 'profile.main().mu' : -1 } )
+&gt; db.results.ensureIndex( { 'profile.main().cpu' : -1 } )
+&gt; db.results.ensureIndex( { 'meta.url' : 1 } )
+</code></pre>
+<h2 id="xhgui-本地虚拟主机配置参考">xhgui 本地虚拟主机配置参考</h2>
+<pre><code class="language-conf">server {
+    listen       80;
+    server_name  xhgui.test;
+    root         /Users/yaozm/Documents/wwwroot/xhgui-branch/webroot;
+
+    # access_log  /usr/local/var/log/nginx/access.log;
+    error_log  /usr/local/var/log/nginx/error.log;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+        index  index.php index.html index.htm;
+    }
+}
+</code></pre>
+<h2 id="针对要分析的站点进行设置直接在要分析站点的-nginx-配置中增加以下项然后使配置生效就可以了">针对要分析的站点进行设置，直接在要分析站点的 nginx 配置中增加以下项，然后使配置生效就可以了。</h2>
+<pre><code class="language-bash">$ fastcgi_param PHP_VALUE &quot;auto_prepend_file=/path/xhgui-branch/external/header.php&quot;;
+</code></pre>
+<p>参考配置</p>
+<pre><code class="language-conf">server {
+    listen       80;
+    server_name  laravel.test;
+    root         /Users/yaozm/Documents/wwwroot/laravel/public;
+
+    # access_log  /usr/local/var/log/nginx/access.log;
+    error_log  /usr/local/var/log/nginx/error.log;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+        index  index.php index.html index.htm;
+    }
+ 	# 添加 PHP_VALUE，告诉 PHP 程序在执行前要调用的服务
+    fastcgi_param PHP_VALUE &quot;auto_prepend_file=/path/wwwroot/xhgui-branch/external/header.php&quot;;
+}
+</code></pre>
+<h3 id="或者也可以在修改-php-配置文件告诉-php-程序在执行前要调用的服务">或者也可以在修改 PHP 配置文件，告诉 PHP 程序在执行前要调用的服务</h3>
+<pre><code class="language-ini">; Automatically add files before PHP document.
+; http://php.net/auto-prepend-file
+auto_prepend_file = &quot;/path/wwwroot/xhgui-branch/external/header.php&quot;
+</code></pre>
+<figure data-type="image" tabindex="2"><img src="http://kingofzihua.github.io/post-images/1567391345072.png" alt="函数监控" loading="lazy"></figure>
+<figure data-type="image" tabindex="3"><img src="http://kingofzihua.github.io/post-images/1567391356129.png" alt="调用图" loading="lazy"></figure>
+<h2 id="参考链接">参考链接</h2>
+<ul>
+<li><a href="https://github.com/phacility/xhprof">https://github.com/phacility/xhprof</a></li>
+<li><a href="https://github.com/perftools/xhgui">https://github.com/perftools/xhgui</a></li>
+<li><a href="https://github.com/tideways/php-xhprof-extension">https://github.com/tideways/php-xhprof-extension</a></li>
+<li><a href="https://github.com/laynefyc/xhgui-branch">https://github.com/laynefyc/xhgui-branch</a></li>
+<li><a href="https://blog.it2048.cn/article-tideways-xhgui">https://blog.it2048.cn/article-tideways-xhgui</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/30832165">https://zhuanlan.zhihu.com/p/30832165</a></li>
+</ul>
+<hr>
+<p>转载自 <a href="https://learnku.com/articles/29967">Tideways、xhprof 和 xhgui 打造 PHP 非侵入式监控平台<br>
+</a></p>
+]]></content>
+    </entry>
+</feed>

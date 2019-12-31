@@ -1,0 +1,611 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>
+    Elasticsearch 基本概念 | kingofzihua
+</title>
+<link rel="shortcut icon" href="http://kingofzihua.github.io/favicon.ico?v=1577770835023">
+<!-- <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous"> -->
+<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="http://kingofzihua.github.io/styles/main.css">
+<!-- js -->
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+<script src="http://kingofzihua.github.io/media/js/jquery.sticky-sidebar.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<script src="https://cdn.bootcss.com/moment.js/2.23.0/moment.min.js"></script>
+
+
+        
+</head>
+
+<body>
+    <div class="main">
+        <div class="header">
+    <div class="nav">
+        <div class="logo">
+            <a href="http://kingofzihua.github.io">
+                <img class="avatar" src="http://kingofzihua.github.io/images/avatar.png?v=1577770835023" alt="">
+            </a>
+            <div class="site-title">
+                <h1>
+                    kingofzihua
+                </h1>
+            </div>
+        </div>
+        <span class="menu-btn fa fa-align-justify"></span>
+        <div class="menu-container">
+            <ul>
+                
+                    
+                            <li>
+                                <a href="/" class="menu">
+                                    首页
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/archives" class="menu">
+                                    归档
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/tags" class="menu">
+                                    标签
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/post/about" class="menu">
+                                    关于
+                                </a>
+                            </li>
+                            
+                                
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $(".menu-btn").click(function() {
+            $(".menu-container").slideToggle();
+        });
+        $(window).resize(function() {
+
+            if (window.matchMedia('(min-width: 960px)').matches) {
+                $(".menu-container").css('display', 'block')
+            } else {
+                $(".menu-container").css('display', 'none')
+            }
+
+        });
+    });
+</script>
+
+            <div id="main-content" class="post-detail main-container">
+                <!-- left -->
+                <div id="content" class="main-container-left">
+                    <article class="post i-card">
+                        <h2 class="post-title">
+                            Elasticsearch 基本概念
+                        </h2>
+                        <div class="post-info">
+                            <time class="post-time">2019-09-02</time>
+                            
+                                <a href="http://kingofzihua.github.io/tag/n9VRPxrjY" class="post-tag i-tag
+                            i-tag-other_1">
+                            #elasticsearch
+                        </a>
+                                
+                        </div>
+                        
+                            <div class="post-feature-image" style="background-image: url('http://kingofzihua.github.io/post-images/elasticsearch-ji-ben-gai-nian.jpeg')"></div>
+                            
+                                <div class="post-content">
+                                    <blockquote>
+<p>Elasticsearch 是一个分布式的搜索和分析引擎，可以用于全文检索、结构化检索和分析，并能将这三者结合起来。Elasticsearch 基于 Lucene 开发，是 Lucene 的封装，提供了 REST API 的操作接口，开箱即用。现在是使用最广的开源搜索引擎之一，Wikipedia、Stack Overflow、GitHub 等都基于 Elasticsearch 来构建他们的搜索引擎。</p>
+</blockquote>
+<!-- more -->
+<h2 id="基础知识">基础知识</h2>
+<h3 id="索引词term">索引词（term）</h3>
+<p>在<code>Elasticsearch</code> 中 索引词(<code>term</code>)是一个能够被索引的精确值。<br>
+foo、Foo、FOO几个单词是不同的索引词。索引词（<code>term</code>）是可以通过<code>term</code>查询进行准确的搜索。</p>
+<h3 id="文本text">文本（text）</h3>
+<p>文本是一段普通的非结构化的文字。通常，文本会被分析成一个个的索引词，存储在<code>Elasticsearch</code> 的索引库中。为了让文本能够进行搜索，文本字段需要实现进行分析；当对文本中的关键词进行查询的时候，搜索引擎应该根据搜索条件搜索出原文本</p>
+<h3 id="分析analysis">分析(analysis)</h3>
+<p>分析是将文本转化为索引词的过程，分析的结果依赖于分词器。比如FOO BAR、Foo-Bar 和 foo bar 这几个单词有可能会被分析称相同的索引词foo和bar，这些索引词存储在<code>Elasticsearch</code>的索引库中。当用FoO:bAR 进行全文搜索的时候，搜索引擎根据匹配计算也能在索引库中搜索出之前的内容。这就是Elasticsearch的搜索分析</p>
+<h3 id="集群cluster">集群(cluster)</h3>
+<blockquote>
+<p>集群由一个或多个节点组成，对外提供服务，对外提供索引和搜索功能。</p>
+</blockquote>
+<ul>
+<li>在所有节点，一个集群有一个唯一的名称默认为<code>Elasticsearch</code>。</li>
+<li>因为每个节点只能是集群的一部分，当该节点被设置为相同的集群名称时，就会自动加入集群。</li>
+<li>当需要有多个集群的时候，要确保每个集群的名称不能重复，否则，节点可能加入错误的集群。</li>
+</ul>
+<p><em>请注意，一个节点只能加入一个集群。此外，你还可以拥有多个独立的集群，每个集群都有起不同的集群名称。例如，在开发过程中，你可以建立开发集群库和测试集群库，分别为开发、测试服务。</em></p>
+<h4 id="elasticsearch集群结构">Elasticsearch集群结构</h4>
+<figure data-type="image" tabindex="1"><img src="http://kingofzihua.github.io/post-images/1567420390519.jpg" alt="" loading="lazy"></figure>
+<h3 id="节点node">节点(node)</h3>
+<p>一个节点是一个逻辑上独立的服务，他是集群的一部分，可以存储数据，并参与集群的索引和搜索功能。</p>
+<ul>
+<li>节点是一个<code>Elasticsearch</code>的实例
+<ul>
+<li>本质上就是一个java进程</li>
+<li>一台机器上可以运行多个<code>Elasticsearch</code>进程，但是生产环境一般建议一台机器上只运行一个<code>Elasticsearch</code>实例</li>
+</ul>
+</li>
+<li>每一个节点都有名字，通过配置文件配置，或者启动的时候 -E node.name=node1 指定</li>
+<li>每一个节点在启动之后，会分配一个UID，保存在data目录下</li>
+</ul>
+<h4 id="master-eligible-nodes-和-masternode">Master-eligible nodes 和 MasterNode</h4>
+<ul>
+<li>每个节点启动后，默认就是一个Master eligible节点
+<ul>
+<li>可以设置 node.master:false 禁止</li>
+</ul>
+</li>
+<li>Master-eligible 节点可以参加选主流程，成为Master节点</li>
+<li>当第一个节点启动当时候，他会将自己选举为Master节点</li>
+<li>每个节点上都保存了集群都状态人，只有Master节点才能修改集群都状态信息
+<ul>
+<li>集群状态（Cluster State）维护了一个集群中必要的信息
+<ul>
+<li>所有的节点新</li>
+<li>所有的索引和其相关的Mapping与Setting 信息</li>
+<li>分片的路由信息</li>
+</ul>
+</li>
+<li>任意节点都能修改信息会导致数据的不一致性，<br>
+<strong>所以只有Master节点才能修改集群的状态信息</strong></li>
+</ul>
+</li>
+</ul>
+<h4 id="date-node-coordinating-node">Date Node &amp; Coordinating Node</h4>
+<ul>
+<li>Data Node
+<ul>
+<li>可以保存数据的节点，叫做 Data Node 负责保存分片数据。在数据扩展上起到了至关重要的作用</li>
+</ul>
+</li>
+<li>Coordinating Node
+<ul>
+<li>负责接受Client的请求，将请求分发到合适的节点，最终把结果汇集到一起</li>
+<li>每个节点默认都起到了 Coordinating Node 的职责</li>
+</ul>
+</li>
+</ul>
+<h4 id="其他的节点类型">其他的节点类型</h4>
+<ul>
+<li>Hot &amp; Warm Node （冷热节点）
+<ul>
+<li>不同的硬件配置的Data Node，用来实现 Hot &amp; Warn 架构，降低集群部署的成本</li>
+</ul>
+</li>
+<li>Machine Learning Node
+<ul>
+<li>负责跑机器学习的Job，用来做异常检测</li>
+</ul>
+</li>
+<li>Tribe Node
+<ul>
+<li>（5.3 开始使用Cross Cluster Serarch）Tribe Node 连接到不同的Elasticsearch 集群，并且支持将这些集群当成一个单独的集群处理</li>
+</ul>
+</li>
+</ul>
+<h4 id="配置节点类型">配置节点类型</h4>
+<ul>
+<li>开发环境中一个节点可以承担多种角色</li>
+<li>生产环境中，应该设置单一的角色的节点（dedicated node）</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>节点类型</th>
+<th>配置参数</th>
+<th>默认值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>maste eligible</td>
+<td>node.master</td>
+<td>true</td>
+</tr>
+<tr>
+<td>data</td>
+<td>node.data</td>
+<td>true</td>
+</tr>
+<tr>
+<td>ingest</td>
+<td>node.ingest</td>
+<td>true</td>
+</tr>
+<tr>
+<td>coordinating only</td>
+<td>无</td>
+<td>每个节点默认都是coordinating节点设置其他类型全部为false</td>
+</tr>
+<tr>
+<td>machine learning</td>
+<td>node.ml</td>
+<td>true(需enable x-pack)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="分片shard">分片(shard)</h3>
+<h4 id="主分片primary-shard">主分片(primary shard)</h4>
+<ul>
+<li>一个分片是一个运行的Lucene的实例</li>
+<li>主分片数在索引创建时指定，后续不允许修改，除非 <code>Reindex</code></li>
+</ul>
+<h4 id="副本分片replica-shard">副本分片(replica shard)</h4>
+<ul>
+<li>副本分片数，可以动态调整</li>
+<li>增加副本数，还可以在一定程度上提高服务的可用性（读取的吞吐）</li>
+</ul>
+<h4 id="示例">示例</h4>
+<p><strong>一个三节点的集群中，blogs索引的分片分布情况</strong><br>
+<img src="http://kingofzihua.github.io/post-images/1567417393236.jpg" alt="" loading="lazy"></p>
+<h4 id="分片的设定">分片的设定</h4>
+<p>对于生产环境中分片的设定，需要提现做好容量规划</p>
+<ul>
+<li>分片设置过小
+<ul>
+<li>导致后续无法增加节点实现水平扩展</li>
+<li>单个分片的数据量太大，导致数据重新分配耗时</li>
+</ul>
+</li>
+<li>分片设置过大，<br>
+<em>7.0之前默认分片数是5个，7.0开始，默认主分片设置成1，解决了 <code>over-sharding</code>的问题</em>
+<ul>
+<li>影响搜索结果的相关性打分，影响统计结果的准确性</li>
+<li>单个节点上过多的分片，会导致资源浪费，同时也会影响性能</li>
+</ul>
+</li>
+</ul>
+<h4 id="demo">Demo</h4>
+<p><strong>在Kibana的开发控制台执行</strong></p>
+<ul>
+<li>获取集群状态的接口</li>
+</ul>
+<pre><code>GET _cluster/health 
+</code></pre>
+<p>返回结果:</p>
+<pre><code>{
+  &quot;cluster_name&quot; : &quot;elasticsearch&quot;,
+  &quot;status&quot; : &quot;yellow&quot;, //状态是黄色的
+  &quot;timed_out&quot; : false,
+  &quot;number_of_nodes&quot; : 1, //只有1个节点
+  &quot;number_of_data_nodes&quot; : 1,//data node 
+  &quot;active_primary_shards&quot; : 18, //18个主分片
+  &quot;active_shards&quot; : 18,
+  &quot;relocating_shards&quot; : 0,
+  &quot;initializing_shards&quot; : 0,
+  &quot;unassigned_shards&quot; : 11,
+  &quot;delayed_unassigned_shards&quot; : 0,
+  &quot;number_of_pending_tasks&quot; : 0,
+  &quot;number_of_in_flight_fetch&quot; : 0,
+  &quot;task_max_waiting_in_queue_millis&quot; : 0,
+  &quot;active_shards_percent_as_number&quot; : 62.06896551724138
+}
+</code></pre>
+<ul>
+<li>查看节点信息</li>
+</ul>
+<pre><code>GET _cat/nodes 
+</code></pre>
+<p>返回结果:</p>
+<pre><code> 127.0.0.1 28 74 2 0.08 0.20 0.12 mdi * homestead
+</code></pre>
+<ul>
+<li>查看分片信息</li>
+</ul>
+<pre><code>GET _cat/shards
+</code></pre>
+<p>返回结果:</p>
+<pre><code>...
+products_2    3 r UNASSIGNED                          
+products_2    0 p STARTED        28  17.3kb 127.0.0.1 homestead
+products_2    0 r UNASSIGNED                          
+test_index     2 p STARTED         1   3.5kb    127.0.0.1  homestead
+test_index     2 r UNASSIGNED       
+...
+</code></pre>
+<h3 id="索引index">索引(index)</h3>
+<ul>
+<li>索引是具有相同结构的文章集合
+<ul>
+<li>一个客户信息的索引</li>
+<li>一个产品目录的索引</li>
+<li>一个订单数据的索引</li>
+</ul>
+</li>
+<li>索引的名字全部小写</li>
+<li>单个集群中可以定义多个你想要的索引<br>
+<img src="http://kingofzihua.github.io/post-images/1567407893547.jpg" alt="" loading="lazy"></li>
+</ul>
+<h4 id="索引的不同语意">索引的不同语意</h4>
+<figure data-type="image" tabindex="2"><img src="http://kingofzihua.github.io/post-images/1567408973411.jpg" alt="" loading="lazy"></figure>
+<h3 id="类型-type">类型 (type)</h3>
+<blockquote>
+<p>可以认为是数据库中的一个表</p>
+</blockquote>
+<p>在索引中你可以定义一个或多个类型，类型是索引的逻辑分区。在一般情况下一种类型被定义为具有一组公共字段的文档。例如，让我们假设你运行一个博客平台，并把所有的数据存储在一个索引中。在这个索引中，你可以定义一种类型为用户数据，一种类型为博客数据，另一种类型为评论数据</p>
+<ul>
+<li>6.0开始Types已经被<code>Depressed</code>。</li>
+<li>在7.0之前，一个<code>index</code>可以设置多个Types</li>
+<li><font style="color:red">7.0开始 一个索引只能创建一个Type - “<code>_doc</code>”</font></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>type</th>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>document(文档)</td>
+<td>field（字段）</td>
+<td>field（字段）</td>
+<td>field（字段）</td>
+</tr>
+<tr>
+<td>document(文档)</td>
+<td>field（字段）</td>
+<td>field（字段）</td>
+<td>field（字段）</td>
+</tr>
+<tr>
+<td>document(文档)</td>
+<td>field（字段）</td>
+<td>field（字段）</td>
+<td>field（字段）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="文档document">文档(document)</h3>
+<blockquote>
+<p>可以认为是数据库中的一条记录</p>
+</blockquote>
+<p>文档是存储在<code>Elasticsearch</code>中的一个JSON格式的字符串。它就像在关系数据库中表的一行。每个储存在索引中的一个文档都有一个类型和一个ID，每个文档都是一个JSON对象，存储了零个或者多个字段，或者键值对。原始的JSON文档被存储在一个叫做<code>_source</code>的字段中。当搜索文档的时候默认返回的就是这个字段</p>
+<ul>
+<li><code>Elasticsearch</code>是面向文档的，文档是所有可搜索数据的最小单位
+<ul>
+<li>日志文件中的一条日志</li>
+<li>一本电影的信息 / 一张唱片的详细信息</li>
+<li>MP3播放器里的一首歌 / 一篇PDF文档中的具体内容</li>
+</ul>
+</li>
+<li>文档会被序列化成JSON格式，保存在<code>Elasticsearch</code>中
+<ul>
+<li>JSON对象由字段组成</li>
+<li>每个字段都有对应的字段类型（字符串 / 数值 / 布尔 / 日期 / 二进制 / 范围类型）</li>
+</ul>
+</li>
+<li>每个文档都有一个Unique ID
+<ul>
+<li>你可以自己指定 ID</li>
+<li>或者由<code>Elasticsearch</code> 自动生成</li>
+</ul>
+</li>
+</ul>
+<figure data-type="image" tabindex="3"><img src="http://kingofzihua.github.io/post-images/1567481358672.png" alt="" loading="lazy"></figure>
+<h4 id="json-文档">JSON 文档</h4>
+<ul>
+<li>一篇文档包行列一系列的字段，类似于数据库中的一条数据</li>
+<li>JSON 文档，格式灵活，不需要预先定义格式
+<ul>
+<li>字段类型可以指定或者是通过<code>Elasticsearch</code> 自动推算(不推荐)</li>
+<li>支持数组 / 支持嵌套<br>
+<img src="http://kingofzihua.github.io/post-images/1567408397372.jpg" alt="" loading="lazy"><br>
+<em>CSV的文件 通过 logstash转化并写入elasticsearch</em></li>
+</ul>
+</li>
+</ul>
+<h4 id="文档的元数据">文档的元数据</h4>
+<figure data-type="image" tabindex="4"><img src="http://kingofzihua.github.io/post-images/1567407973203.jpg" alt="" loading="lazy"></figure>
+<h3 id="映射mapping">映射(mapping)</h3>
+<blockquote>
+<p>可以认为是数据库中的表结构</p>
+</blockquote>
+<p>每一个索引都有一个映射，它定义了索引中的每一个字段类型，以及一个索引范围的设置，一个映射可以事先被定义，或者在第一次存储文档的时候自动识别。</p>
+<h3 id="字段field">字段(field)</h3>
+<blockquote>
+<p>字段类似于关系数据库中表的列</p>
+</blockquote>
+<p>文档中包含零个或者多个字段，字段可以是一个简单的值(例如字符串、整数、日期)，也可以是一个数组或队形的嵌套结构。每个字段都对应一个字段类型，例如整数、字符串、对象等。字段还可以指定如何分析该字段等值。</p>
+<h3 id="主键id">主键(ID)</h3>
+<blockquote>
+<p>ID是一个文件的唯一标识。</p>
+</blockquote>
+<p>如果存在库的时候没有提供ID，系统会自动生成一个ID，文档的 id 必须是唯一的。</p>
+<h2 id="传统关系型数据库和elasticsearch的区别">传统关系型数据库和Elasticsearch的区别</h2>
+<p><code>Elasticsearch</code> 本质上是一个数据库，但并不是 Mysql 这种关系型数据库，查询语言也不是 SQL，而且<code>Elasticsearch</code> 自己的一套查询语言。</p>
+<p>既然是数据库，有一些概念是互通的，如下表：</p>
+<table>
+<thead>
+<tr>
+<th>Mysql</th>
+<th>Elasticsearch</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>数据库（Database）</td>
+<td>索引（Index）</td>
+</tr>
+<tr>
+<td>表（Table）</td>
+<td>类型（Type）</td>
+</tr>
+<tr>
+<td>记录（Row）</td>
+<td>文档（Document）</td>
+</tr>
+<tr>
+<td>字段（Column）</td>
+<td>字段（Fields）</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="参考链接">参考链接</h2>
+<ul>
+<li><a href="https://e.jd.com/30318357.html">Elasticsearch技术解析与实战</a></li>
+<li><a href="https://time.geekbang.org/course/intro/197">极客时间:Elasticsearch核心技术与实战</a></li>
+<li><a href="https://learnku.com/index.php/courses/ecommerce-advance/5.8/the-basic-concept-of-elasticsearch/4314">laravel-china: Elasticsearch 基础概念</a></li>
+</ul>
+
+                                </div>
+                    </article>
+                    <!--  -->
+                    
+                        <div class="next-post">
+                            <div class="next">下一篇</div>
+                            <a href="http://kingofzihua.github.io/post/fu-wu-qi-chang-yong-duan-kou-ji-ying-yong-cheng-xu-duan-kou-zuo-yong-jie-shao">
+                                <h3 class="post-title">
+                                    服务器常用端口及应用程序端口作用介绍
+                                </h3>
+                            </a>
+                        </div>
+                        
+                            <div id="disqus_thread"></div>
+                            <div id="gitalk-container"></div>
+                </div>
+                <!-- middle -->
+                <div class="main-container-middle"></div>
+                <!-- right -->
+                <div id="sidebar" class="main-container-right">
+                    
+                        <!-- toc -->
+                        
+    <div class="toc-card i-card ">
+        <div class="toc-title i-card-title">目录</div>
+        <div class="toc-content">
+            <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86">基础知识</a>
+<ul>
+<li><a href="#%E7%B4%A2%E5%BC%95%E8%AF%8Dterm">索引词（term）</a></li>
+<li><a href="#%E6%96%87%E6%9C%ACtext">文本（text）</a></li>
+<li><a href="#%E5%88%86%E6%9E%90analysis">分析(analysis)</a></li>
+<li><a href="#%E9%9B%86%E7%BE%A4cluster">集群(cluster)</a>
+<ul>
+<li><a href="#elasticsearch%E9%9B%86%E7%BE%A4%E7%BB%93%E6%9E%84">Elasticsearch集群结构</a></li>
+</ul>
+</li>
+<li><a href="#%E8%8A%82%E7%82%B9node">节点(node)</a>
+<ul>
+<li><a href="#master-eligible-nodes-%E5%92%8C-masternode">Master-eligible nodes 和 MasterNode</a></li>
+<li><a href="#date-node-coordinating-node">Date Node &amp; Coordinating Node</a></li>
+<li><a href="#%E5%85%B6%E4%BB%96%E7%9A%84%E8%8A%82%E7%82%B9%E7%B1%BB%E5%9E%8B">其他的节点类型</a></li>
+<li><a href="#%E9%85%8D%E7%BD%AE%E8%8A%82%E7%82%B9%E7%B1%BB%E5%9E%8B">配置节点类型</a></li>
+</ul>
+</li>
+<li><a href="#%E5%88%86%E7%89%87shard">分片(shard)</a>
+<ul>
+<li><a href="#%E4%B8%BB%E5%88%86%E7%89%87primary-shard">主分片(primary shard)</a></li>
+<li><a href="#%E5%89%AF%E6%9C%AC%E5%88%86%E7%89%87replica-shard">副本分片(replica shard)</a></li>
+<li><a href="#%E7%A4%BA%E4%BE%8B">示例</a></li>
+<li><a href="#%E5%88%86%E7%89%87%E7%9A%84%E8%AE%BE%E5%AE%9A">分片的设定</a></li>
+<li><a href="#demo">Demo</a></li>
+</ul>
+</li>
+<li><a href="#%E7%B4%A2%E5%BC%95index">索引(index)</a>
+<ul>
+<li><a href="#%E7%B4%A2%E5%BC%95%E7%9A%84%E4%B8%8D%E5%90%8C%E8%AF%AD%E6%84%8F">索引的不同语意</a></li>
+</ul>
+</li>
+<li><a href="#%E7%B1%BB%E5%9E%8B-type">类型 (type)</a></li>
+<li><a href="#%E6%96%87%E6%A1%A3document">文档(document)</a>
+<ul>
+<li><a href="#json-%E6%96%87%E6%A1%A3">JSON 文档</a></li>
+<li><a href="#%E6%96%87%E6%A1%A3%E7%9A%84%E5%85%83%E6%95%B0%E6%8D%AE">文档的元数据</a></li>
+</ul>
+</li>
+<li><a href="#%E6%98%A0%E5%B0%84mapping">映射(mapping)</a></li>
+<li><a href="#%E5%AD%97%E6%AE%B5field">字段(field)</a></li>
+<li><a href="#%E4%B8%BB%E9%94%AEid">主键(ID)</a></li>
+</ul>
+</li>
+<li><a href="#%E4%BC%A0%E7%BB%9F%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%92%8Celasticsearch%E7%9A%84%E5%8C%BA%E5%88%AB">传统关系型数据库和Elasticsearch的区别</a></li>
+<li><a href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5">参考链接</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+        <script>
+            function locateCatelogList() {
+                /*获取文章目录集合,可通过:header过滤器*/
+                var alis = $('.post-content :header');
+                /*获取侧边栏目录列表集合**/
+                var sidebar_alis = $('.markdownIt-TOC a');
+                /*获取滚动条到顶部的距离*/
+                var scroll_height = $(window).scrollTop();
+                for (var i = 0; i < alis.length; i++) {
+                    /*获取锚点集合中的元素分别到顶点的距离*/
+                    var a_height = $(alis[i]).offset().top;
+                    if (a_height < scroll_height) {
+                        /*高亮显示*/
+                        sidebar_alis.removeClass('on');
+                        $(sidebar_alis[i]).addClass('on');
+                    }
+                }
+            }
+            $(function() {
+                /*绑定滚动事件 */
+                $(window).bind('scroll', locateCatelogList);
+            });
+        </script>
+    </div>
+    
+                            
+
+                </div>
+
+
+
+
+            </div>
+
+
+            <div class="site-footer">
+  Powered by <a href="https://github.com/kingofzihua" target="_blank">kingofzihua</a> | 
+  <a class="rss" href="http://kingofzihua.github.io/atom.xml" target="_blank">RSS</a>
+</div>
+
+<script>
+  hljs.initHighlightingOnLoad()
+</script>
+
+
+    </div>
+    <script>
+        $('#sidebar').stickySidebar({
+            topSpacing: 80,
+            // bottomSpacing: 60
+        });
+    </script>
+    
+</body>
+
+</html>

@@ -1,0 +1,297 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>
+    服务器常用端口及应用程序端口作用介绍 | kingofzihua
+</title>
+<link rel="shortcut icon" href="http://kingofzihua.github.io/favicon.ico?v=1577770835023">
+<!-- <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous"> -->
+<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="http://kingofzihua.github.io/styles/main.css">
+<!-- js -->
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+<script src="http://kingofzihua.github.io/media/js/jquery.sticky-sidebar.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<script src="https://cdn.bootcss.com/moment.js/2.23.0/moment.min.js"></script>
+
+
+        
+</head>
+
+<body>
+    <div class="main">
+        <div class="header">
+    <div class="nav">
+        <div class="logo">
+            <a href="http://kingofzihua.github.io">
+                <img class="avatar" src="http://kingofzihua.github.io/images/avatar.png?v=1577770835023" alt="">
+            </a>
+            <div class="site-title">
+                <h1>
+                    kingofzihua
+                </h1>
+            </div>
+        </div>
+        <span class="menu-btn fa fa-align-justify"></span>
+        <div class="menu-container">
+            <ul>
+                
+                    
+                            <li>
+                                <a href="/" class="menu">
+                                    首页
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/archives" class="menu">
+                                    归档
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/tags" class="menu">
+                                    标签
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/post/about" class="menu">
+                                    关于
+                                </a>
+                            </li>
+                            
+                                
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $(".menu-btn").click(function() {
+            $(".menu-container").slideToggle();
+        });
+        $(window).resize(function() {
+
+            if (window.matchMedia('(min-width: 960px)').matches) {
+                $(".menu-container").css('display', 'block')
+            } else {
+                $(".menu-container").css('display', 'none')
+            }
+
+        });
+    });
+</script>
+
+            <div id="main-content" class="post-detail main-container">
+                <!-- left -->
+                <div id="content" class="main-container-left">
+                    <article class="post i-card">
+                        <h2 class="post-title">
+                            服务器常用端口及应用程序端口作用介绍
+                        </h2>
+                        <div class="post-info">
+                            <time class="post-time">2019-09-01</time>
+                            
+                                <a href="http://kingofzihua.github.io/tag/f7PDRDRNb" class="post-tag i-tag
+                            i-tag-banana">
+                            #端口
+                        </a>
+                                
+                        </div>
+                        
+                            <div class="post-feature-image" style="background-image: url('http://kingofzihua.github.io/post-images/fu-wu-qi-chang-yong-duan-kou-ji-ying-yong-cheng-xu-duan-kou-zuo-yong-jie-shao.png')"></div>
+                            
+                                <div class="post-content">
+                                    <blockquote>
+<p>一台服务器为什么可以同时是Web服务器，也可以是FTP服务器，还可以是邮件服务器等，其中一个很重要的原因是各种服务采用不同的端口分别提供不同的服务，比如：通常TCP/IP协议规定Web采用80号端口，FTP采用21号端口等，而邮件服务器是采用25号端口。这样，通过不同端口，计算机就可以与外界进行互不干扰的通信</p>
+</blockquote>
+<!-- more --> 
+<h2 id="常用端口整理">常用端口整理</h2>
+<table>
+<thead>
+<tr>
+<th>端口号</th>
+<th>协议</th>
+<th>应用程序及其作用</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>21</td>
+<td>FTP</td>
+<td>FTP端口</td>
+<td>文件上传、下载</td>
+</tr>
+<tr>
+<td>22</td>
+<td>SSH</td>
+<td>SSH远程登陆</td>
+<td>远程登陆</td>
+</tr>
+<tr>
+<td>25</td>
+<td>SMTP</td>
+<td>邮件传输</td>
+<td>邮件传输</td>
+</tr>
+<tr>
+<td>53</td>
+<td>DNS</td>
+<td>DNS域名解析</td>
+<td>域名解析</td>
+</tr>
+<tr>
+<td>80</td>
+<td>HTTP</td>
+<td>HTTP服务默认端口</td>
+<td>nginx、apache 等web服务会需要监听</td>
+</tr>
+<tr>
+<td>443</td>
+<td>HTTPS</td>
+<td>HTTPS协议的默认端口</td>
+<td>HTTPS</td>
+</tr>
+<tr>
+<td>3306</td>
+<td></td>
+<td>mysql</td>
+<td>MySQL、MariaDB</td>
+</tr>
+<tr>
+<td>5601</td>
+<td></td>
+<td>Kibana</td>
+<td>Kibana</td>
+</tr>
+<tr>
+<td>6379</td>
+<td></td>
+<td>Redis</td>
+<td>Redis 默认端口</td>
+</tr>
+<tr>
+<td>8080</td>
+<td></td>
+<td>tomcat</td>
+<td>TOMCAT，默认的端口号</td>
+</tr>
+<tr>
+<td>9000</td>
+<td></td>
+<td>php-fpm</td>
+<td>php-fpm默认端口</td>
+</tr>
+<tr>
+<td>9200</td>
+<td></td>
+<td>elasticsearch</td>
+<td>elasticsearch默认端口</td>
+</tr>
+</tbody>
+</table>
+
+                                </div>
+                    </article>
+                    <!--  -->
+                    
+                        <div class="next-post">
+                            <div class="next">下一篇</div>
+                            <a href="http://kingofzihua.github.io/post/tidewaysxhprof-he-xhgui-da-zao-php-fei-qin-ru-shi-jian-kong-ping-tai">
+                                <h3 class="post-title">
+                                    Tideways、xhprof 和 xhgui 打造 PHP 非侵入式监控平台
+                                </h3>
+                            </a>
+                        </div>
+                        
+                            <div id="disqus_thread"></div>
+                            <div id="gitalk-container"></div>
+                </div>
+                <!-- middle -->
+                <div class="main-container-middle"></div>
+                <!-- right -->
+                <div id="sidebar" class="main-container-right">
+                    
+                        <!-- toc -->
+                        
+    <div class="toc-card i-card ">
+        <div class="toc-title i-card-title">目录</div>
+        <div class="toc-content">
+            <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E5%B8%B8%E7%94%A8%E7%AB%AF%E5%8F%A3%E6%95%B4%E7%90%86">常用端口整理</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+        <script>
+            function locateCatelogList() {
+                /*获取文章目录集合,可通过:header过滤器*/
+                var alis = $('.post-content :header');
+                /*获取侧边栏目录列表集合**/
+                var sidebar_alis = $('.markdownIt-TOC a');
+                /*获取滚动条到顶部的距离*/
+                var scroll_height = $(window).scrollTop();
+                for (var i = 0; i < alis.length; i++) {
+                    /*获取锚点集合中的元素分别到顶点的距离*/
+                    var a_height = $(alis[i]).offset().top;
+                    if (a_height < scroll_height) {
+                        /*高亮显示*/
+                        sidebar_alis.removeClass('on');
+                        $(sidebar_alis[i]).addClass('on');
+                    }
+                }
+            }
+            $(function() {
+                /*绑定滚动事件 */
+                $(window).bind('scroll', locateCatelogList);
+            });
+        </script>
+    </div>
+    
+                            
+
+                </div>
+
+
+
+
+            </div>
+
+
+            <div class="site-footer">
+  Powered by <a href="https://github.com/kingofzihua" target="_blank">kingofzihua</a> | 
+  <a class="rss" href="http://kingofzihua.github.io/atom.xml" target="_blank">RSS</a>
+</div>
+
+<script>
+  hljs.initHighlightingOnLoad()
+</script>
+
+
+    </div>
+    <script>
+        $('#sidebar').stickySidebar({
+            topSpacing: 80,
+            // bottomSpacing: 60
+        });
+    </script>
+    
+</body>
+
+</html>

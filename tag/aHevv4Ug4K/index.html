@@ -1,0 +1,345 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>
+    监控 | kingofzihua
+</title>
+<link rel="shortcut icon" href="http://kingofzihua.github.io/favicon.ico?v=1577770835023">
+<!-- <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous"> -->
+<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="http://kingofzihua.github.io/styles/main.css">
+<!-- js -->
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+<script src="http://kingofzihua.github.io/media/js/jquery.sticky-sidebar.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<script src="https://cdn.bootcss.com/moment.js/2.23.0/moment.min.js"></script>
+
+
+</head>
+
+<body>
+    <div class="main">
+        <div class="header">
+    <div class="nav">
+        <div class="logo">
+            <a href="http://kingofzihua.github.io">
+                <img class="avatar" src="http://kingofzihua.github.io/images/avatar.png?v=1577770835023" alt="">
+            </a>
+            <div class="site-title">
+                <h1>
+                    kingofzihua
+                </h1>
+            </div>
+        </div>
+        <span class="menu-btn fa fa-align-justify"></span>
+        <div class="menu-container">
+            <ul>
+                
+                    
+                            <li>
+                                <a href="/" class="menu">
+                                    首页
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/archives" class="menu">
+                                    归档
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/tags" class="menu">
+                                    标签
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/post/about" class="menu">
+                                    关于
+                                </a>
+                            </li>
+                            
+                                
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $(".menu-btn").click(function() {
+            $(".menu-container").slideToggle();
+        });
+        $(window).resize(function() {
+
+            if (window.matchMedia('(min-width: 960px)').matches) {
+                $(".menu-container").css('display', 'block')
+            } else {
+                $(".menu-container").css('display', 'none')
+            }
+
+        });
+    });
+</script>
+
+            <div id="main-content" class="post-container main-container">
+                <div id="content" class="main-container-left">
+                    
+    <div class="i-card">
+        <b>标签：#
+        监控</b>
+    </div>
+    
+        
+            <article class="post i-card">
+                <h2 class="post-title">
+                    <a href="http://kingofzihua.github.io/post/tidewaysxhprof-he-xhgui-da-zao-php-fei-qin-ru-shi-jian-kong-ping-tai">
+                        Tideways、xhprof 和 xhgui 打造 PHP 非侵入式监控平台
+                    </a>
+                </h2>
+                <div class="post-info">
+                    <time class="post-time">2019-08-30</time>
+                    
+                        <a href="http://kingofzihua.github.io/tag/5u6qkCj88" class="post-tag i-tag
+                            i-tag-success">
+            #php
+        </a>
+                        
+                        <a href="http://kingofzihua.github.io/tag/aHevv4Ug4K" class="post-tag i-tag
+                            i-tag-success">
+            #监控
+        </a>
+                        
+                </div>
+                <div class="post-article">
+                    
+                        <a href="http://kingofzihua.github.io/post/tidewaysxhprof-he-xhgui-da-zao-php-fei-qin-ru-shi-jian-kong-ping-tai" class="post-feature-image" style="background-image:url(http://kingofzihua.github.io/post-images/tidewaysxhprof-he-xhgui-da-zao-php-fei-qin-ru-shi-jian-kong-ping-tai.png) ">
+                        </a>
+                        
+                            <div class="post-content">
+                                
+                                        <div class="post-content-content">
+                                            
+推荐阅读
+
+Tideways、xhprof 和 xhgui 打造 PHP 非侵入式监控平台
+超全的设计模式简介（45种）
+design-patterns-for-humans 中文版
+MongoDB 资源、库、工具、应用程序精选列表中文版
+有哪些鲜为人知，但是很有意思的网站？
+一份攻城狮笔记
+每天搜集 Github 上优秀的项目
+一些有趣的民间故事
+超好用的谷歌浏览器、Sublime Text、Phpstorm、油猴插件合集
+
+环境准备
+安装之前确保已经正确安装了以下软件
+
+PHP
+Nginx
+Mongodb
+
+安装 PHP mongodb 扩展
+$ sudo pecl install mongodb
+
+PHP 配置文件中添加
+[mongodb]
+extension=mongodb.so
+
+安装 PHP tideaways 扩展
+常规编译安装
+$ git clone https://github.com/tideways/php-xhprof-extension.git
+$ cd /path/php-xhprof-extension
+$ phpize
+$ ./configure
+$ make
+$ sudo make install
+
+PHP 配置文件中添加
+[tideways]
+extension=tideways_xhprof.so
+; 不需要自动加载，在程序中控制就行
+tideways.auto_prepend_library=0
+; 频率设置为100，在程序调用时可以修改
+tideways.sample_rate=100
+
+安装 xhgui-branch（xhgui 的汉化版）
+$ git clone https://github.com/laynefyc/xhgui-branch.git
+$ cd xhgui-branch
+$ php install.php
+
+修改 xhgui-branch 配置文件
+&amp;lt;?php
+    return array(
+ 	    ...
+        &#39;extension&#39; =&amp;gt; &#39;tideways_xhprof&#39;,
+     	...
+        &#39;save.handler&#39; =&amp;gt; &#39;mongodb&#39;,
+        &#39;db.host&#39; =&amp;gt; &#39;mongodb://127.0.0.1:27017&#39;,
+        &#39;db.db&#39; =&amp;gt; &#39;xhprof&#39;,
+ 	    ...
+    );
+
+启动 mongodb 并设置 xhgui 索引，命令如下：
+$ mongo
+&amp;gt; use xhprof
+&amp;gt; db.results.ensureIndex( { &#39;meta.SERVER.REQUEST_TIME&#39; : -1 } )
+&amp;gt; db.results.ensureIndex( { &#39;profile.main().wt&#39; : -1 } )
+&amp;gt; db.results.ensureIndex( { &#39;profile.main().mu&#39; : -1 } )
+&amp;gt; db.results.ensureIndex( { &#39;profile.main().cpu&#39; : -1 } )
+&amp;gt; db.results.ensureIndex( { &#39;meta.url&#39; : 1 } )
+
+xhgui 本地虚拟主机配置参考
+server {
+    listen       80;
+    server_name  xhgui.test;
+    root         /Users/yaozm/Documents/wwwroot/xhgui-branch/webroot;
+
+    # access_log  /usr/local/var/log/nginx/access.log;
+    error_log  /usr/local/var/log/nginx/error.log;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+        index  index.php index.html index.htm;
+    }
+}
+
+针对要分析的站点进行设置，直接在要分析站点的 nginx 配置中增加以下项，然后使配置生效就可以了。
+$ fastcgi_param PHP_VALUE &amp;quot;auto_prepend_file=/path/xhgui-branch/external/header.php&amp;quot;;
+
+参考配置
+server {
+    listen       80;
+    server_name  laravel.test;
+    root         /Users/yaozm/Documents/wwwroot/laravel/public;
+
+    # access_log  /usr/local/var/log/nginx/access.log;
+    error_log  /usr/local/var/log/nginx/error.log;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+        index  index.php index.html index.htm;
+    }
+ 	# 添加 PHP_VALUE，告诉 PHP 程序在执行前要调用的服务
+    fastcgi_param PHP_VALUE &amp;quot;auto_prepend_file=/path/wwwroot/xhgui-branch/external/header.php&amp;quot;;
+}
+
+或者也可以在修改 PHP 配置文件，告诉 PHP 程序在执行前要调用的服务
+; Automatically add files before PHP document.
+; http://php.net/auto-prepend-file
+auto_prepend_file = &amp;quot;/path/wwwroot/xhgui-branch/external/header.php&amp;quot;
+
+
+
+参考链接
+
+https://github.com/phacility/xhprof
+https://github.com/perftools/xhgui
+https://github.com/tideways/php-xhprof-extension
+https://github.com/laynefyc/xhgui-branch
+https://blog.it2048.cn/article-tideways-xhgui
+https://zhuanlan.zhihu.com/p/30832165
+
+
+转载自 Tideways、xhprof 和 xhgui 打造 PHP 非侵入式监控平台
+
+
+                                        </div>
+                                        
+                                            <a class="btn btn-text" href="http://kingofzihua.github.io/post/tidewaysxhprof-he-xhgui-da-zao-php-fei-qin-ru-shi-jian-kong-ping-tai">Read More ~</a>
+                            </div>
+                </div>
+            </article>
+            
+                <!-- 翻页 -->
+                
+                </div>
+                <!--  -->
+                <div class="main-container-middle"></div>
+                <!--  -->
+                <div id="sidebar" class="main-container-right">
+
+                    <!-- 个人信息 -->
+                    
+    <div class="id_card i-card">
+        <div class="id_card-avatar" style="background-image: url(http://kingofzihua.github.io/images/avatar.png?v=1577770835023)">
+        </div>
+        <h1 class="id_card-title">
+            kingofzihua
+        </h1>
+        <h2 class="id_card-description">
+            我未曾见过一个早起、勤奋、谨慎、诚实的人整天抱怨的 — 富兰克林
+        </h2>
+        <!--  -->
+        <div class="id_card-sns">
+            <!-- github -->
+            
+                <a href="https://github.com/kingofzihua" target="_blank" rel="noopener noreferrer"><i
+                class="fa fa-github"></i></a>
+                
+                    <!-- twitter -->
+                    
+                            <!-- weibo -->
+                            
+                                    <!-- facebook -->
+                                    
+
+        </div>
+    </div>
+    
+
+                        <!-- 公告栏 -->
+                        
+    <div class="notice-card i-card ">
+        <div class="notice-title i-card-title">友情链接</div>
+        <div class="notice-content">
+            <p>
+<a href="http://www.easyswoole.com" target="_blank" rel="noopener">easyswoole</a><br><br>
+<a href="https://learnku.com/laravel" target="_blank" rel="noopener">laravel-china</a><br><br>
+<a href="http://www.php20.cn" target="_blank" rel="noopener">仙士可的博客</a><br><br>
+<a href="http://www.lienze.com" target="_blank" rel="noopener">随心之所</a><br><br>
+<a href="https://niexp.cn" target="_blank" rel="noopener">锞锞blog</a><br><br>
+<a href="http://xingdong365.com" target="_blank" rel="noopener">邢栋博客</a><br><br>
+<a href="http://www.guohongfu.top" target="_blank" rel="noopener">一场、</a><br><br>
+<a href="https://dzt666.cn" target="_blank" rel="noopener">dongzt</a><br><br>
+<a href="http://phpcli.net" target="_blank" rel="noopener">爱因诗贤个人博客</a><br><br>
+</p>
+        </div>
+    </div>
+    
+
+                </div>
+            </div>
+
+
+
+            <div class="site-footer">
+  Powered by <a href="https://github.com/kingofzihua" target="_blank">kingofzihua</a> | 
+  <a class="rss" href="http://kingofzihua.github.io/atom.xml" target="_blank">RSS</a>
+</div>
+
+<script>
+  hljs.initHighlightingOnLoad()
+</script>
+
+    </div>
+    <script>
+        $('#sidebar').stickySidebar({
+            topSpacing: 80,
+            // bottomSpacing: 60
+        });
+    </script>
+</body>
+
+</html>

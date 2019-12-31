@@ -1,0 +1,572 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>
+    laravel 修改第三方OSS包适配文件元数据修改 | kingofzihua
+</title>
+<link rel="shortcut icon" href="http://kingofzihua.github.io/favicon.ico?v=1577770835023">
+<!-- <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous"> -->
+<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="http://kingofzihua.github.io/styles/main.css">
+<!-- js -->
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+<script src="http://kingofzihua.github.io/media/js/jquery.sticky-sidebar.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<script src="https://cdn.bootcss.com/moment.js/2.23.0/moment.min.js"></script>
+
+
+        
+</head>
+
+<body>
+    <div class="main">
+        <div class="header">
+    <div class="nav">
+        <div class="logo">
+            <a href="http://kingofzihua.github.io">
+                <img class="avatar" src="http://kingofzihua.github.io/images/avatar.png?v=1577770835023" alt="">
+            </a>
+            <div class="site-title">
+                <h1>
+                    kingofzihua
+                </h1>
+            </div>
+        </div>
+        <span class="menu-btn fa fa-align-justify"></span>
+        <div class="menu-container">
+            <ul>
+                
+                    
+                            <li>
+                                <a href="/" class="menu">
+                                    首页
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/archives" class="menu">
+                                    归档
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/tags" class="menu">
+                                    标签
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/post/about" class="menu">
+                                    关于
+                                </a>
+                            </li>
+                            
+                                
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $(".menu-btn").click(function() {
+            $(".menu-container").slideToggle();
+        });
+        $(window).resize(function() {
+
+            if (window.matchMedia('(min-width: 960px)').matches) {
+                $(".menu-container").css('display', 'block')
+            } else {
+                $(".menu-container").css('display', 'none')
+            }
+
+        });
+    });
+</script>
+
+            <div id="main-content" class="post-detail main-container">
+                <!-- left -->
+                <div id="content" class="main-container-left">
+                    <article class="post i-card">
+                        <h2 class="post-title">
+                            laravel 修改第三方OSS包适配文件元数据修改
+                        </h2>
+                        <div class="post-info">
+                            <time class="post-time">2019-08-27</time>
+                            
+                                <a href="http://kingofzihua.github.io/tag/Y4NpI8nJt" class="post-tag i-tag
+                            i-tag-error">
+                            #laravel
+                        </a>
+                                
+                                <a href="http://kingofzihua.github.io/tag/dA-40iPtnq" class="post-tag i-tag
+                            i-tag-other_1">
+                            #OSS
+                        </a>
+                                
+                        </div>
+                        
+                            <div class="post-feature-image" style="background-image: url('http://kingofzihua.github.io/post-images/laravel-oss-xiu-gai-di-san-fang-oss-bao-shi-pei-yuan-wen-jian-xiu-gai.png')"></div>
+                            
+                                <div class="post-content">
+                                    <blockquote>
+<p>对象存储 (Object Storage Service, 简称 OSS) OSS 相信大家都听过，它是阿里云对外提供的海量，安全和高可靠的云存储服务。</p>
+</blockquote>
+<!-- more -->
+<h2 id="flysystem-oss">flysystem-oss</h2>
+<h3 id="安装">安装</h3>
+<pre><code>$ composer require &quot;iidestiny/flysystem-oss&quot; -vvv
+</code></pre>
+<h3 id="配置storage">配置Storage</h3>
+<h4 id="新建一个provider">新建一个Provider</h4>
+<pre><code>$ php artisan make:provider OssServiceProvider
+</code></pre>
+<h4 id="修改-appprovidersossserviceprovider">修改 app/Providers/OssServiceProvider</h4>
+<pre><code>&lt;?php
+
+namespace App\Providers;
+
+use League\Flysystem\Filesystem;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\ServiceProvider;
+use Iidestiny\Flysystem\Oss\OssAdapter;
+use Iidestiny\Flysystem\Oss\Plugins\FileUrl;
+use Iidestiny\Flysystem\Oss\Plugins\SignUrl;
+use Iidestiny\Flysystem\Oss\Plugins\TemporaryUrl;
+use Iidestiny\Flysystem\Oss\Plugins\SignatureConfig;
+
+/**
+ * Class OssServiceProvider
+ * @auth kingofzihua
+ * @blog http://blog.kingofzihua.top
+ * @email kingofzihua@outlook.com
+ * @package App\Providers
+ */
+class OssServiceProvider extends ServiceProvider
+{
+    /**
+     * Bootstrap services.
+     *
+     * @return void
+     */
+    public function boot()
+    {
+        Storage::extend('oss', function ($app, $config) {
+
+            $root = $config['root'] ?? null;
+
+            $adapter = new OssAdapter(
+                $config['access_id'], $config['access_key'], $config['endpoint'],
+                $config['bucket'], $config['isCName'], $root
+            );
+
+            $filesystem = new Filesystem($adapter,['disable_asserts'=&gt;true]);
+            $filesystem-&gt;addPlugin(new FileUrl());
+            $filesystem-&gt;addPlugin(new SignUrl());
+            $filesystem-&gt;addPlugin(new TemporaryUrl());
+            $filesystem-&gt;addPlugin(new SignatureConfig());
+
+            return $filesystem;
+        });
+    }
+}
+</code></pre>
+<h4 id="编辑配置文件">编辑配置文件</h4>
+<p>.env</p>
+<pre><code>FILESYSTEM_DRIVER=oss
+OSS_ACCESS_KEY=xxxxxxxxx
+OSS_SECRET_KEY=xxxxxxxxxx
+OSS_ENDPOINT=xxxxxxxx
+OSS_BUCKET=xxxxxxx
+</code></pre>
+<p>app/config/filesystems.php</p>
+<pre><code># 增加oss配置项
+'oss' =&gt; [
+  'driver' =&gt; 'oss',
+  'access_key' =&gt; env('OSS_ACCESS_KEY'),
+  'secret_key' =&gt; env('OSS_SECRET_KEY'),
+  'endpoint'   =&gt; env('OSS_ENDPOINT'),
+  'bucket'     =&gt; env('OSS_BUCKET'),
+  'isCName'    =&gt; env('OSS_IS_CNAME', false), // 如果 isCname 为 false，endpoint 应配置 oss 提供的域名如：`oss-cn-beijing.aliyuncs.com`，否则为自定义域名，，cname 或 cdn 请自行到阿里 oss 后台配置并绑定 bucket
+],
+</code></pre>
+<h4 id="注册ossserviceprovider">注册OssServiceProvider</h4>
+<p>app/config/app.php</p>
+<pre><code>...
+'providers' =&gt; [
+        ...
+				//阿里云OSS
+        App\Providers\OssServiceProvider::class,
+],
+...
+</code></pre>
+<h2 id="oss-设置文件元信息">OSS 设置文件元信息</h2>
+<h3 id="项目需求">项目需求</h3>
+<p>下载的文件名称要和数据的编号相对应。</p>
+<h3 id="项目分析">项目分析</h3>
+<p>由于后台有批量倒入，而且倒入的是oss的文件地址，并且是分好类的，直接修改文件，有点不太友好，所以暂时不考虑，查找阿里云OSS文档，发现OSS可以修改文件的<code>Content-Disposition</code> ,wtf，这不就解决了吗？</p>
+<h3 id="解决方案">解决方案</h3>
+<ul>
+<li>文件后台批量上传</li>
+<li>上传成功后请求阿里云修改<code>Content-Disposition</code>为数据编号</li>
+</ul>
+<h3 id="问题">问题</h3>
+<p><code>flysystem-oss</code> 这个是封装的一个<code>Filesystem</code>，我们使用时通过<code>Storage</code>来 <code>put</code>操作存储文件，本质上其实使用的就是<code>Filesystem</code>，查看<code>Filesystem</code>的定义，发现里面没有提供修改的接口，</p>
+<h4 id="解决问题">解决问题</h4>
+<p>阿里云OSS 提供一个修改文件原信息的接口，是通过<code>copyObject</code>来实现的，<br>
+<strong>CopyObject使用限制</strong></p>
+<ul>
+<li>CopyObject接口仅支持拷贝小于1 GB的Object。如果要拷贝大于1 GB的Object，您可以使用UploadPartCopy接口进行操作。</li>
+<li>CopyObject接口支持修改Object的元数据(源Object与目标Object一致)，最大可支持修改48.8 TB的Object。</li>
+<li>使用此接口须对源Object有读权限。</li>
+<li>源Object和目标Object必须属于同一地域。</li>
+<li>不能拷贝通过追加上传方式产生的Object。</li>
+<li>如果源Object为软链接，则只拷贝软链接，无法拷贝软链接指向的文件内容。</li>
+</ul>
+<blockquote>
+<p>这里有个坑，就是说<code>源Object与目标Object一致</code>时才可以修改，sdk和文档中并没有说，但是自己测试的时候就是这样的。这个已提交工单，但是还没有回复</p>
+</blockquote>
+<h4 id="封装自己的ossadapter">封装自己的OssAdapter</h4>
+<p><strong>由于 <code>flysystem-oss</code> 并没有只修改<code>元数据</code>的方法所以我们要自己实现</strong></p>
+<p>新建一个<code>OssAdapter</code>并继承自 <code>flysystem-oss</code> 的<code>OssAdapter</code></p>
+<pre><code>&lt;?php
+
+namespace App\Filesystem;
+
+use OSS\Core\OssException;
+use Iidestiny\Flysystem\Oss\OssAdapter as BaseOssAdapter;
+
+/**
+ * Class OssAdapter
+ * @auth kingofzihua
+ * @blog http://blog.kingofzihua.top
+ * @email kingofzihua@outlook.com
+ * @package App\Filesystem
+ */
+class OssAdapter extends BaseOssAdapter
+{
+    /**
+     * @auth kingofzihua
+     * @return \OSS\OssClient
+     */
+    public function getClient()
+    {
+        return $this-&gt;client;
+    }
+
+    /**
+     * 修改数据元信息
+     * @param $path
+     * @param array $option
+     * @auth kingofzihua
+     * @return bool
+     */
+    public function updateMeta($path, array $option)
+    {
+        $path = $this-&gt;applyPathPrefix($path);				
+        try {
+            $this-&gt;client-&gt;copyObject($this-&gt;bucket, $path, $this-&gt;bucket, $path, $option);
+        } catch (OssException $exception) {
+            return false;
+        }
+        return true;
+    }
+}
+</code></pre>
+<h4 id="封装自己的filesystem">封装自己的Filesystem</h4>
+<p>由于<code>laravel</code>自带的<code>Filesystem</code>并没有oss所需要的接口，所以我们需要自己定义一个<code>Filesystem</code> 并继承自 <code>laravel</code>的<code>Filesystem</code></p>
+<pre><code>&lt;?php
+
+namespace App\Filesystem;
+
+use League\Flysystem\Util;
+use League\Flysystem\FileNotFoundException;
+use League\Flysystem\Filesystem as BaseFilesystem;
+
+/**
+ * Class Filesystem
+ * @auth kingofzihua
+ * @blog http://blog.kingofzihua.top
+ * @email kingofzihua@outlook.com
+ * @package App\Filesystem
+ */
+class Filesystem extends BaseFilesystem
+{
+    /**
+     * @param $path
+     * @param $newPath
+     * @param null $option
+     * @auth kingofzihua
+     * @return mixed
+     * @throws FileNotFoundException
+     */
+    public function updateMeta($path, array $option)
+    {
+        $path = Util::normalizePath($path);
+
+        //判断文件是否存在 如果不存在，就抛出异常
+        if (!$this-&gt;has($path)) {
+            throw new FileNotFoundException($path);
+        }
+        return $this-&gt;getAdapter()-&gt;updateMeta($path, $option);
+    }
+}
+
+</code></pre>
+<h4 id="storage中使用自己定义的-filesystem">Storage中使用自己定义的 Filesystem</h4>
+<p>AppProviders/OssServiceProvider.php</p>
+<pre><code>&lt;?php
+
+namespace App\Providers;
+
+//use League\Flysystem\Filesystem; 注释掉
+//use Iidestiny\Flysystem\Oss\OssAdapter; 注释掉
+use App\Filesystem\Filesystem;
+use App\Filesystem\OssAdapter;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\ServiceProvider;
+use Iidestiny\Flysystem\Oss\Plugins\FileUrl;
+use Iidestiny\Flysystem\Oss\Plugins\SignUrl;
+use Iidestiny\Flysystem\Oss\Plugins\TemporaryUrl;
+use Iidestiny\Flysystem\Oss\Plugins\SignatureConfig;
+
+/**
+ * Class OssServiceProvider
+ * @auth kingofzihua
+ * @blog http://blog.kingofzihua.top
+ * @email kingofzihua@outlook.com
+ * @package App\Providers
+ */
+class OssServiceProvider extends ServiceProvider
+{
+    /**
+     * Bootstrap services.
+     *
+     * @return void
+     */
+    public function boot()
+    {
+        Storage::extend('oss', function ($app, $config) {
+
+            $root = $config['root'] ?? null;
+
+            $adapter = new OssAdapter(
+                $config['access_id'], $config['access_key'], $config['endpoint'],
+                $config['bucket'], $config['isCName'], $root
+            );
+
+            $filesystem = new Filesystem($adapter,['disable_asserts'=&gt;true]);
+            $filesystem-&gt;addPlugin(new FileUrl());
+            $filesystem-&gt;addPlugin(new SignUrl());
+            $filesystem-&gt;addPlugin(new TemporaryUrl());
+            $filesystem-&gt;addPlugin(new SignatureConfig());
+
+            return $filesystem;
+        });
+    }
+}
+
+</code></pre>
+<h3 id="测试">测试</h3>
+<pre><code>
+use OSS\OssClient;
+use App\Models\Model;
+use App\Filesystem\Filesystem;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
+use League\Flysystem\FileNotFoundException;
+
+...
+    /**
+     * 通过模型修改用户的文件meta
+     * @param $model
+     * @auth kingofzihua
+     */
+public function updateFileMetaByModel($model){
+        $download_name = $model-&gt;id . '.' . File::extension($model-&gt;file_path);
+
+        $copyOptions = [
+            OssClient::OSS_HEADERS =&gt; [
+                OssClient::OSS_CONTENT_DISPOSTION =&gt; 'attachment;filename=' . $download_name,
+                OssClient::OSS_CACHE_CONTROL =&gt; 'No-cache',
+                OssClient::OSS_EXPIRES =&gt; '0',
+            ]
+        ];
+
+        try {
+
+            /**
+             * @var Filesystem $storage
+             */
+            $storage = Storage::disk();
+
+            $storage-&gt;updateMeta($model-&gt;file_path, $copyOptions);
+        } catch (FileNotFoundException $fileNotFoundException) {
+            //文件不存在，不用处理
+        }
+}
+</code></pre>
+<h2 id="总结">总结</h2>
+<p>我们在<code>laravel</code>中使用 OSS储存，首先需要将OSS储存扩展为<code>Filesystem</code>，给<code>Filesystem</code>自定义方法，调用OSSAPI 就可以实现，主要麻烦的地方就是你需要自己注册<code>Provider</code>，并且自己扩展<code>Filesystem</code>和<code>OssAdapter</code>。</p>
+<hr>
+<h3 id="阿里云客服提供回复">阿里云客服提供回复</h3>
+<p><strong>如果需要使用设置的headers生效必须设置<code>x-oss-metadata-directive</code>为 <code>REPLACE</code></strong>    <a href="https://help.aliyun.com/document_detail/31979.html">点击查看文档</a></p>
+<pre><code>$copyOptions = array(
+    OssClient::OSS_HEADERS =&gt; array(
+        'Expires' =&gt; '0',
+        'Content-Disposition' =&gt; 'attachment; filename=&quot;10086.zip&quot;',
+        'x-oss-meta-location' =&gt; 'location',
+        'x-oss-metadata-directive' =&gt; 'REPLACE', //这一句必须得加
+    ),
+);
+try{
+    $ossClient = new OssClient($accessKeyId, $accessKeySecret, $endpoint);
+
+    $ossClient-&gt;copyObject($fromBucket, $fromObject, $toBucket, $toObject, $copyOptions);
+} catch(OssException $e) {
+    printf(__FUNCTION__ . &quot;: FAILED\n&quot;);
+    printf($e-&gt;getMessage() . &quot;\n&quot;);
+    return;
+}
+</code></pre>
+<h2 id="参考资料">参考资料</h2>
+<p><a href="https://github.com/iiDestiny/flysystem-oss">flysystem-oss</a><br>
+<a href="https://learnku.com/articles/21812">优雅的 Oss Flysystem 扩展</a><br>
+<a href="https://help.aliyun.com/document_detail/31817.htm">对象存储服务OSS</a><br>
+<a href="https://helpcdn.aliyun.com/document_detail/32099.html">OSS PHP SDK </a></p>
+
+                                </div>
+                    </article>
+                    <!--  -->
+                    
+                        <div class="next-post">
+                            <div class="next">下一篇</div>
+                            <a href="http://kingofzihua.github.io/post/composer-ban-ben-yue-shu-biao-da-shi-he-lock-file">
+                                <h3 class="post-title">
+                                    composer 版本约束表达式和lock文件
+                                </h3>
+                            </a>
+                        </div>
+                        
+                            <div id="disqus_thread"></div>
+                            <div id="gitalk-container"></div>
+                </div>
+                <!-- middle -->
+                <div class="main-container-middle"></div>
+                <!-- right -->
+                <div id="sidebar" class="main-container-right">
+                    
+                        <!-- toc -->
+                        
+    <div class="toc-card i-card ">
+        <div class="toc-title i-card-title">目录</div>
+        <div class="toc-content">
+            <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#flysystem-oss">flysystem-oss</a>
+<ul>
+<li><a href="#%E5%AE%89%E8%A3%85">安装</a></li>
+<li><a href="#%E9%85%8D%E7%BD%AEstorage">配置Storage</a>
+<ul>
+<li><a href="#%E6%96%B0%E5%BB%BA%E4%B8%80%E4%B8%AAprovider">新建一个Provider</a></li>
+<li><a href="#%E4%BF%AE%E6%94%B9-appprovidersossserviceprovider">修改 app/Providers/OssServiceProvider</a></li>
+<li><a href="#%E7%BC%96%E8%BE%91%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6">编辑配置文件</a></li>
+<li><a href="#%E6%B3%A8%E5%86%8Cossserviceprovider">注册OssServiceProvider</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#oss-%E8%AE%BE%E7%BD%AE%E6%96%87%E4%BB%B6%E5%85%83%E4%BF%A1%E6%81%AF">OSS 设置文件元信息</a>
+<ul>
+<li><a href="#%E9%A1%B9%E7%9B%AE%E9%9C%80%E6%B1%82">项目需求</a></li>
+<li><a href="#%E9%A1%B9%E7%9B%AE%E5%88%86%E6%9E%90">项目分析</a></li>
+<li><a href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88">解决方案</a></li>
+<li><a href="#%E9%97%AE%E9%A2%98">问题</a>
+<ul>
+<li><a href="#%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98">解决问题</a></li>
+<li><a href="#%E5%B0%81%E8%A3%85%E8%87%AA%E5%B7%B1%E7%9A%84ossadapter">封装自己的OssAdapter</a></li>
+<li><a href="#%E5%B0%81%E8%A3%85%E8%87%AA%E5%B7%B1%E7%9A%84filesystem">封装自己的Filesystem</a></li>
+<li><a href="#storage%E4%B8%AD%E4%BD%BF%E7%94%A8%E8%87%AA%E5%B7%B1%E5%AE%9A%E4%B9%89%E7%9A%84-filesystem">Storage中使用自己定义的 Filesystem</a></li>
+</ul>
+</li>
+<li><a href="#%E6%B5%8B%E8%AF%95">测试</a></li>
+</ul>
+</li>
+<li><a href="#%E6%80%BB%E7%BB%93">总结</a>
+<ul>
+<li><a href="#%E9%98%BF%E9%87%8C%E4%BA%91%E5%AE%A2%E6%9C%8D%E6%8F%90%E4%BE%9B%E5%9B%9E%E5%A4%8D">阿里云客服提供回复</a></li>
+</ul>
+</li>
+<li><a href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99">参考资料</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+        <script>
+            function locateCatelogList() {
+                /*获取文章目录集合,可通过:header过滤器*/
+                var alis = $('.post-content :header');
+                /*获取侧边栏目录列表集合**/
+                var sidebar_alis = $('.markdownIt-TOC a');
+                /*获取滚动条到顶部的距离*/
+                var scroll_height = $(window).scrollTop();
+                for (var i = 0; i < alis.length; i++) {
+                    /*获取锚点集合中的元素分别到顶点的距离*/
+                    var a_height = $(alis[i]).offset().top;
+                    if (a_height < scroll_height) {
+                        /*高亮显示*/
+                        sidebar_alis.removeClass('on');
+                        $(sidebar_alis[i]).addClass('on');
+                    }
+                }
+            }
+            $(function() {
+                /*绑定滚动事件 */
+                $(window).bind('scroll', locateCatelogList);
+            });
+        </script>
+    </div>
+    
+                            
+
+                </div>
+
+
+
+
+            </div>
+
+
+            <div class="site-footer">
+  Powered by <a href="https://github.com/kingofzihua" target="_blank">kingofzihua</a> | 
+  <a class="rss" href="http://kingofzihua.github.io/atom.xml" target="_blank">RSS</a>
+</div>
+
+<script>
+  hljs.initHighlightingOnLoad()
+</script>
+
+
+    </div>
+    <script>
+        $('#sidebar').stickySidebar({
+            topSpacing: 80,
+            // bottomSpacing: 60
+        });
+    </script>
+    
+</body>
+
+</html>

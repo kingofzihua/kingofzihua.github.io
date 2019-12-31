@@ -1,0 +1,706 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>
+    Elasticsearch Query DSL - 复合查询 | kingofzihua
+</title>
+<link rel="shortcut icon" href="http://kingofzihua.github.io/favicon.ico?v=1577770835023">
+<!-- <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous"> -->
+<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="http://kingofzihua.github.io/styles/main.css">
+<!-- js -->
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+<script src="http://kingofzihua.github.io/media/js/jquery.sticky-sidebar.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<script src="https://cdn.bootcss.com/moment.js/2.23.0/moment.min.js"></script>
+
+
+        
+</head>
+
+<body>
+    <div class="main">
+        <div class="header">
+    <div class="nav">
+        <div class="logo">
+            <a href="http://kingofzihua.github.io">
+                <img class="avatar" src="http://kingofzihua.github.io/images/avatar.png?v=1577770835023" alt="">
+            </a>
+            <div class="site-title">
+                <h1>
+                    kingofzihua
+                </h1>
+            </div>
+        </div>
+        <span class="menu-btn fa fa-align-justify"></span>
+        <div class="menu-container">
+            <ul>
+                
+                    
+                            <li>
+                                <a href="/" class="menu">
+                                    首页
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/archives" class="menu">
+                                    归档
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/tags" class="menu">
+                                    标签
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/post/about" class="menu">
+                                    关于
+                                </a>
+                            </li>
+                            
+                                
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $(".menu-btn").click(function() {
+            $(".menu-container").slideToggle();
+        });
+        $(window).resize(function() {
+
+            if (window.matchMedia('(min-width: 960px)').matches) {
+                $(".menu-container").css('display', 'block')
+            } else {
+                $(".menu-container").css('display', 'none')
+            }
+
+        });
+    });
+</script>
+
+            <div id="main-content" class="post-detail main-container">
+                <!-- left -->
+                <div id="content" class="main-container-left">
+                    <article class="post i-card">
+                        <h2 class="post-title">
+                            Elasticsearch Query DSL - 复合查询
+                        </h2>
+                        <div class="post-info">
+                            <time class="post-time">2019-09-16</time>
+                            
+                        </div>
+                        
+                            <div class="post-feature-image" style="background-image: url('http://kingofzihua.github.io/post-images/elasticsearch-query-dsl-compound-queries.jpg')"></div>
+                            
+                                <div class="post-content">
+                                    <blockquote>
+<p>复合查询包括其他复合查询或叶查询，可以组合其结果和分数，更改其行为，或者从查询切换到筛选上下文。</p>
+</blockquote>
+ <!-- more --> 
+<h2 id="bool-query-布尔查询">Bool Query 布尔查询</h2>
+<ul>
+<li>一个 bool 查询 ，是一个或者多个查询子句的组合
+<ul>
+<li>总共包括4中子句。其中两种会影响算分，2中不影响算分</li>
+</ul>
+</li>
+<li>相关性并不只是全文检索的专利。也适用于 yes|no的子句，匹配的子句越多，相关性评越高。如果多条子查询语句被合并为一跳复合查询语句，比如bool查询，则每个查询子句计算得出的评分会被合并到总的相关性评分中</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">类型</th>
+<th style="text-align:center">匹配</th>
+<th style="text-align:center">算分</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">must</td>
+<td style="text-align:center">必须匹配</td>
+<td style="text-align:center">贡献算分</td>
+</tr>
+<tr>
+<td style="text-align:center">should</td>
+<td style="text-align:center">选择性匹配</td>
+<td style="text-align:center">贡献算分</td>
+</tr>
+<tr>
+<td style="text-align:center">must_not</td>
+<td style="text-align:center">Filter Context <br> 必须不能匹配</td>
+<td style="text-align:center">不贡献算分</td>
+</tr>
+<tr>
+<td style="text-align:center">filter</td>
+<td style="text-align:center">Filter Context <br> 必须匹配</td>
+<td style="text-align:center">不贡献算分</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Filter Context -不影响算分</strong></p>
+<h3 id="请求示例">请求示例</h3>
+<h4 id="准备数据">准备数据</h4>
+<pre><code>POST /news/_bulk
+{&quot;index&quot;:{&quot;_id&quot;:1}}
+{&quot;content&quot;:&quot;Apple Mac&quot;}
+{&quot;index&quot;:{&quot;_id&quot;:2}}
+{&quot;content&quot;:&quot;Apple iPad&quot;}
+{&quot;index&quot;:{&quot;_id&quot;:3}}
+{&quot;content&quot;:&quot;Apple employee like Apple Pie and Apple Juice&quot;}
+</code></pre>
+<h4 id="must-查询">Must 查询</h4>
+<p>查询包含apple的内容<br>
+请求</p>
+<pre><code>POST news/_search
+{
+  &quot;query&quot;:{
+    &quot;bool&quot;: {
+      &quot;must&quot;: [
+        {&quot;match&quot;: {&quot;content&quot;: &quot;apple&quot;}}
+      ]
+    }
+  }
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;took&quot; : 3,
+  &quot;timed_out&quot; : false,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 1,
+    &quot;successful&quot; : 1,
+    &quot;skipped&quot; : 0,
+    &quot;failed&quot; : 0
+  },
+  &quot;hits&quot; : {
+    &quot;total&quot; : {
+      &quot;value&quot; : 3,
+      &quot;relation&quot; : &quot;eq&quot;
+    },
+    &quot;max_score&quot; : 0.17280532,
+    &quot;hits&quot; : [
+      {
+        &quot;_index&quot; : &quot;news&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;3&quot;,
+        &quot;_score&quot; : 0.17280532,
+        &quot;_source&quot; : {
+          &quot;content&quot; : &quot;Apple employee like Apple Pie and Apple Juice&quot;
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;news&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_score&quot; : 0.16786805,
+        &quot;_source&quot; : {
+          &quot;content&quot; : &quot;Apple Mac&quot;
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;news&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_score&quot; : 0.16786805,
+        &quot;_source&quot; : {
+          &quot;content&quot; : &quot;Apple iPad&quot;
+        }
+      }
+    ]
+  }
+}
+</code></pre>
+<h4 id="must-not-查询">Must Not 查询</h4>
+<p>查询包含apple的内容 但是不包含 pie<br>
+请求</p>
+<pre><code>POST news/_search
+{
+  &quot;query&quot;:{
+    &quot;bool&quot;: {
+      &quot;must&quot;: [
+        {&quot;match&quot;: {&quot;content&quot;: &quot;apple&quot;}}
+      ],
+      &quot;must_not&quot;: [
+        {&quot;match&quot;: {&quot;content&quot;: &quot;pie&quot;}}
+      ]
+    }
+  }
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;took&quot; : 3,
+  &quot;timed_out&quot; : false,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 1,
+    &quot;successful&quot; : 1,
+    &quot;skipped&quot; : 0,
+    &quot;failed&quot; : 0
+  },
+  &quot;hits&quot; : {
+    &quot;total&quot; : {
+      &quot;value&quot; : 2,
+      &quot;relation&quot; : &quot;eq&quot;
+    },
+    &quot;max_score&quot; : 0.16786805,
+    &quot;hits&quot; : [
+      {
+        &quot;_index&quot; : &quot;news&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_score&quot; : 0.16786805,
+        &quot;_source&quot; : {
+          &quot;content&quot; : &quot;Apple Mac&quot;
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;news&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_score&quot; : 0.16786805,
+        &quot;_source&quot; : {
+          &quot;content&quot; : &quot;Apple iPad&quot;
+        }
+      }
+    ]
+  }
+}
+</code></pre>
+<h3 id="bool-嵌套">Bool 嵌套</h3>
+<figure data-type="image" tabindex="1"><img src="http://kingofzihua.github.io/post-images/1568255247856.png" alt="" loading="lazy"></figure>
+<h4 id="查询语句的结构会对相关度算分产生影响">查询语句的结构，会对相关度算分产生影响</h4>
+<ul>
+<li>同一层级下对竞争字段，具有相同对权重</li>
+<li>通过嵌套bool查询，可以改变对算分对影响</li>
+</ul>
+<figure data-type="image" tabindex="2"><img src="http://kingofzihua.github.io/post-images/1568255536825.png" alt="" loading="lazy"></figure>
+<h4 id="查询语法">查询语法</h4>
+<ul>
+<li>子查询可以任意顺序出现</li>
+<li>可以嵌套多个查询</li>
+<li>如果你的bool查询中，没有must条件，should中必须至少满足一条查询</li>
+</ul>
+<figure data-type="image" tabindex="3"><img src="http://kingofzihua.github.io/post-images/1568254527196.jpg" alt="" loading="lazy"></figure>
+<h2 id="boosting-相关性提升查询">Boosting 相关性提升查询</h2>
+<ul>
+<li>Boosting 是控制相关度的一种手段</li>
+<li>参数  boost 的含义
+<ul>
+<li>当 boost &gt; 1，打分的相关度相对性提升</li>
+<li>当 0 &lt; boost &lt; 1，打分的权重相对性降低</li>
+<li>当 boost &lt; 0 时，贡献负分</li>
+</ul>
+</li>
+</ul>
+<h3 id="请求示例-2">请求示例</h3>
+<h4 id="准备测试数据">准备测试数据</h4>
+<pre><code>POST /blogs/_bulk
+{&quot;index&quot;:{&quot;_id&quot;:1}}
+{&quot;title&quot;:&quot;Apple iPad&quot;,&quot;content&quot;:&quot;Apple iPad,Apple iPad&quot;}
+{&quot;index&quot;:{&quot;_id&quot;:2}}
+{&quot;title&quot;:&quot;Apple iPad,Apple iPad&quot;,&quot;content&quot;:&quot;Apple iPad&quot;}
+</code></pre>
+<h4 id="测试">测试</h4>
+<pre><code>POST news/_search
+{
+  &quot;query&quot;:{
+    &quot;boosting&quot;: {
+      &quot;positive&quot;: {    //提升
+        &quot;match&quot;: {
+          &quot;content&quot;: &quot;apple&quot;
+        }
+      },
+      &quot;negative&quot;: { //降低
+        &quot;match&quot;: {
+          &quot;content&quot;: &quot;pie&quot;
+        }
+      },
+      &quot;negative_boost&quot;: 0.5 //降低的分数
+    }
+  }
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;took&quot; : 0,
+  &quot;timed_out&quot; : false,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 1,
+    &quot;successful&quot; : 1,
+    &quot;skipped&quot; : 0,
+    &quot;failed&quot; : 0
+  },
+  &quot;hits&quot; : {
+    &quot;total&quot; : {
+      &quot;value&quot; : 3,
+      &quot;relation&quot; : &quot;eq&quot;
+    },
+    &quot;max_score&quot; : 0.16786805,
+    &quot;hits&quot; : [
+      {
+        &quot;_index&quot; : &quot;news&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_score&quot; : 0.16786805,
+        &quot;_source&quot; : {
+          &quot;content&quot; : &quot;Apple Mac&quot;
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;news&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_score&quot; : 0.16786805,
+        &quot;_source&quot; : {
+          &quot;content&quot; : &quot;Apple iPad&quot;
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;news&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;3&quot;,
+        &quot;_score&quot; : 0.08640266,
+        &quot;_source&quot; : {
+          &quot;content&quot; : &quot;Apple employee like Apple Pie and Apple Juice&quot;
+        }
+      }
+    ]
+  }
+}
+</code></pre>
+<p>   可以把<code>negative_boost</code> 改成 <code>1</code> 对比查看效果。原本来说文档3中 <code>apple</code>出现的频率高，算分高，通过降低相关性，调整了返回结果的算分。</p>
+<h3 id="顶级参数">顶级参数</h3>
+<p>  <code>positive</code>:（必需，查询对象）您希望运行的查询。任何返回的文档必须与此查询匹配。<br>
+  <code>negative</code>:（必需，查询对象）用于降低匹配文档的<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/query-filter-context.html#relevance-scores">相关性得分</a>的查询。<br>
+ 	  如果返回的文档与<code>positive</code>查询和此查询匹配，则 <code>boosting</code>查询将计算文档的最终相关性分数，如下所示：</p>
+<ul>
+<li>从positive查询中获取原始相关性分数。</li>
+<li>将得分乘以该negative_boost值。</li>
+</ul>
+<p>  <code>negative_boost</code>:（必需，浮动）之间的浮点数0和1.0用于降低<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/query-filter-context.html#relevance-scores">相关性得分</a>的匹配的文件 negative的查询。</p>
+<h2 id="constant-score-查询">Constant Score 查询</h2>
+<ul>
+<li>将Query 转成Filter，忽略 TF-IDF计算，避免相关性算分的开销</li>
+<li>Filter 可以有效利用缓存</li>
+</ul>
+<h3 id="请求示例-3">请求示例</h3>
+<pre><code>POST news/_search
+{
+  &quot;query&quot;: {
+    &quot;constant_score&quot;: {
+      &quot;filter&quot;: {
+        &quot;term&quot;: {
+          &quot;content&quot;: &quot;apple&quot;
+        }
+      },
+      &quot;boost&quot;: 1
+    }
+  }
+}
+</code></pre>
+<h3 id="顶级参数-2">顶级参数</h3>
+<p><code>filter</code> :<br>
+    （必需，查询对象）要运行的<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/query-dsl-bool-query.html">筛选查询</a>。任何返回的文档必须与此查询匹配。<br>
+     过滤查询不会计算<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/query-filter-context.html#relevance-scores">相关性分数</a> 。为了加快性能，Elasticsearch会自动缓存经常使用的过滤器查询。</p>
+<p><code>boost</code> :<br>
+      （可选，浮点）浮点数用作匹配查询的每个文档的常量 <a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/query-filter-context.html#relevance-scores">相关性分数</a> filter。默认为1.0。</p>
+<h2 id="disjunction-max-查询">Disjunction Max  查询</h2>
+<ul>
+<li>将任何与任一查询匹配的文档作为结果返回</li>
+<li>采用字段上最匹配的评分最终评分返回</li>
+</ul>
+<h3 id="请求示例-4">请求示例</h3>
+<h4 id="准备测试数据-2">准备测试数据</h4>
+<pre><code>PUT blogs/_bulk
+{&quot;index&quot;:{&quot;_id&quot;:1}}
+{&quot;title&quot;:&quot;Quick  brown rabbits&quot;,&quot;body&quot;:&quot;Brown rabbits are commonly seen.&quot;}
+{&quot;index&quot;:{&quot;_id&quot;:2}}
+{&quot;title&quot;:&quot;Keeping pets healthy&quot;,&quot;body&quot;:&quot;My quick brown fox eats rabbits on a regular basis.&quot;}
+</code></pre>
+<h4 id="使用-bool-查询">使用 bool 查询</h4>
+<p>请求：</p>
+<pre><code>POST blogs/_search
+{
+  &quot;query&quot;: {
+    &quot;bool&quot;: {
+      &quot;should&quot;: [
+        {&quot;match&quot;: {&quot;title&quot;: &quot;Brown fox&quot;}},
+        {&quot;match&quot;: {&quot;body&quot;: &quot;Brown fox&quot;}}
+      ]
+    }
+  }
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;took&quot; : 3,
+  &quot;timed_out&quot; : false,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 1,
+    &quot;successful&quot; : 1,
+    &quot;skipped&quot; : 0,
+    &quot;failed&quot; : 0
+  },
+  &quot;hits&quot; : {
+    &quot;total&quot; : {
+      &quot;value&quot; : 2,
+      &quot;relation&quot; : &quot;eq&quot;
+    },
+    &quot;max_score&quot; : 0.90425634,
+    &quot;hits&quot; : [
+      {
+        &quot;_index&quot; : &quot;blogs&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_score&quot; : 0.90425634,
+        &quot;_source&quot; : {
+          &quot;title&quot; : &quot;Quick  brown rabbits&quot;,
+          &quot;body&quot; : &quot;Brown rabbits are commonly seen.&quot;
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;blogs&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_score&quot; : 0.77041256,
+        &quot;_source&quot; : {
+          &quot;title&quot; : &quot;Keeping pets healthy&quot;,
+          &quot;body&quot; : &quot;My quick brown fox eats rabbits on a regular basis.&quot;
+        }
+      }
+    ]
+  }
+}
+</code></pre>
+<h4 id="使用-dis_max-查询-disjunction-max-query">使用 dis_max 查询 (Disjunction Max Query)</h4>
+<p>请求：</p>
+<pre><code>POST blogs/_search
+{
+  &quot;query&quot;: {
+    &quot;dis_max&quot;: {
+      &quot;queries&quot;: [
+        {&quot;match&quot;: {&quot;title&quot;: &quot;Brown fox&quot;}},
+        {&quot;match&quot;: {&quot;body&quot;: &quot;Brown fox&quot;}}
+      ]
+    }
+  }
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;took&quot; : 5,
+  &quot;timed_out&quot; : false,
+  &quot;_shards&quot; : {
+    &quot;total&quot; : 1,
+    &quot;successful&quot; : 1,
+    &quot;skipped&quot; : 0,
+    &quot;failed&quot; : 0
+  },
+  &quot;hits&quot; : {
+    &quot;total&quot; : {
+      &quot;value&quot; : 2,
+      &quot;relation&quot; : &quot;eq&quot;
+    },
+    &quot;max_score&quot; : 0.77041256,
+    &quot;hits&quot; : [
+      {
+        &quot;_index&quot; : &quot;blogs&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;2&quot;,
+        &quot;_score&quot; : 0.77041256,
+        &quot;_source&quot; : {
+          &quot;title&quot; : &quot;Keeping pets healthy&quot;,
+          &quot;body&quot; : &quot;My quick brown fox eats rabbits on a regular basis.&quot;
+        }
+      },
+      {
+        &quot;_index&quot; : &quot;blogs&quot;,
+        &quot;_type&quot; : &quot;_doc&quot;,
+        &quot;_id&quot; : &quot;1&quot;,
+        &quot;_score&quot; : 0.6931472,
+        &quot;_source&quot; : {
+          &quot;title&quot; : &quot;Quick  brown rabbits&quot;,
+          &quot;body&quot; : &quot;Brown rabbits are commonly seen.&quot;
+        }
+      }
+    ]
+  }
+}
+</code></pre>
+<h3 id="顶级参数-3">顶级参数</h3>
+<p><code>queries</code> :<br>
+    （必需，查询对象数组）包含一个或多个查询子句。返回的文档必须与这些查询中的<strong>一个或多个匹配</strong>。如果文档与多个查询匹配，则Elasticsearch使用最高<a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/query-filter-context.html">相关性分数</a>。<br>
+<code>tie_breaker</code> :<br>
+    （可选，浮动）之间的浮动点数目0和1.0用于提高相关分数的匹配多个查询子句文档。默认为0.0。</p>
+<h3 id="tie-breaker-参数调整评分">Tie Breaker 参数调整评分</h3>
+<p>Tier Breaker 是一个介于0-1之间的浮点数。 0代表使用最佳匹配，1代表所有语句同等重要。</p>
+<ul>
+<li>获得最佳匹配语句的评分 <code>_score</code></li>
+<li>将其他匹配语句的评分与 <code>tie_breaker</code> 相乘</li>
+<li>将最高分数添加到相乘的分数中。</li>
+</ul>
+<p> 如果该tie_breaker值大于0.0，则所有匹配子句都计数，但得分最高的子句最多。</p>
+<h2 id="function-score-查询">Function Score 查询</h2>
+<p>...</p>
+<hr>
+<h2 id="参考资料">参考资料</h2>
+<ul>
+<li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/compound-queries.html">Elasticsearch文档:Compound-queries</a></li>
+<li><a href="https://time.geekbang.org/course/intro/197">极客时间:Elasticsearch核心技术与实战</a></li>
+</ul>
+
+                                </div>
+                    </article>
+                    <!--  -->
+                    
+                        <div class="next-post">
+                            <div class="next">下一篇</div>
+                            <a href="http://kingofzihua.github.io/post/elasticsearch-query-dsl-term-level-querie">
+                                <h3 class="post-title">
+                                    Elasticsearch Query DSL - 术语查询 
+                                </h3>
+                            </a>
+                        </div>
+                        
+                            <div id="disqus_thread"></div>
+                            <div id="gitalk-container"></div>
+                </div>
+                <!-- middle -->
+                <div class="main-container-middle"></div>
+                <!-- right -->
+                <div id="sidebar" class="main-container-right">
+                    
+                        <!-- toc -->
+                        
+    <div class="toc-card i-card ">
+        <div class="toc-title i-card-title">目录</div>
+        <div class="toc-content">
+            <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#bool-query-%E5%B8%83%E5%B0%94%E6%9F%A5%E8%AF%A2">Bool Query 布尔查询</a>
+<ul>
+<li><a href="#%E8%AF%B7%E6%B1%82%E7%A4%BA%E4%BE%8B">请求示例</a>
+<ul>
+<li><a href="#%E5%87%86%E5%A4%87%E6%95%B0%E6%8D%AE">准备数据</a></li>
+<li><a href="#must-%E6%9F%A5%E8%AF%A2">Must 查询</a></li>
+<li><a href="#must-not-%E6%9F%A5%E8%AF%A2">Must Not 查询</a></li>
+</ul>
+</li>
+<li><a href="#bool-%E5%B5%8C%E5%A5%97">Bool 嵌套</a>
+<ul>
+<li><a href="#%E6%9F%A5%E8%AF%A2%E8%AF%AD%E5%8F%A5%E7%9A%84%E7%BB%93%E6%9E%84%E4%BC%9A%E5%AF%B9%E7%9B%B8%E5%85%B3%E5%BA%A6%E7%AE%97%E5%88%86%E4%BA%A7%E7%94%9F%E5%BD%B1%E5%93%8D">查询语句的结构，会对相关度算分产生影响</a></li>
+<li><a href="#%E6%9F%A5%E8%AF%A2%E8%AF%AD%E6%B3%95">查询语法</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#boosting-%E7%9B%B8%E5%85%B3%E6%80%A7%E6%8F%90%E5%8D%87%E6%9F%A5%E8%AF%A2">Boosting 相关性提升查询</a>
+<ul>
+<li><a href="#%E8%AF%B7%E6%B1%82%E7%A4%BA%E4%BE%8B-2">请求示例</a>
+<ul>
+<li><a href="#%E5%87%86%E5%A4%87%E6%B5%8B%E8%AF%95%E6%95%B0%E6%8D%AE">准备测试数据</a></li>
+<li><a href="#%E6%B5%8B%E8%AF%95">测试</a></li>
+</ul>
+</li>
+<li><a href="#%E9%A1%B6%E7%BA%A7%E5%8F%82%E6%95%B0">顶级参数</a></li>
+</ul>
+</li>
+<li><a href="#constant-score-%E6%9F%A5%E8%AF%A2">Constant Score 查询</a>
+<ul>
+<li><a href="#%E8%AF%B7%E6%B1%82%E7%A4%BA%E4%BE%8B-3">请求示例</a></li>
+<li><a href="#%E9%A1%B6%E7%BA%A7%E5%8F%82%E6%95%B0-2">顶级参数</a></li>
+</ul>
+</li>
+<li><a href="#disjunction-max-%E6%9F%A5%E8%AF%A2">Disjunction Max  查询</a>
+<ul>
+<li><a href="#%E8%AF%B7%E6%B1%82%E7%A4%BA%E4%BE%8B-4">请求示例</a>
+<ul>
+<li><a href="#%E5%87%86%E5%A4%87%E6%B5%8B%E8%AF%95%E6%95%B0%E6%8D%AE-2">准备测试数据</a></li>
+<li><a href="#%E4%BD%BF%E7%94%A8-bool-%E6%9F%A5%E8%AF%A2">使用 bool 查询</a></li>
+<li><a href="#%E4%BD%BF%E7%94%A8-dis_max-%E6%9F%A5%E8%AF%A2-disjunction-max-query">使用 dis_max 查询 (Disjunction Max Query)</a></li>
+</ul>
+</li>
+<li><a href="#%E9%A1%B6%E7%BA%A7%E5%8F%82%E6%95%B0-3">顶级参数</a></li>
+<li><a href="#tie-breaker-%E5%8F%82%E6%95%B0%E8%B0%83%E6%95%B4%E8%AF%84%E5%88%86">Tie Breaker 参数调整评分</a></li>
+</ul>
+</li>
+<li><a href="#function-score-%E6%9F%A5%E8%AF%A2">Function Score 查询</a></li>
+<li><a href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99">参考资料</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+        <script>
+            function locateCatelogList() {
+                /*获取文章目录集合,可通过:header过滤器*/
+                var alis = $('.post-content :header');
+                /*获取侧边栏目录列表集合**/
+                var sidebar_alis = $('.markdownIt-TOC a');
+                /*获取滚动条到顶部的距离*/
+                var scroll_height = $(window).scrollTop();
+                for (var i = 0; i < alis.length; i++) {
+                    /*获取锚点集合中的元素分别到顶点的距离*/
+                    var a_height = $(alis[i]).offset().top;
+                    if (a_height < scroll_height) {
+                        /*高亮显示*/
+                        sidebar_alis.removeClass('on');
+                        $(sidebar_alis[i]).addClass('on');
+                    }
+                }
+            }
+            $(function() {
+                /*绑定滚动事件 */
+                $(window).bind('scroll', locateCatelogList);
+            });
+        </script>
+    </div>
+    
+                            
+
+                </div>
+
+
+
+
+            </div>
+
+
+            <div class="site-footer">
+  Powered by <a href="https://github.com/kingofzihua" target="_blank">kingofzihua</a> | 
+  <a class="rss" href="http://kingofzihua.github.io/atom.xml" target="_blank">RSS</a>
+</div>
+
+<script>
+  hljs.initHighlightingOnLoad()
+</script>
+
+
+    </div>
+    <script>
+        $('#sidebar').stickySidebar({
+            topSpacing: 80,
+            // bottomSpacing: 60
+        });
+    </script>
+    
+</body>
+
+</html>

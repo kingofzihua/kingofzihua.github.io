@@ -1,0 +1,413 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>
+    CentOS7 Django 项目部署（nginx + uwcgi） | kingofzihua
+</title>
+<link rel="shortcut icon" href="http://kingofzihua.github.io/favicon.ico?v=1577770835023">
+<!-- <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous"> -->
+<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="http://kingofzihua.github.io/styles/main.css">
+<!-- js -->
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+<script src="http://kingofzihua.github.io/media/js/jquery.sticky-sidebar.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<script src="https://cdn.bootcss.com/moment.js/2.23.0/moment.min.js"></script>
+
+
+        
+</head>
+
+<body>
+    <div class="main">
+        <div class="header">
+    <div class="nav">
+        <div class="logo">
+            <a href="http://kingofzihua.github.io">
+                <img class="avatar" src="http://kingofzihua.github.io/images/avatar.png?v=1577770835023" alt="">
+            </a>
+            <div class="site-title">
+                <h1>
+                    kingofzihua
+                </h1>
+            </div>
+        </div>
+        <span class="menu-btn fa fa-align-justify"></span>
+        <div class="menu-container">
+            <ul>
+                
+                    
+                            <li>
+                                <a href="/" class="menu">
+                                    首页
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/archives" class="menu">
+                                    归档
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/tags" class="menu">
+                                    标签
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/post/about" class="menu">
+                                    关于
+                                </a>
+                            </li>
+                            
+                                
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $(".menu-btn").click(function() {
+            $(".menu-container").slideToggle();
+        });
+        $(window).resize(function() {
+
+            if (window.matchMedia('(min-width: 960px)').matches) {
+                $(".menu-container").css('display', 'block')
+            } else {
+                $(".menu-container").css('display', 'none')
+            }
+
+        });
+    });
+</script>
+
+            <div id="main-content" class="post-detail main-container">
+                <!-- left -->
+                <div id="content" class="main-container-left">
+                    <article class="post i-card">
+                        <h2 class="post-title">
+                            CentOS7 Django 项目部署（nginx + uwcgi）
+                        </h2>
+                        <div class="post-info">
+                            <time class="post-time">2019-08-19</time>
+                            
+                        </div>
+                        
+                            <div class="post-feature-image" style="background-image: url('http://kingofzihua.github.io/post-images/centos7-django-xiang-mu-bu-shu-nginx-uwcgi.jpg')"></div>
+                            
+                                <div class="post-content">
+                                    <blockquote>
+<p>用django开发项目的时候，都是用debug=True模式运行，所以静态文件都是django去处理。在实际项目中，还是需要多线程以及专门处理静态文件的服务来配合，才能提升整个系统的性能。因此，可以选用nginx+uwsgi+django的架构进行部署。</p>
+</blockquote>
+<!-- more -->
+<h3 id="前期准备">前期准备</h3>
+<ol>
+<li><a href="https://blog.kingofzihua.top/2018/12/centos7-%E5%AE%89%E8%A3%85nginx/" title="安装nginx ">安装nginx </a></li>
+<li><a href="https://blog.kingofzihua.top/2018/12/centos7-%E5%AE%89%E8%A3%85-python3-7/" title="安装python">安装python</a></li>
+<li>git（可以不用）</li>
+</ol>
+<h3 id="一-安装virtualenv">一、安装virtualenv</h3>
+<p>建议大家都使用virtualenv，方便不同项目不同的包版本不同导致冲突。不了解的同学可以先去了解下</p>
+<pre><code class="language-shell">pip3 install virtualenv
+</code></pre>
+<p>添加到环境变量并建立软链接</p>
+<pre><code class="language-shell">ln -s /usr/local/python3/bin/virtualenv /usr/bin/virtualenv
+</code></pre>
+<h3 id="二-项目代码部署到服务器">二、项目代码部署到服务器</h3>
+<h4 id="进入到服务器项目部署目录">进入到服务器项目部署目录</h4>
+<pre><code class="language-shell">cd /www/deploy/
+</code></pre>
+<h4 id="git-拉取代码">git 拉取代码</h4>
+<pre><code class="language-shell"># 这是我的项目 你的要换成你的
+git clone git@gitee.com:kingofzihua/django.git django/master
+# ps: 项目代码的路径为 /www/deploy/django/master 个人习惯，你可以用你自己喜欢的方式
+</code></pre>
+<h4 id="项目目录结构分析">项目目录结构分析</h4>
+<p>每个项目的目录结构可能不一样，我的项目是自定义的，我在这里稍微说下，不然可能会犯晕</p>
+<pre><code class="language-shell">cd  /www/deploy/django/master # 进入项目根路径
+tree -L 2 # tree命令找不到的话 就 yum install tree -y 安装下 -L 参数是显示几级目录
+.
+├── app #项目的目录
+│   ├── comm
+│   ├── index # index 模块
+│   ├── __init__.py
+├── bootstrap # 这个就是 django创建的那个很重要的目录
+│   ├── __init__.py
+│   ├── settings.py # 设置文件
+│   ├── urls.py # url文件
+│   └── wsgi.py #wsgi文件
+├── config # 配置文件
+│   ├── mysql.conf.example #mysql的配置文件 我是用 文件包含的方式，并没有在 settings中配置
+│   └── uwsgi.xml.example #wsgi的配置文件 内容在下面
+├── data # 导出的模块数据存放的目录 `python manage.py dumpdata`
+│   └── models.json
+├── manage.py
+├── requirements.txt # 项目依赖
+├── static # 静态文件存放路径
+│   ├── js
+│   ├── css
+├── storage # 一些其他资源文件存放目录
+│   └── logs # 日志目录
+├── templates # 模版文件
+│   ├── inclusion_tag
+│   ├── index
+</code></pre>
+<h3 id="三-创建并启动虚拟环境">三、创建并启动虚拟环境</h3>
+<h4 id="创建指定版本的虚拟环境">创建指定版本的虚拟环境</h4>
+<pre><code class="language-shell">cd  /www/deploy/django/master # 进入项目根路径
+virtualenv --python=/usr/bin/python3 venv
+</code></pre>
+<h4 id="启动虚拟环境">启动虚拟环境</h4>
+<pre><code class="language-shell">cd  /www/deploy/django/master # 进入项目根路径
+source venv/bin/activate # 
+# 这个时候你的命令行应该是这个样子的
+# (venv) [root@localhost master]        # 前面多了一个 (venv)
+</code></pre>
+<h3 id="四-部署项目">四、部署项目</h3>
+<h4 id="安装项目依赖">安装项目依赖</h4>
+<pre><code class="language-shell">pip install -r requirements.txt
+</code></pre>
+<h4 id="安装uwcgi">安装uwcgi</h4>
+<pre><code class="language-shell">pip install uwcgi
+</code></pre>
+<h4 id="修改数据库配置文件并进行数据填充">修改数据库配置文件并进行数据填充</h4>
+<p>修改数据库配置文件：</p>
+<blockquote>
+<p>根据你的配置文件 修改成正确的就行</p>
+</blockquote>
+<p>数据填充：</p>
+<pre><code class="language-shell">python manage.py migrate
+</code></pre>
+<h3 id="修改项目文件">修改项目文件</h3>
+<p><code>bootstrap/settings.py</code>:</p>
+<pre><code class="language-python">DEBUG = False # 关闭DEBUG模式
+
+ALLOWED_HOSTS = ['*'] # 表示此Django站点可以投放的主机/域名的字符串列表
+</code></pre>
+<h4 id="创建uwcgi的配置文件">创建uwcgi的配置文件</h4>
+<p>创建文件<code>/www/deploy/django/master/config/uwsgi.xml</code>写入一下内容:</p>
+<pre><code class="language-xml">&lt;uwsgi&gt;
+    &lt;socket&gt;127.0.0.1:8080&lt;/socket&gt; &lt;!-- 内部端口，自定义 --&gt;
+    &lt;chdir&gt;/www/deploy/django/master/&lt;/chdir&gt; &lt;!-- 项目路径 --&gt;
+    &lt;module&gt;bootstrap.wsgi&lt;/module&gt;  &lt;!-- bootstrap为wsgi.py所在目录名--&gt;
+    &lt;processes&gt;4&lt;/processes&gt; &lt;!-- 进程数 --&gt;
+    &lt;daemonize&gt;storage/logs/uwsgi.log&lt;/daemonize&gt; &lt;!-- 日志文件 --&gt;
+&lt;/uwsgi&gt;
+</code></pre>
+<h4 id="创建nginx的配置文件">创建nginx的配置文件</h4>
+<p>创建文件<code>/etc/nginx/conf.d/django.conf</code> 并写入一下内容:</p>
+<pre><code class="language-shell">server {
+    listen       80;
+    server_name  blog.kingofzihua.top; # 你的域名 或者ip
+
+    charset utf-8;
+    #access_log  /var/log/nginx/host.access.log  main;
+
+    location / {
+        include uwsgi_params; # 引入uwsgi模块的文件
+        uwsgi_pass 127.0.0.1:8080; # 端口要和uwsgi里配置的一样
+        uwsgi_param UWSGI_SCRIPT bootstrap.wsgi; # wsgi.py所在的目录名+.wsgi 注意看我的目录结构
+        uwsgi_param UWSGI_CHDIR /www/deploy/django/master; # #项目路径
+    }
+
+    location /static/ {
+        alias /www/deploy/django/master/static; # 静态资源访问路径
+    }
+}
+</code></pre>
+<p>查看配置文件是否正确：</p>
+<pre><code class="language-shell">nginx -tc /etc/nginx/nginx.conf
+</code></pre>
+<p>检查如果输出下面这样就说明配置文件没有语法错误</p>
+<pre><code class="language-shell">nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+</code></pre>
+<h4 id="启动-uwcgi并重启-nginx">启动 uwcgi并重启 nginx</h4>
+<pre><code class="language-shell">cd /www/deploy/django/master
+uwsgi -x config.uwcgi.xml # 启动uwcgi
+nginx -s reload # 重启nginx 使得 配置文件生效
+</code></pre>
+<h4 id="访问你的域名">访问你的域名</h4>
+<p>浏览器打开你的域名查看项目部署情况</p>
+<h3 id="几个关键的文件配置">几个关键的文件配置</h3>
+<h4 id="django-database">django database</h4>
+<p><code>bootstrap/settings.py</code>：</p>
+<pre><code class="language-python"># Database
+# https://docs.djangoproject.com/en/2.1/ref/settings/#databases
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'OPTIONS': {
+            'read_default_file': os.path.join(BASE_DIR, 'config/mysql.conf'),
+            # 设定sql_mode
+            # https://docs.djangoproject.com/en/2.1/ref/databases/#mysql-sql-mode
+            'init_command': &quot;SET sql_mode='STRICT_TRANS_TABLES'&quot;
+        },
+    }
+}
+</code></pre>
+<p><code>config/mysql.conf</code> ：</p>
+<pre><code class="language-ini">[client]
+host = 127.0.0.1
+port = 3306
+database = platform
+user = root
+password = root
+default-character-set = utf8mb4
+</code></pre>
+<h4 id="uwcgi-配置">uwcgi 配置</h4>
+<p><code>config/uwsgi.xml</code> ：</p>
+<pre><code class="language-xml">&lt;uwsgi&gt;
+    &lt;socket&gt;127.0.0.1:8001&lt;/socket&gt; &lt;!-- 内部端口，自定义 --&gt;
+    &lt;chdir&gt;/you/path/django/&lt;/chdir&gt; &lt;!-- 项目路径 --&gt;
+    &lt;module&gt;bootstrap.wsgi&lt;/module&gt;  &lt;!-- bootstrap为wsgi.py所在目录名--&gt;
+    &lt;processes&gt;4&lt;/processes&gt; &lt;!-- 进程数 --&gt;
+    &lt;daemonize&gt;storage/logs/uwsgi.log&lt;/daemonize&gt; &lt;!-- 日志文件储存位置 --&gt;
+&lt;/uwsgi&gt;
+</code></pre>
+<hr>
+<p>@  <a href="https://www.django.cn" title="django中文网">django中文网</a></p>
+
+                                </div>
+                    </article>
+                    <!--  -->
+                    
+                        <div class="next-post">
+                            <div class="next">下一篇</div>
+                            <a href="http://kingofzihua.github.io/post/centos7-an-zhuang-nginx">
+                                <h3 class="post-title">
+                                    CentOS7 安装 Nginx
+                                </h3>
+                            </a>
+                        </div>
+                        
+                            <div id="disqus_thread"></div>
+                            <div id="gitalk-container"></div>
+                </div>
+                <!-- middle -->
+                <div class="main-container-middle"></div>
+                <!-- right -->
+                <div id="sidebar" class="main-container-right">
+                    
+                        <!-- toc -->
+                        
+    <div class="toc-card i-card ">
+        <div class="toc-title i-card-title">目录</div>
+        <div class="toc-content">
+            <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#%E5%89%8D%E6%9C%9F%E5%87%86%E5%A4%87">前期准备</a></li>
+<li><a href="#%E4%B8%80-%E5%AE%89%E8%A3%85virtualenv">一、安装virtualenv</a></li>
+<li><a href="#%E4%BA%8C-%E9%A1%B9%E7%9B%AE%E4%BB%A3%E7%A0%81%E9%83%A8%E7%BD%B2%E5%88%B0%E6%9C%8D%E5%8A%A1%E5%99%A8">二、项目代码部署到服务器</a>
+<ul>
+<li><a href="#%E8%BF%9B%E5%85%A5%E5%88%B0%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%A1%B9%E7%9B%AE%E9%83%A8%E7%BD%B2%E7%9B%AE%E5%BD%95">进入到服务器项目部署目录</a></li>
+<li><a href="#git-%E6%8B%89%E5%8F%96%E4%BB%A3%E7%A0%81">git 拉取代码</a></li>
+<li><a href="#%E9%A1%B9%E7%9B%AE%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84%E5%88%86%E6%9E%90">项目目录结构分析</a></li>
+</ul>
+</li>
+<li><a href="#%E4%B8%89-%E5%88%9B%E5%BB%BA%E5%B9%B6%E5%90%AF%E5%8A%A8%E8%99%9A%E6%8B%9F%E7%8E%AF%E5%A2%83">三、创建并启动虚拟环境</a>
+<ul>
+<li><a href="#%E5%88%9B%E5%BB%BA%E6%8C%87%E5%AE%9A%E7%89%88%E6%9C%AC%E7%9A%84%E8%99%9A%E6%8B%9F%E7%8E%AF%E5%A2%83">创建指定版本的虚拟环境</a></li>
+<li><a href="#%E5%90%AF%E5%8A%A8%E8%99%9A%E6%8B%9F%E7%8E%AF%E5%A2%83">启动虚拟环境</a></li>
+</ul>
+</li>
+<li><a href="#%E5%9B%9B-%E9%83%A8%E7%BD%B2%E9%A1%B9%E7%9B%AE">四、部署项目</a>
+<ul>
+<li><a href="#%E5%AE%89%E8%A3%85%E9%A1%B9%E7%9B%AE%E4%BE%9D%E8%B5%96">安装项目依赖</a></li>
+<li><a href="#%E5%AE%89%E8%A3%85uwcgi">安装uwcgi</a></li>
+<li><a href="#%E4%BF%AE%E6%94%B9%E6%95%B0%E6%8D%AE%E5%BA%93%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E5%B9%B6%E8%BF%9B%E8%A1%8C%E6%95%B0%E6%8D%AE%E5%A1%AB%E5%85%85">修改数据库配置文件并进行数据填充</a></li>
+</ul>
+</li>
+<li><a href="#%E4%BF%AE%E6%94%B9%E9%A1%B9%E7%9B%AE%E6%96%87%E4%BB%B6">修改项目文件</a>
+<ul>
+<li><a href="#%E5%88%9B%E5%BB%BAuwcgi%E7%9A%84%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6">创建uwcgi的配置文件</a></li>
+<li><a href="#%E5%88%9B%E5%BB%BAnginx%E7%9A%84%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6">创建nginx的配置文件</a></li>
+<li><a href="#%E5%90%AF%E5%8A%A8-uwcgi%E5%B9%B6%E9%87%8D%E5%90%AF-nginx">启动 uwcgi并重启 nginx</a></li>
+<li><a href="#%E8%AE%BF%E9%97%AE%E4%BD%A0%E7%9A%84%E5%9F%9F%E5%90%8D">访问你的域名</a></li>
+</ul>
+</li>
+<li><a href="#%E5%87%A0%E4%B8%AA%E5%85%B3%E9%94%AE%E7%9A%84%E6%96%87%E4%BB%B6%E9%85%8D%E7%BD%AE">几个关键的文件配置</a>
+<ul>
+<li><a href="#django-database">django database</a></li>
+<li><a href="#uwcgi-%E9%85%8D%E7%BD%AE">uwcgi 配置</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+        <script>
+            function locateCatelogList() {
+                /*获取文章目录集合,可通过:header过滤器*/
+                var alis = $('.post-content :header');
+                /*获取侧边栏目录列表集合**/
+                var sidebar_alis = $('.markdownIt-TOC a');
+                /*获取滚动条到顶部的距离*/
+                var scroll_height = $(window).scrollTop();
+                for (var i = 0; i < alis.length; i++) {
+                    /*获取锚点集合中的元素分别到顶点的距离*/
+                    var a_height = $(alis[i]).offset().top;
+                    if (a_height < scroll_height) {
+                        /*高亮显示*/
+                        sidebar_alis.removeClass('on');
+                        $(sidebar_alis[i]).addClass('on');
+                    }
+                }
+            }
+            $(function() {
+                /*绑定滚动事件 */
+                $(window).bind('scroll', locateCatelogList);
+            });
+        </script>
+    </div>
+    
+                            
+
+                </div>
+
+
+
+
+            </div>
+
+
+            <div class="site-footer">
+  Powered by <a href="https://github.com/kingofzihua" target="_blank">kingofzihua</a> | 
+  <a class="rss" href="http://kingofzihua.github.io/atom.xml" target="_blank">RSS</a>
+</div>
+
+<script>
+  hljs.initHighlightingOnLoad()
+</script>
+
+
+    </div>
+    <script>
+        $('#sidebar').stickySidebar({
+            topSpacing: 80,
+            // bottomSpacing: 60
+        });
+    </script>
+    
+</body>
+
+</html>

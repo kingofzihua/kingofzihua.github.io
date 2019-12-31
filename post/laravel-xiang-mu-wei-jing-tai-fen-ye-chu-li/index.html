@@ -1,0 +1,392 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>
+    Laravel 项目 伪静态分页处理 | kingofzihua
+</title>
+<link rel="shortcut icon" href="http://kingofzihua.github.io/favicon.ico?v=1577770835023">
+<!-- <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous"> -->
+<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="http://kingofzihua.github.io/styles/main.css">
+<!-- js -->
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+<script src="http://kingofzihua.github.io/media/js/jquery.sticky-sidebar.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<script src="https://cdn.bootcss.com/moment.js/2.23.0/moment.min.js"></script>
+
+
+        
+</head>
+
+<body>
+    <div class="main">
+        <div class="header">
+    <div class="nav">
+        <div class="logo">
+            <a href="http://kingofzihua.github.io">
+                <img class="avatar" src="http://kingofzihua.github.io/images/avatar.png?v=1577770835023" alt="">
+            </a>
+            <div class="site-title">
+                <h1>
+                    kingofzihua
+                </h1>
+            </div>
+        </div>
+        <span class="menu-btn fa fa-align-justify"></span>
+        <div class="menu-container">
+            <ul>
+                
+                    
+                            <li>
+                                <a href="/" class="menu">
+                                    首页
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/archives" class="menu">
+                                    归档
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/tags" class="menu">
+                                    标签
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/post/about" class="menu">
+                                    关于
+                                </a>
+                            </li>
+                            
+                                
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $(".menu-btn").click(function() {
+            $(".menu-container").slideToggle();
+        });
+        $(window).resize(function() {
+
+            if (window.matchMedia('(min-width: 960px)').matches) {
+                $(".menu-container").css('display', 'block')
+            } else {
+                $(".menu-container").css('display', 'none')
+            }
+
+        });
+    });
+</script>
+
+            <div id="main-content" class="post-detail main-container">
+                <!-- left -->
+                <div id="content" class="main-container-left">
+                    <article class="post i-card">
+                        <h2 class="post-title">
+                            Laravel 项目 伪静态分页处理
+                        </h2>
+                        <div class="post-info">
+                            <time class="post-time">2019-12-31</time>
+                            
+                                <a href="http://kingofzihua.github.io/tag/eKiukqYwE" class="post-tag i-tag
+                            i-tag-">
+                            #伪静态
+                        </a>
+                                
+                                <a href="http://kingofzihua.github.io/tag/Y4NpI8nJt" class="post-tag i-tag
+                            i-tag-error">
+                            #laravel
+                        </a>
+                                
+                        </div>
+                        
+                                <div class="post-content">
+                                    <blockquote>
+<p>手上有个Laravel 的项目，要求做伪静态处理，项目中使用了 Laravel 自带的分页组件，分页组件分页会在你的url 用 query 的方式做页码的传递，达不到伪静态的要求。</p>
+</blockquote>
+<!-- more -->
+<h2 id="想要的效果">想要的效果</h2>
+<p>我们伪静态想要的效果大体是这样的:</p>
+<pre><code class="language-php"> /software/3dmax/created_at/page-1.html
+</code></pre>
+<p>对应 Laravel 的路由是:</p>
+<pre><code class="language-php">/software/{category}/{order}/page-{page}.html
+</code></pre>
+<p>因为laravel 路由本身是支持路由参数的，所以说 我们变量的获取是完全没有问题的，但是 Laravel 自带的分页组件会将你的 参数 用 query的方式做传递，所以，分页地址是下面这种</p>
+<pre><code class="language-php"> /software/3dmax/created_at/page-1.html?category=3dmax&amp;order=created_at&amp;page=2
+</code></pre>
+<p>这不是我们需要的，所以我们需要对 Laravel 自带的分页组件进行修改。</p>
+<h2 id="laravel-分页组件">Laravel 分页组件</h2>
+<p>    在 Laravel 中我们如果需要分页，会调用 模型中的 <code>paginate</code> 方法，然后传递每页的页码。<code>paginate</code> 方法会调用 <code>Illuminate\Database\Concerns\BuildsQueries</code> 下的<code>paginator</code>方法，<code>paginator</code> 方法会构造一个 <code>Illuminate\Pagination\LengthAwarePaginator</code>的实例， <code>Illuminate\Pagination\LengthAwarePaginator</code> 会使用 <code>Illuminate\Pagination\AbstractPaginator</code> 中的<code>url</code>方法进行构造请求参数和url。<br>
+现在我们找到生成url的地方了，我们需要做的就是在这里修改。</p>
+<h2 id="重写分页组件">重写分页组件</h2>
+<p>Laravel 中本身支持自定义分页组件，but我们做的不是自定义分页，我们需要对于方法进行重写。</p>
+<h3 id="创建-lengthawarepaginator-类">创建 LengthAwarePaginator 类</h3>
+<pre><code class="language-php">mkdir app/Pagination
+touch app/Pagination/LengthAwarePaginator.php
+</code></pre>
+<p>文件app/Pagination/LengthAwarePaginator.php 内容：</p>
+<pre><code>&lt;?php
+
+namespace App\Pagination;
+
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
+use Illuminate\Pagination\LengthAwarePaginator as BasePaginator;
+
+class LengthAwarePaginator extends BasePaginator
+{
+}
+
+</code></pre>
+<h3 id="重写-url-方法">重写 url 方法</h3>
+<p>首先 Laravel 自带的分页 会把路由里面的参数放到 query中，我们需要的是 参数还是放到地址中。</p>
+<ul>
+<li>获取到所有的query参数</li>
+<li>判断需要分页的页面路由中是否有绑定的路由参数</li>
+<li>如果没有的话，我们就走 Laravel 本身的分页</li>
+<li>如果有的话，我们就通过路由和路由参数进行构建地址，并把它从query参数中剔除</li>
+<li>判断下当前的query参数中是否还有参数，如果还有的话，我们就和之前一样。</li>
+</ul>
+<pre><code class="language-php">...
+
+public function url($page)
+    {
+        if ($page &lt;= 0) {
+            $page = 1;
+        }
+
+        $parameters = [$this-&gt;pageName =&gt; $page];
+
+        if (count($this-&gt;query) &gt; 0) {
+            $parameters = array_merge($this-&gt;query, $parameters);
+        }
+
+        //判断的参数是否在 路由中 需要绑定的数据
+        $params = \request()-&gt;route()-&gt;parameters();
+
+        if (!empty($params)) {
+            foreach ($parameters as $key =&gt; $parameter) {
+                if (isset($params[$key])) {
+                    $params[$key] = $parameter;
+                    unset($parameters[$key]);
+                }
+            }
+
+            $path = route(\request()-&gt;route()-&gt;getAction('as'), $params);
+        } else {
+            $path = $this-&gt;path;
+        }
+
+        if (empty(Arr::query($parameters))) {
+            return $path . $this-&gt;buildFragment();
+        }
+
+        return $path
+            . (Str::contains($this-&gt;path, '?') ? '&amp;' : '?')
+            . Arr::query($parameters)
+            . $this-&gt;buildFragment();
+    }
+    ...
+</code></pre>
+<h2 id="使用自定义的分页组件">使用自定义的分页组件</h2>
+<p>在 Laravel 中我们如果需要分页，会调用 模型中的 <code>paginate</code> 方法，但是<code>paginate</code>方法的定义在<code>Illuminate\Database\Eloquent\Builder</code>下，如果我们需要重写的话，会很麻烦，并且还有一个问题就是，并不是我们所有的分页都是需要伪静态的，比如我们用户中心的数据可能不太需要伪静态。所以我们需要一个可以手动设置的东西，Larave 模型中有一个 <a href="https://learnku.com/docs/laravel/5.8/eloquent/3931#4330c1">本地作用域</a>，我们可以写一个方法<code>staticPaginate</code>，当需要使用静态分页的时候，我们可以<code>Model-&gt;query()-&gt;staticPaginate();</code> 来调用，所需要的参数和 Laravel 自带的 <code>pageinage</code> 方法类似。</p>
+<h3 id="公共的model-基类文件">公共的Model 基类文件</h3>
+<p>Laravel项目中的 Model 我们一般不会直接继承<code>Illuminate\Database\Eloquent\Model</code> 我们一般都在 <code>app\Models</code> 目录定义一个 Model  基类，所有的模型都继承自 Model 基类，这并不是必须的，只是这样的话对于模型修改，或添加公共的方法比较方便。</p>
+<h3 id="在模型中定义本地作用域">在模型中定义本地作用域</h3>
+<p>你只需要拷贝 <code>Illuminate\Database\Eloquent\Builder</code>下的<code>paginate</code>方法的内容并修改<code>$this</code>的指向就可以了</p>
+<pre><code class="language-php">
+...
+
+use Illuminate\Pagination\Paginator;
+# Laravel 自带的。
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+
+...
+
+/**
+     * 自定义静态分页
+     * @author kingofzihua
+     * @param Builder $builder
+     * @param int $perPage
+     * @param array $columns
+     * @param string $pageName
+     * @param int|null $page
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     *
+     * @throws \InvalidArgumentException
+     */
+    public function scopeStaticPaginate($builder, $perPage = null, $columns = ['*'], $pageName = 'page', $page = null)
+    {
+        if (request('page')) {
+            request()-&gt;offsetSet('page', request('page'));
+        }
+
+        $page = $page ?: Paginator::resolveCurrentPage($pageName);
+
+        $perPage = $perPage ?: $builder-&gt;getModel()-&gt;getPerPage();
+
+        $results = ($total = $builder-&gt;toBase()-&gt;getCountForPagination())
+            ? $builder-&gt;forPage($page, $perPage)-&gt;get($columns)
+            : $builder-&gt;getModel()-&gt;newCollection();
+        return $this-&gt;paginator($results, $total, $perPage, $page, [
+            'path' =&gt; Paginator::resolveCurrentPath(),
+            'pageName' =&gt; $pageName,
+        ]);
+    }
+
+    ...
+</code></pre>
+<h3 id="替换自定义的分页组件">替换自定义的分页组件</h3>
+<pre><code class="language-php">
+# 替换下
+use App\Pagination\LengthAwarePaginator;
+
+...
+
+/**
+     * Create a new length-aware paginator instance.
+     *
+     * @param \Illuminate\Support\Collection $items
+     * @param int $total
+     * @param int $perPage
+     * @param int $currentPage
+     * @param array $options
+     * @return \App\Pagination\LengthAwarePaginator
+     */
+    protected function paginator($items, $total, $perPage, $currentPage, $options)
+    {
+        return Container::getInstance()-&gt;makeWith(LengthAwarePaginator::class, compact(
+            'items', 'total', 'perPage', 'currentPage', 'options'
+        ));
+    }
+
+    ...
+
+</code></pre>
+<h2 id="在项目中使用静态分页组件">在项目中使用静态分页组件</h2>
+<pre><code class="language-php">Model::query()-&gt;staticPaginate($pageSize);
+</code></pre>
+
+                                </div>
+                    </article>
+                    <!--  -->
+                    
+                        <div class="next-post">
+                            <div class="next">下一篇</div>
+                            <a href="http://kingofzihua.github.io/post/wen-ben-chu-li-san-jian-ke-zhi-awk">
+                                <h3 class="post-title">
+                                    文本处理三剑客之awk
+                                </h3>
+                            </a>
+                        </div>
+                        
+                            <div id="disqus_thread"></div>
+                            <div id="gitalk-container"></div>
+                </div>
+                <!-- middle -->
+                <div class="main-container-middle"></div>
+                <!-- right -->
+                <div id="sidebar" class="main-container-right">
+                    
+                        <!-- toc -->
+                        
+    <div class="toc-card i-card ">
+        <div class="toc-title i-card-title">目录</div>
+        <div class="toc-content">
+            <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E6%83%B3%E8%A6%81%E7%9A%84%E6%95%88%E6%9E%9C">想要的效果</a></li>
+<li><a href="#laravel-%E5%88%86%E9%A1%B5%E7%BB%84%E4%BB%B6">Laravel 分页组件</a></li>
+<li><a href="#%E9%87%8D%E5%86%99%E5%88%86%E9%A1%B5%E7%BB%84%E4%BB%B6">重写分页组件</a>
+<ul>
+<li><a href="#%E5%88%9B%E5%BB%BA-lengthawarepaginator-%E7%B1%BB">创建 LengthAwarePaginator 类</a></li>
+<li><a href="#%E9%87%8D%E5%86%99-url-%E6%96%B9%E6%B3%95">重写 url 方法</a></li>
+</ul>
+</li>
+<li><a href="#%E4%BD%BF%E7%94%A8%E8%87%AA%E5%AE%9A%E4%B9%89%E7%9A%84%E5%88%86%E9%A1%B5%E7%BB%84%E4%BB%B6">使用自定义的分页组件</a>
+<ul>
+<li><a href="#%E5%85%AC%E5%85%B1%E7%9A%84model-%E5%9F%BA%E7%B1%BB%E6%96%87%E4%BB%B6">公共的Model 基类文件</a></li>
+<li><a href="#%E5%9C%A8%E6%A8%A1%E5%9E%8B%E4%B8%AD%E5%AE%9A%E4%B9%89%E6%9C%AC%E5%9C%B0%E4%BD%9C%E7%94%A8%E5%9F%9F">在模型中定义本地作用域</a></li>
+<li><a href="#%E6%9B%BF%E6%8D%A2%E8%87%AA%E5%AE%9A%E4%B9%89%E7%9A%84%E5%88%86%E9%A1%B5%E7%BB%84%E4%BB%B6">替换自定义的分页组件</a></li>
+</ul>
+</li>
+<li><a href="#%E5%9C%A8%E9%A1%B9%E7%9B%AE%E4%B8%AD%E4%BD%BF%E7%94%A8%E9%9D%99%E6%80%81%E5%88%86%E9%A1%B5%E7%BB%84%E4%BB%B6">在项目中使用静态分页组件</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+        <script>
+            function locateCatelogList() {
+                /*获取文章目录集合,可通过:header过滤器*/
+                var alis = $('.post-content :header');
+                /*获取侧边栏目录列表集合**/
+                var sidebar_alis = $('.markdownIt-TOC a');
+                /*获取滚动条到顶部的距离*/
+                var scroll_height = $(window).scrollTop();
+                for (var i = 0; i < alis.length; i++) {
+                    /*获取锚点集合中的元素分别到顶点的距离*/
+                    var a_height = $(alis[i]).offset().top;
+                    if (a_height < scroll_height) {
+                        /*高亮显示*/
+                        sidebar_alis.removeClass('on');
+                        $(sidebar_alis[i]).addClass('on');
+                    }
+                }
+            }
+            $(function() {
+                /*绑定滚动事件 */
+                $(window).bind('scroll', locateCatelogList);
+            });
+        </script>
+    </div>
+    
+                            
+
+                </div>
+
+
+
+
+            </div>
+
+
+            <div class="site-footer">
+  Powered by <a href="https://github.com/kingofzihua" target="_blank">kingofzihua</a> | 
+  <a class="rss" href="http://kingofzihua.github.io/atom.xml" target="_blank">RSS</a>
+</div>
+
+<script>
+  hljs.initHighlightingOnLoad()
+</script>
+
+
+    </div>
+    <script>
+        $('#sidebar').stickySidebar({
+            topSpacing: 80,
+            // bottomSpacing: 60
+        });
+    </script>
+    
+</body>
+
+</html>

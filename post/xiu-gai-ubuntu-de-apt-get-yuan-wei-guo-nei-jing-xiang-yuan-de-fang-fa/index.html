@@ -1,0 +1,229 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>
+    修改Ubuntu的apt-get源为国内镜像源的方法 | kingofzihua
+</title>
+<link rel="shortcut icon" href="http://kingofzihua.github.io/favicon.ico?v=1577770835023">
+<!-- <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous"> -->
+<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="http://kingofzihua.github.io/styles/main.css">
+<!-- js -->
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+<script src="http://kingofzihua.github.io/media/js/jquery.sticky-sidebar.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<script src="https://cdn.bootcss.com/moment.js/2.23.0/moment.min.js"></script>
+
+
+        
+</head>
+
+<body>
+    <div class="main">
+        <div class="header">
+    <div class="nav">
+        <div class="logo">
+            <a href="http://kingofzihua.github.io">
+                <img class="avatar" src="http://kingofzihua.github.io/images/avatar.png?v=1577770835023" alt="">
+            </a>
+            <div class="site-title">
+                <h1>
+                    kingofzihua
+                </h1>
+            </div>
+        </div>
+        <span class="menu-btn fa fa-align-justify"></span>
+        <div class="menu-container">
+            <ul>
+                
+                    
+                            <li>
+                                <a href="/" class="menu">
+                                    首页
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/archives" class="menu">
+                                    归档
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/tags" class="menu">
+                                    标签
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/post/about" class="menu">
+                                    关于
+                                </a>
+                            </li>
+                            
+                                
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $(".menu-btn").click(function() {
+            $(".menu-container").slideToggle();
+        });
+        $(window).resize(function() {
+
+            if (window.matchMedia('(min-width: 960px)').matches) {
+                $(".menu-container").css('display', 'block')
+            } else {
+                $(".menu-container").css('display', 'none')
+            }
+
+        });
+    });
+</script>
+
+            <div id="main-content" class="post-detail main-container">
+                <!-- left -->
+                <div id="content" class="main-container-left">
+                    <article class="post i-card">
+                        <h2 class="post-title">
+                            修改Ubuntu的apt-get源为国内镜像源的方法
+                        </h2>
+                        <div class="post-info">
+                            <time class="post-time">2019-08-19</time>
+                            
+                                <a href="http://kingofzihua.github.io/tag/m8CoTfmJX" class="post-tag i-tag
+                            i-tag-warning">
+                            #ubuntu
+                        </a>
+                                
+                                <a href="http://kingofzihua.github.io/tag/P_-_7phRZR" class="post-tag i-tag
+                            i-tag-info">
+                            #apt-get
+                        </a>
+                                
+                        </div>
+                        
+                            <div class="post-feature-image" style="background-image: url('http://kingofzihua.github.io/post-images/xiu-gai-ubuntu-de-apt-get-yuan-wei-guo-nei-jing-xiang-yuan-de-fang-fa.jpg')"></div>
+                            
+                                <div class="post-content">
+                                    <blockquote>
+<p>Ubuntu 下载软件速度有点慢，因为默认的是从国外下载软件，那就更换到国内比较好的快速更新源（就是这些软件所在的服务器）</p>
+</blockquote>
+<!-- more --> 
+<p>1、原文件备份</p>
+<pre><code class="language-shell">sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
+</code></pre>
+<p>2、编辑源列表文件</p>
+<pre><code class="language-shell">sudo vim /etc/apt/sources.list
+</code></pre>
+<p>3、将原来的列表删除，添加如下内容（中科大镜像源）</p>
+<pre><code class="language-shell">deb http://mirrors.ustc.edu.cn/ubuntu/ xenial main restricted universe multiverse  
+deb http://mirrors.ustc.edu.cn/ubuntu/ xenial-security main restricted universe multiverse  
+deb http://mirrors.ustc.edu.cn/ubuntu/ xenial-updates main restricted universe multiverse  
+deb http://mirrors.ustc.edu.cn/ubuntu/ xenial-proposed main restricted universe multiverse  
+deb http://mirrors.ustc.edu.cn/ubuntu/ xenial-backports main restricted universe multiverse  
+deb-src http://mirrors.ustc.edu.cn/ubuntu/ xenial main restricted universe multiverse  
+deb-src http://mirrors.ustc.edu.cn/ubuntu/ xenial-security main restricted universe multiverse  
+deb-src http://mirrors.ustc.edu.cn/ubuntu/ xenial-updates main restricted universe multiverse  
+deb-src http://mirrors.ustc.edu.cn/ubuntu/ xenial-proposed main restricted universe multiverse  
+deb-src http://mirrors.ustc.edu.cn/ubuntu/ xenial-backports main restricted universe multiverse  
+</code></pre>
+<p>4、更新apt源</p>
+<pre><code class="language-shell">sudo apt-get update
+</code></pre>
+<hr>
+<p>转载自 <a href="http://www.zgljl2012.com/ubuntu-xiu-gai-ubuntude-apt-getyuan-wei-a-li-yun-yuan-de-fang-fa">修改Ubuntu的apt-get源为国内镜像源的方法</a></p>
+
+                                </div>
+                    </article>
+                    <!--  -->
+                    
+                        <div class="next-post">
+                            <div class="next">下一篇</div>
+                            <a href="http://kingofzihua.github.io/post/centos7-django-xiang-mu-bu-shu-nginx-uwcgi">
+                                <h3 class="post-title">
+                                    CentOS7 Django 项目部署（nginx + uwcgi）
+                                </h3>
+                            </a>
+                        </div>
+                        
+                            <div id="disqus_thread"></div>
+                            <div id="gitalk-container"></div>
+                </div>
+                <!-- middle -->
+                <div class="main-container-middle"></div>
+                <!-- right -->
+                <div id="sidebar" class="main-container-right">
+                    
+                                <!-- id-card -->
+                                
+    <div class="id_card i-card">
+        <div class="id_card-avatar" style="background-image: url(http://kingofzihua.github.io/images/avatar.png?v=1577770835023)">
+        </div>
+        <h1 class="id_card-title">
+            kingofzihua
+        </h1>
+        <h2 class="id_card-description">
+            我未曾见过一个早起、勤奋、谨慎、诚实的人整天抱怨的 — 富兰克林
+        </h2>
+        <!--  -->
+        <div class="id_card-sns">
+            <!-- github -->
+            
+                <a href="https://github.com/kingofzihua" target="_blank" rel="noopener noreferrer"><i
+                class="fa fa-github"></i></a>
+                
+                    <!-- twitter -->
+                    
+                            <!-- weibo -->
+                            
+                                    <!-- facebook -->
+                                    
+
+        </div>
+    </div>
+    
+                                    
+
+                </div>
+
+
+
+
+            </div>
+
+
+            <div class="site-footer">
+  Powered by <a href="https://github.com/kingofzihua" target="_blank">kingofzihua</a> | 
+  <a class="rss" href="http://kingofzihua.github.io/atom.xml" target="_blank">RSS</a>
+</div>
+
+<script>
+  hljs.initHighlightingOnLoad()
+</script>
+
+
+    </div>
+    <script>
+        $('#sidebar').stickySidebar({
+            topSpacing: 80,
+            // bottomSpacing: 60
+        });
+    </script>
+    
+</body>
+
+</html>

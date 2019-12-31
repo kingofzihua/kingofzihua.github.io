@@ -1,0 +1,1366 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>
+    Elasticsearch Analyzer (分词器) | kingofzihua
+</title>
+<link rel="shortcut icon" href="http://kingofzihua.github.io/favicon.ico?v=1577770835023">
+<!-- <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous"> -->
+<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="http://kingofzihua.github.io/styles/main.css">
+<!-- js -->
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+<script src="http://kingofzihua.github.io/media/js/jquery.sticky-sidebar.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<script src="https://cdn.bootcss.com/moment.js/2.23.0/moment.min.js"></script>
+
+
+        
+</head>
+
+<body>
+    <div class="main">
+        <div class="header">
+    <div class="nav">
+        <div class="logo">
+            <a href="http://kingofzihua.github.io">
+                <img class="avatar" src="http://kingofzihua.github.io/images/avatar.png?v=1577770835023" alt="">
+            </a>
+            <div class="site-title">
+                <h1>
+                    kingofzihua
+                </h1>
+            </div>
+        </div>
+        <span class="menu-btn fa fa-align-justify"></span>
+        <div class="menu-container">
+            <ul>
+                
+                    
+                            <li>
+                                <a href="/" class="menu">
+                                    首页
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/archives" class="menu">
+                                    归档
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/tags" class="menu">
+                                    标签
+                                </a>
+                            </li>
+                            
+                                
+                    
+                            <li>
+                                <a href="/post/about" class="menu">
+                                    关于
+                                </a>
+                            </li>
+                            
+                                
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $(".menu-btn").click(function() {
+            $(".menu-container").slideToggle();
+        });
+        $(window).resize(function() {
+
+            if (window.matchMedia('(min-width: 960px)').matches) {
+                $(".menu-container").css('display', 'block')
+            } else {
+                $(".menu-container").css('display', 'none')
+            }
+
+        });
+    });
+</script>
+
+            <div id="main-content" class="post-detail main-container">
+                <!-- left -->
+                <div id="content" class="main-container-left">
+                    <article class="post i-card">
+                        <h2 class="post-title">
+                            Elasticsearch Analyzer (分词器)
+                        </h2>
+                        <div class="post-info">
+                            <time class="post-time">2019-09-04</time>
+                            
+                                <a href="http://kingofzihua.github.io/tag/n9VRPxrjY" class="post-tag i-tag
+                            i-tag-other_4">
+                            #elasticsearch
+                        </a>
+                                
+                        </div>
+                        
+                            <div class="post-feature-image" style="background-image: url('http://kingofzihua.github.io/post-images/elasticsearch-analyzer-fen-ci-qi.jpg')"></div>
+                            
+                                <div class="post-content">
+                                    <blockquote>
+<p>在Elasticsearch中，索引分析模块是可以通过注册分词器（analyzer）来进行配置。分词器的作用是当一个文档被索引的时候分词器从文档中提取出若干词元(token)来支持索引的存储和搜索。</p>
+</blockquote>
+<!-- more -->
+<h2 id="analysis-与analyzer">Analysis 与Analyzer</h2>
+<ul>
+<li>Analysis -文本分析是把全文本转换为一系列索引词（<code>term</code>）/词元（ <code>token</code>）的过程，也叫分词</li>
+<li>Analysis 是通过Analyer 来实现的
+<ul>
+<li>可使用 Elasticsearch 内置的分析器/ 或者按需定制化分析器</li>
+</ul>
+</li>
+<li>除了在数据写入时转换词条，匹配Query语句时候也需要用相同的分析器对查询语句进行分析</li>
+<li></li>
+</ul>
+<h2 id="analyzer-分词器的组成">Analyzer （分词器）的组成</h2>
+<blockquote>
+<p>分词器是专门处理分词的组件，分词器(analyzer)是由字符过滤器（Character Filters）、一个分解器(tokenizer)、零个或多个词元过滤器(token filters)组成。</p>
+</blockquote>
+<figure data-type="image" tabindex="1"><img src="http://kingofzihua.github.io/post-images/1567573386582.jpg" alt="" loading="lazy"></figure>
+<h3 id="character-filters-字符过滤器">Character Filters （字符过滤器）</h3>
+<pre><code>在分解器（Tokenizer）之前对文本进行预处理。处理的算法称谓字符过滤器（Character Filters）	
+</code></pre>
+<p>一个分解器（Tokenizer）会有一个或多个字符过滤器（Character Filters）。针对原始文本处理。会影响分解器（Tokenizer）的position和offset信息。</p>
+<h4 id="elasticsearch-自带的-character-filters">Elasticsearch 自带的 Character Filters</h4>
+<ul>
+<li>HTML strip - 去除html标签</li>
+<li>Mapping - 字符串替换</li>
+<li>Pattern replace - 正则匹配替换</li>
+</ul>
+<h4 id="例子">例子</h4>
+<h5 id="将文本中的-中划线-替换成-下划线-_">将文本中的 中划线[ - ] 替换成 下划线 [ _ ]</h5>
+<pre><code>GET _analyze
+{
+  &quot;char_filter&quot;: [
+      {
+        &quot;type&quot;:&quot;mapping&quot;,
+        &quot;mappings&quot;:[&quot;- =&gt; _&quot;]
+      }
+    ],
+  &quot;text&quot;: &quot;123-456&quot;
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;tokens&quot; : [
+    {
+      &quot;token&quot; : &quot;123_456&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 8,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    }
+  ]
+}
+</code></pre>
+<h5 id="替换表情符号">替换表情符号</h5>
+<pre><code>GET _analyze
+{
+  &quot;char_filter&quot;: [
+      {
+        &quot;type&quot;:&quot;mapping&quot;,
+        &quot;mappings&quot;:[&quot;:) =&gt; happy&quot;,&quot;:( =&gt; sad&quot;]
+      }
+    ],
+  &quot;text&quot;: [&quot;I am felling :)&quot;,&quot;Feeling :( today&quot;]
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;tokens&quot; : [
+    {
+      &quot;token&quot; : &quot;I am felling happy&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 15,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    },
+    {
+      &quot;token&quot; : &quot;Feeling sad today&quot;,
+      &quot;start_offset&quot; : 16,
+      &quot;end_offset&quot; : 32,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 1
+    }
+  ]
+}
+</code></pre>
+<h5 id="正则表达式">正则表达式</h5>
+<pre><code>GET _analyze
+{
+  &quot;char_filter&quot;: [
+      {
+        &quot;type&quot;:&quot;pattern_replace&quot;,
+        &quot;pattern&quot;:&quot;http://(.*)&quot;,
+        &quot;replacement&quot;:&quot;$1&quot;
+      }
+    ],
+  &quot;text&quot;: &quot;http://www.elastic.co&quot;
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;tokens&quot; : [
+    {
+      &quot;token&quot; : &quot;www.elastic.co&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 21,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    }
+  ]
+}
+</code></pre>
+<h3 id="tokenizer分解器">tokenizer（分解器）</h3>
+<pre><code>按照规则切分为单词，把字符串分解成一系列词元。
+</code></pre>
+<p>一个简单的分解器是把一个橘子当遇到空格或标点符号时，分解成一个个的索引词。</p>
+<h4 id="elasticsearch-内置的-tokenizers">Elasticsearch 内置的 Tokenizers</h4>
+<ul>
+<li>whitespace</li>
+<li>standard</li>
+<li>uax_url_email</li>
+<li>pattern</li>
+<li>keyword</li>
+<li>path hierarchy 文件路径</li>
+</ul>
+<p><strong>可以用 Java 开发插件，实现自己的Tokenizer</strong></p>
+<h4 id="例子-2">例子</h4>
+<h5 id="path_hierarchy">path_hierarchy</h5>
+<pre><code>GET _analyze
+{
+  &quot;tokenizer&quot;: &quot;path_hierarchy&quot;,
+  &quot;text&quot;: &quot;/usr/local/bin&quot;
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;tokens&quot; : [
+    {
+      &quot;token&quot; : &quot;/usr&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 4,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    },
+    {
+      &quot;token&quot; : &quot;/usr/local&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 10,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    },
+    {
+      &quot;token&quot; : &quot;/usr/local/bin&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 14,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    }
+  ]
+}
+</code></pre>
+<h3 id="token-filters-词元过滤器">token filters  (词元过滤器)</h3>
+<pre><code>对分词器提取出来的单词、词元做进一步的处理。
+</code></pre>
+<p>将切分的单词进行加工，例如：小写，删除 stopwords，增加同义词</p>
+<h4 id="elasticsearch-自带的token-filters">Elasticsearch 自带的token filters</h4>
+<ul>
+<li>lowercase (小写处理)</li>
+<li>stop （删除修饰性词语）</li>
+<li>synonym（添加近义词）</li>
+</ul>
+<h4 id="例子-3">例子</h4>
+<h5 id="stop">stop</h5>
+<p><strong>不能只使用 filter，所以我们用都使用whitespace tokenizer 来做个对比</strong></p>
+<ul>
+<li>不使用 stop filter</li>
+</ul>
+<pre><code>GET _analyze
+{
+  &quot;tokenizer&quot;: &quot;whitespace&quot;, 
+  &quot;text&quot;: &quot;The rain in Spain falls mainly on the plain.&quot;
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;tokens&quot; : [
+    {
+      &quot;token&quot; : &quot;The&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 3,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    },
+    {
+      &quot;token&quot; : &quot;rain&quot;,
+      &quot;start_offset&quot; : 4,
+      &quot;end_offset&quot; : 8,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 1
+    },
+    {
+      &quot;token&quot; : &quot;in&quot;,
+      &quot;start_offset&quot; : 9,
+      &quot;end_offset&quot; : 11,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 2
+    },
+    {
+      &quot;token&quot; : &quot;Spain&quot;,
+      &quot;start_offset&quot; : 12,
+      &quot;end_offset&quot; : 17,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 3
+    },
+    {
+      &quot;token&quot; : &quot;falls&quot;,
+      &quot;start_offset&quot; : 18,
+      &quot;end_offset&quot; : 23,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 4
+    },
+    {
+      &quot;token&quot; : &quot;mainly&quot;,
+      &quot;start_offset&quot; : 24,
+      &quot;end_offset&quot; : 30,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 5
+    },
+    {
+      &quot;token&quot; : &quot;on&quot;,
+      &quot;start_offset&quot; : 31,
+      &quot;end_offset&quot; : 33,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 6
+    },
+    {
+      &quot;token&quot; : &quot;the&quot;,
+      &quot;start_offset&quot; : 34,
+      &quot;end_offset&quot; : 37,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 7
+    },
+    {
+      &quot;token&quot; : &quot;plain.&quot;,
+      &quot;start_offset&quot; : 38,
+      &quot;end_offset&quot; : 44,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 8
+    }
+  ]
+}
+</code></pre>
+<ul>
+<li>使用 stop filter</li>
+</ul>
+<pre><code>GET _analyze
+{
+  &quot;tokenizer&quot;: &quot;whitespace&quot;, 
+  &quot;filter&quot;: [&quot;stop&quot;],
+  &quot;text&quot;: &quot;The rain in Spain falls mainly on the plain.&quot;
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;tokens&quot; : [
+    {
+      &quot;token&quot; : &quot;The&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 3,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    },
+    {
+      &quot;token&quot; : &quot;rain&quot;,
+      &quot;start_offset&quot; : 4,
+      &quot;end_offset&quot; : 8,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 1
+    },
+    {
+      &quot;token&quot; : &quot;Spain&quot;,
+      &quot;start_offset&quot; : 12,
+      &quot;end_offset&quot; : 17,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 3
+    },
+    {
+      &quot;token&quot; : &quot;falls&quot;,
+      &quot;start_offset&quot; : 18,
+      &quot;end_offset&quot; : 23,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 4
+    },
+    {
+      &quot;token&quot; : &quot;mainly&quot;,
+      &quot;start_offset&quot; : 24,
+      &quot;end_offset&quot; : 30,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 5
+    },
+    {
+      &quot;token&quot; : &quot;plain.&quot;,
+      &quot;start_offset&quot; : 38,
+      &quot;end_offset&quot; : 44,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 8
+    }
+  ]
+}
+
+</code></pre>
+<h2 id="使用-_analyzer-api">使用 _analyzer API</h2>
+<h3 id="直接指定analyzer-进行测试">直接指定Analyzer 进行测试</h3>
+<pre><code>GET /_analyze
+{
+  &quot;analyzer&quot;: &quot;standard&quot;,
+  &quot;text&quot;: &quot;2 running Quick brown-foxes leap over lazy dogs in the summer evening.&quot;
+}
+</code></pre>
+<h3 id="指定索引的字段进行测试">指定索引的字段进行测试</h3>
+<pre><code>POST books/_analyze
+{
+  &quot;field&quot;: &quot;title&quot;,
+  &quot;text&quot;: &quot;Mastering Elasticsearch&quot;
+}
+</code></pre>
+<h3 id="自定义分词器进行测试">自定义分词器进行测试</h3>
+<pre><code>POST /_analyze
+{
+  &quot;tokenizer&quot;: &quot;standard&quot;,
+  &quot;filter&quot;: [&quot;lowercase&quot;],
+  &quot;text&quot;: &quot;Mastering Elasticsearch&quot;
+}
+</code></pre>
+<h2 id="elasticsearch的内置分词器">Elasticsearch的内置分词器</h2>
+<h3 id="standard-analyzer">Standard Analyzer</h3>
+<ul>
+<li>elasticsearch 默认的分词器</li>
+<li>按词切分</li>
+<li>小写处理</li>
+</ul>
+<figure data-type="image" tabindex="2"><img src="http://kingofzihua.github.io/post-images/1567574028769.jpg" alt="" loading="lazy"></figure>
+<pre><code>GET _analyze
+{
+ &quot;analyzer&quot;: &quot;standard&quot;,
+ &quot;text&quot;: &quot;2 running Quick brown-foxes leap over lazy dogs in the summer evening.&quot;
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;tokens&quot; : [
+    {
+      &quot;token&quot; : &quot;2&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 1,
+      &quot;type&quot; : &quot;&lt;NUM&gt;&quot;,
+      &quot;position&quot; : 0
+    },
+    {
+      &quot;token&quot; : &quot;running&quot;,
+      &quot;start_offset&quot; : 2,
+      &quot;end_offset&quot; : 9,
+      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,
+      &quot;position&quot; : 1
+    },
+    {
+      &quot;token&quot; : &quot;quick&quot;,
+      &quot;start_offset&quot; : 10,
+      &quot;end_offset&quot; : 15,
+      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,
+      &quot;position&quot; : 2
+    },
+    {
+      &quot;token&quot; : &quot;brown&quot;,
+      &quot;start_offset&quot; : 16,
+      &quot;end_offset&quot; : 21,
+      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,
+      &quot;position&quot; : 3
+    },
+    {
+      &quot;token&quot; : &quot;foxes&quot;,
+      &quot;start_offset&quot; : 22,
+      &quot;end_offset&quot; : 27,
+      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,
+      &quot;position&quot; : 4
+    },
+    {
+      &quot;token&quot; : &quot;leap&quot;,
+      &quot;start_offset&quot; : 28,
+      &quot;end_offset&quot; : 32,
+      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,
+      &quot;position&quot; : 5
+    },
+    {
+      &quot;token&quot; : &quot;over&quot;,
+      &quot;start_offset&quot; : 33,
+      &quot;end_offset&quot; : 37,
+      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,
+      &quot;position&quot; : 6
+    },
+    {
+      &quot;token&quot; : &quot;lazy&quot;,
+      &quot;start_offset&quot; : 38,
+      &quot;end_offset&quot; : 42,
+      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,
+      &quot;position&quot; : 7
+    },
+    {
+      &quot;token&quot; : &quot;dogs&quot;,
+      &quot;start_offset&quot; : 43,
+      &quot;end_offset&quot; : 47,
+      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,
+      &quot;position&quot; : 8
+    },
+    {
+      &quot;token&quot; : &quot;in&quot;,
+      &quot;start_offset&quot; : 48,
+      &quot;end_offset&quot; : 50,
+      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,
+      &quot;position&quot; : 9
+    },
+    {
+      &quot;token&quot; : &quot;the&quot;,
+      &quot;start_offset&quot; : 51,
+      &quot;end_offset&quot; : 54,
+      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,
+      &quot;position&quot; : 10
+    },
+    {
+      &quot;token&quot; : &quot;summer&quot;,
+      &quot;start_offset&quot; : 55,
+      &quot;end_offset&quot; : 61,
+      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,
+      &quot;position&quot; : 11
+    },
+    {
+      &quot;token&quot; : &quot;evening&quot;,
+      &quot;start_offset&quot; : 62,
+      &quot;end_offset&quot; : 69,
+      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,
+      &quot;position&quot; : 12
+    }
+  ]
+}
+</code></pre>
+<h3 id="simple-analyzer">Simple Analyzer</h3>
+<ul>
+<li>按照非字母切分，非字母对都被去除</li>
+<li>小写处理</li>
+</ul>
+<figure data-type="image" tabindex="3"><img src="http://kingofzihua.github.io/post-images/1567574087251.jpg" alt="" loading="lazy"></figure>
+<pre><code>GET _analyze
+  {
+    &quot;analyzer&quot;: &quot;simple&quot;,
+    &quot;text&quot;: &quot;2 running Quick brown-foxes leap over lazy dogs in the summer evening.&quot;
+  }
+</code></pre>
+<p>返回结果：</p>
+<pre><code>	{
+  &quot;tokens&quot; : [
+    {
+      &quot;token&quot; : &quot;running&quot;,
+      &quot;start_offset&quot; : 2,
+      &quot;end_offset&quot; : 9,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    },
+    {
+      &quot;token&quot; : &quot;quick&quot;,
+      &quot;start_offset&quot; : 10,
+      &quot;end_offset&quot; : 15,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 1
+    },
+    {
+      &quot;token&quot; : &quot;brown&quot;,
+      &quot;start_offset&quot; : 16,
+      &quot;end_offset&quot; : 21,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 2
+    },
+    {
+      &quot;token&quot; : &quot;foxes&quot;,
+      &quot;start_offset&quot; : 22,
+      &quot;end_offset&quot; : 27,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 3
+    },
+    {
+      &quot;token&quot; : &quot;leap&quot;,
+      &quot;start_offset&quot; : 28,
+      &quot;end_offset&quot; : 32,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 4
+    },
+    {
+      &quot;token&quot; : &quot;over&quot;,
+      &quot;start_offset&quot; : 33,
+      &quot;end_offset&quot; : 37,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 5
+    },
+    {
+      &quot;token&quot; : &quot;lazy&quot;,
+      &quot;start_offset&quot; : 38,
+      &quot;end_offset&quot; : 42,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 6
+    },
+    {
+      &quot;token&quot; : &quot;dogs&quot;,
+      &quot;start_offset&quot; : 43,
+      &quot;end_offset&quot; : 47,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 7
+    },
+    {
+      &quot;token&quot; : &quot;in&quot;,
+      &quot;start_offset&quot; : 48,
+      &quot;end_offset&quot; : 50,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 8
+    },
+    {
+      &quot;token&quot; : &quot;the&quot;,
+      &quot;start_offset&quot; : 51,
+      &quot;end_offset&quot; : 54,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 9
+    },
+    {
+      &quot;token&quot; : &quot;summer&quot;,
+      &quot;start_offset&quot; : 55,
+      &quot;end_offset&quot; : 61,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 10
+    },
+    {
+      &quot;token&quot; : &quot;evening&quot;,
+      &quot;start_offset&quot; : 62,
+      &quot;end_offset&quot; : 69,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 11
+    }
+  ]
+}
+</code></pre>
+<h3 id="whitespace-analyzer">Whitespace Analyzer</h3>
+<ul>
+<li>按照空格切分</li>
+</ul>
+<figure data-type="image" tabindex="4"><img src="http://kingofzihua.github.io/post-images/1567574121683.jpg" alt="" loading="lazy"></figure>
+<pre><code>GET _analyze
+{
+  &quot;analyzer&quot;: &quot;whitespace&quot;,
+  &quot;text&quot;: &quot;2 running Quick brown-foxes leap over lazy dogs in the summer evening.&quot;
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;tokens&quot; : [
+    {
+      &quot;token&quot; : &quot;2&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 1,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    },
+    {
+      &quot;token&quot; : &quot;running&quot;,
+      &quot;start_offset&quot; : 2,
+      &quot;end_offset&quot; : 9,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 1
+    },
+    {
+      &quot;token&quot; : &quot;Quick&quot;,
+      &quot;start_offset&quot; : 10,
+      &quot;end_offset&quot; : 15,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 2
+    },
+    {
+      &quot;token&quot; : &quot;brown-foxes&quot;,
+      &quot;start_offset&quot; : 16,
+      &quot;end_offset&quot; : 27,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 3
+    },
+    {
+      &quot;token&quot; : &quot;leap&quot;,
+      &quot;start_offset&quot; : 28,
+      &quot;end_offset&quot; : 32,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 4
+    },
+    {
+      &quot;token&quot; : &quot;over&quot;,
+      &quot;start_offset&quot; : 33,
+      &quot;end_offset&quot; : 37,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 5
+    },
+    {
+      &quot;token&quot; : &quot;lazy&quot;,
+      &quot;start_offset&quot; : 38,
+      &quot;end_offset&quot; : 42,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 6
+    },
+    {
+      &quot;token&quot; : &quot;dogs&quot;,
+      &quot;start_offset&quot; : 43,
+      &quot;end_offset&quot; : 47,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 7
+    },
+    {
+      &quot;token&quot; : &quot;in&quot;,
+      &quot;start_offset&quot; : 48,
+      &quot;end_offset&quot; : 50,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 8
+    },
+    {
+      &quot;token&quot; : &quot;the&quot;,
+      &quot;start_offset&quot; : 51,
+      &quot;end_offset&quot; : 54,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 9
+    },
+    {
+      &quot;token&quot; : &quot;summer&quot;,
+      &quot;start_offset&quot; : 55,
+      &quot;end_offset&quot; : 61,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 10
+    },
+    {
+      &quot;token&quot; : &quot;evening.&quot;,
+      &quot;start_offset&quot; : 62,
+      &quot;end_offset&quot; : 70,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 11
+    }
+  ]
+}
+</code></pre>
+<h3 id="stop-analyzer">Stop Analyzer</h3>
+<ul>
+<li>相比 Simple Analyzer 多了stop filter
+<ul>
+<li>会把 <code>the</code>， <code>a</code>，<code>is</code> 等修饰性词语去除</li>
+</ul>
+</li>
+</ul>
+<figure data-type="image" tabindex="5"><img src="http://kingofzihua.github.io/post-images/1567574149862.png" alt="" loading="lazy"></figure>
+<pre><code>GET _analyze
+{
+  &quot;analyzer&quot;: &quot;stop&quot;,
+  &quot;text&quot;: &quot;2 running Quick brown-foxes leap over lazy dogs in the summer evening.&quot;
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;tokens&quot; : [
+    {
+      &quot;token&quot; : &quot;running&quot;,
+      &quot;start_offset&quot; : 2,
+      &quot;end_offset&quot; : 9,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    },
+    {
+      &quot;token&quot; : &quot;quick&quot;,
+      &quot;start_offset&quot; : 10,
+      &quot;end_offset&quot; : 15,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 1
+    },
+    {
+      &quot;token&quot; : &quot;brown&quot;,
+      &quot;start_offset&quot; : 16,
+      &quot;end_offset&quot; : 21,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 2
+    },
+    {
+      &quot;token&quot; : &quot;foxes&quot;,
+      &quot;start_offset&quot; : 22,
+      &quot;end_offset&quot; : 27,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 3
+    },
+    {
+      &quot;token&quot; : &quot;leap&quot;,
+      &quot;start_offset&quot; : 28,
+      &quot;end_offset&quot; : 32,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 4
+    },
+    {
+      &quot;token&quot; : &quot;over&quot;,
+      &quot;start_offset&quot; : 33,
+      &quot;end_offset&quot; : 37,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 5
+    },
+    {
+      &quot;token&quot; : &quot;lazy&quot;,
+      &quot;start_offset&quot; : 38,
+      &quot;end_offset&quot; : 42,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 6
+    },
+    {
+      &quot;token&quot; : &quot;dogs&quot;,
+      &quot;start_offset&quot; : 43,
+      &quot;end_offset&quot; : 47,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 7
+    },
+    {
+      &quot;token&quot; : &quot;summer&quot;,
+      &quot;start_offset&quot; : 55,
+      &quot;end_offset&quot; : 61,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 10
+    },
+    {
+      &quot;token&quot; : &quot;evening&quot;,
+      &quot;start_offset&quot; : 62,
+      &quot;end_offset&quot; : 69,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 11
+    }
+  ]
+}
+</code></pre>
+<h3 id="keyword-analyzer">Keyword Analyzer</h3>
+<ul>
+<li>不分词，直接将输入当一个<code>term</code>输出</li>
+</ul>
+<figure data-type="image" tabindex="6"><img src="http://kingofzihua.github.io/post-images/1567574187183.jpg" alt="" loading="lazy"></figure>
+<pre><code>GET _analyze
+{
+  &quot;analyzer&quot;: &quot;keyword&quot;,
+  &quot;text&quot;: &quot;2 running Quick brown-foxes leap over lazy dogs in the summer evening.&quot;
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;tokens&quot; : [
+    {
+      &quot;token&quot; : &quot;2 running Quick brown-foxes leap over lazy dogs in the summer evening.&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 70,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    }
+  ]
+}
+</code></pre>
+<p><em>没有做任何的处理，直接把结果按一个<code>term</code>输出了</em></p>
+<h3 id="pattern-analyzer">Pattern Analyzer</h3>
+<figure data-type="image" tabindex="7"><img src="http://kingofzihua.github.io/post-images/1567571888516.jpg" alt="" loading="lazy"></figure>
+<ul>
+<li>通过正则表达式进行分词</li>
+<li>默认是\W+，非字符的符号进行分隔</li>
+</ul>
+<pre><code>GET _analyze
+{
+  &quot;analyzer&quot;: &quot;pattern&quot;,
+  &quot;text&quot;: &quot;2 running Quick brown-foxes leap over lazy dogs in the summer evening.&quot;
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;tokens&quot; : [
+    {
+      &quot;token&quot; : &quot;2&quot;,
+      &quot;start_offset&quot; : 0,
+      &quot;end_offset&quot; : 1,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 0
+    },
+    {
+      &quot;token&quot; : &quot;running&quot;,
+      &quot;start_offset&quot; : 2,
+      &quot;end_offset&quot; : 9,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 1
+    },
+    {
+      &quot;token&quot; : &quot;quick&quot;,
+      &quot;start_offset&quot; : 10,
+      &quot;end_offset&quot; : 15,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 2
+    },
+    {
+      &quot;token&quot; : &quot;brown&quot;,
+      &quot;start_offset&quot; : 16,
+      &quot;end_offset&quot; : 21,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 3
+    },
+    {
+      &quot;token&quot; : &quot;foxes&quot;,
+      &quot;start_offset&quot; : 22,
+      &quot;end_offset&quot; : 27,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 4
+    },
+    {
+      &quot;token&quot; : &quot;leap&quot;,
+      &quot;start_offset&quot; : 28,
+      &quot;end_offset&quot; : 32,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 5
+    },
+    {
+      &quot;token&quot; : &quot;over&quot;,
+      &quot;start_offset&quot; : 33,
+      &quot;end_offset&quot; : 37,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 6
+    },
+    {
+      &quot;token&quot; : &quot;lazy&quot;,
+      &quot;start_offset&quot; : 38,
+      &quot;end_offset&quot; : 42,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 7
+    },
+    {
+      &quot;token&quot; : &quot;dogs&quot;,
+      &quot;start_offset&quot; : 43,
+      &quot;end_offset&quot; : 47,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 8
+    },
+    {
+      &quot;token&quot; : &quot;in&quot;,
+      &quot;start_offset&quot; : 48,
+      &quot;end_offset&quot; : 50,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 9
+    },
+    {
+      &quot;token&quot; : &quot;the&quot;,
+      &quot;start_offset&quot; : 51,
+      &quot;end_offset&quot; : 54,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 10
+    },
+    {
+      &quot;token&quot; : &quot;summer&quot;,
+      &quot;start_offset&quot; : 55,
+      &quot;end_offset&quot; : 61,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 11
+    },
+    {
+      &quot;token&quot; : &quot;evening&quot;,
+      &quot;start_offset&quot; : 62,
+      &quot;end_offset&quot; : 69,
+      &quot;type&quot; : &quot;word&quot;,
+      &quot;position&quot; : 12
+    }
+  ]
+}
+</code></pre>
+<h3 id="language-提供了30多种常见语言的分词器">Language - 提供了30多种常见语言的分词器</h3>
+<p>针对不同的语言. 支持以下类型:</p>
+<ul>
+<li>arabic</li>
+<li>armenian</li>
+<li>basque</li>
+<li>bengali</li>
+<li>brazilian</li>
+<li>bulgarian</li>
+<li>catalan</li>
+<li>cjk</li>
+<li>czech</li>
+<li>danish</li>
+<li>dutch</li>
+<li>english</li>
+<li>finnish</li>
+<li>french</li>
+<li>galician</li>
+<li>german</li>
+<li>greek</li>
+<li>hindi</li>
+<li>hungarian</li>
+<li>indonesian</li>
+<li>irish</li>
+<li>italian</li>
+<li>latvian</li>
+<li>lithuanian</li>
+<li>norwegian</li>
+<li>persian</li>
+<li>portuguese</li>
+<li>romanian</li>
+<li>russian</li>
+<li>sorani</li>
+<li>spanish</li>
+<li>swedish</li>
+<li>turkish</li>
+<li>thai</li>
+</ul>
+<h2 id="自定义分词器">自定义分词器</h2>
+<p><strong>自定义分析器标准格式：</strong></p>
+<pre><code>PUT /my_index
+{
+    &quot;settings&quot;: {
+        &quot;analysis&quot;: {
+            &quot;char_filter&quot;: { ... custom character filters ... },//字符过滤器
+            &quot;tokenizer&quot;: { ... custom tokenizers ... },//分词器
+            &quot;filter&quot;: { ... custom token filters ... }, //词单元过滤器
+            &quot;analyzer&quot;: { ... custom analyzers ... }
+        }
+    }
+}
+</code></pre>
+<p><a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.2/analysis-custom-analyzer.html">》官方文档介绍《</a></p>
+<h3 id="my_custom_analyzer">my_custom_analyzer</h3>
+<blockquote>
+<p>在一个索引（test_custom_analyzer）上定义一个自定义的分词器（my_custom_analyzer）。分词器使用的自定义的字符过滤器（emoticons）、自定义的分解器（punctuation）、自定义的词元过滤器（english_stop）和系统内置的（lowercase）。</p>
+</blockquote>
+<h4 id="定义分词器">定义分词器</h4>
+<pre><code>PUT test_custom_analyzer
+{
+  &quot;settings&quot;: {
+    &quot;analysis&quot;: {
+      &quot;analyzer&quot;: {
+        &quot;my_custom_analyzer&quot;:{
+          &quot;type&quot;:&quot;custom&quot;,
+          &quot;char_filter&quot;:[
+            &quot;emoticons&quot;  
+          ],
+          &quot;tokenizer&quot;:&quot;punctuation&quot;,
+          &quot;filter&quot;:[
+            &quot;lowercase&quot;,
+            &quot;english_stop&quot;
+          ]
+        }
+      },
+      &quot;tokenizer&quot;: {
+        &quot;punctuation&quot;:{
+          &quot;type&quot;:&quot;pattern&quot;,
+          &quot;pattern&quot;:&quot;[ .,!?]&quot;
+        }
+      },
+      &quot;char_filter&quot;: {
+        &quot;emoticons&quot;:{
+          &quot;type&quot;:&quot;mapping&quot;,
+          &quot;mappings&quot;:[&quot;:) =&gt; _happy_&quot;,&quot;:( =&gt; _sad_&quot;]
+        }
+      },
+      &quot;filter&quot;: {
+        &quot;english_stop&quot;:{
+          &quot;type&quot;:&quot;stop&quot;,
+          &quot;stopwords&quot;:&quot;_english_&quot;
+        }
+      }
+    }
+  }
+}
+</code></pre>
+<h4 id="测试自定义的分词器">测试自定义的分词器</h4>
+<pre><code>POST test_custom_analyzer/_analyze
+{
+  &quot;analyzer&quot;: &quot;my_custom_analyzer&quot;,
+  &quot;text&quot;: &quot;I'm a :) person, and you? &quot;
+}
+
+</code></pre>
+<h4 id="解析">解析</h4>
+<pre><code>PUT test_custom_analyzer  # 在一个索引上定义一个分词器
+{
+  &quot;settings&quot;: { 
+    &quot;analysis&quot;: {
+      &quot;analyzer&quot;: { # 自定义分词器
+        &quot;my_custom_analyzer&quot;:{  # 分词器名字
+          &quot;type&quot;:&quot;custom&quot;,
+          &quot;char_filter&quot;:[    # 分词器所需要使用的 字符过滤器 
+            &quot;emoticons&quot;     # 字符过滤器的名字，这个是自定义的，在char_filter 里可以看到定义
+          ],
+          &quot;tokenizer&quot;:&quot;punctuation&quot;,  # 分词器所需要使用的 分解器
+          &quot;filter&quot;:[   # 分解器所调用的 词元过滤器 
+            &quot;lowercase&quot;,
+            &quot;english_stop&quot; # 词元过滤器 这个是自定义的 在filter里可以看到定义
+          ]
+        }
+      },
+      &quot;tokenizer&quot;: {    # 自定义  分解器
+        &quot;punctuation&quot;:{ #  分解器的名字
+          &quot;type&quot;:&quot;pattern&quot;,
+          &quot;pattern&quot;:&quot;[ .,!?]&quot;
+        }
+      },
+      &quot;char_filter&quot;: { #自定义字符过滤器
+        &quot;emoticons&quot;:{ # 字符过滤器的名字
+          &quot;type&quot;:&quot;mapping&quot;,
+          &quot;mappings&quot;:[&quot;:) =&gt; _happy_&quot;,&quot;:( =&gt; _sad_&quot;]
+        }
+      },
+      &quot;filter&quot;: { # 自定义 词元过滤器
+        &quot;english_stop&quot;:{ # 词元过滤器的名字
+          &quot;type&quot;:&quot;stop&quot;,
+          &quot;stopwords&quot;:&quot;_english_&quot;
+        }
+      }
+    }
+  }
+}
+</code></pre>
+<h2 id="其他分词器">其他分词器</h2>
+<h3 id="analysis-icu">Analysis-ICU</h3>
+<pre><code>提供了Unicode的支持，更好的支持亚洲语言
+</code></pre>
+<ul>
+<li>https://github.com/elastic/elasticsearch-analysis-icu</li>
+</ul>
+<figure data-type="image" tabindex="8"><img src="http://kingofzihua.github.io/post-images/1567576048362.png" alt="" loading="lazy"></figure>
+<h4 id="安装">安装</h4>
+<pre><code># 需要找到你的elasticsearch-plugin命令所在位置
+sudo /you-path/elasticsearch-plugin install analysis-icu
+</code></pre>
+<h3 id="analysis-ik-中文分词插件">Analysis-IK （中文分词插件）</h3>
+<pre><code>支持自定义词库，支持热更新分词字典
+</code></pre>
+<ul>
+<li>https://github.com/medcl/elasticsearch-analysis-ik</li>
+</ul>
+<h4 id="安装-2">安装</h4>
+<pre><code># 需要找到你的elasticsearch-plugin命令所在位置
+sudo /you-path/elasticsearch-plugin list
+analysis-ik
+</code></pre>
+<h3 id="hanlp-中文分词插件">HanLP （中文分词插件）</h3>
+<pre><code> 面向生产环境的自然语言处理工具
+</code></pre>
+<ul>
+<li>http://hanlp.com/</li>
+<li>https://github.com/KennFalcon/elasticsearch-analysis-hanlp</li>
+</ul>
+<h4 id="安装-3">安装</h4>
+<pre><code># 需要找到你的elasticsearch-plugin命令所在位置
+sudo /you-path/elasticsearch-plugin install https://github.com/KennFalcon/elasticsearch-analysis-hanlp/releases/download/v7.2.0/elasticsearch-analysis-hanlp-7.2.0.zip
+</code></pre>
+<h3 id="pinyin-拼音">Pinyin （拼音）</h3>
+<ul>
+<li>https://github.com/medcl/elasticsearch-analysis-pinyin</li>
+</ul>
+<h4 id="安装-4">安装</h4>
+<pre><code># 需要找到你的elasticsearch-plugin命令所在位置
+sudo /you-path/elasticsearch-plugin install https://github.com/medcl/elasticsearch-analysis-pinyin/releases/download/v7.2.0/elasticsearch-analysis-pinyin-7.2.0.zip
+</code></pre>
+<hr>
+<h2 id="参考资料">参考资料</h2>
+<ul>
+<li><a href="https://e.jd.com/30318357.html">Elasticsearch技术解析与实战</a></li>
+<li><a href="https://time.geekbang.org/course/intro/197">极客时间:Elasticsearch核心技术与实战</a></li>
+</ul>
+
+                                </div>
+                    </article>
+                    <!--  -->
+                    
+                        <div class="next-post">
+                            <div class="next">下一篇</div>
+                            <a href="http://kingofzihua.github.io/post/elasticsearch-rest-api">
+                                <h3 class="post-title">
+                                    Elasticsearch REST API
+                                </h3>
+                            </a>
+                        </div>
+                        
+                            <div id="disqus_thread"></div>
+                            <div id="gitalk-container"></div>
+                </div>
+                <!-- middle -->
+                <div class="main-container-middle"></div>
+                <!-- right -->
+                <div id="sidebar" class="main-container-right">
+                    
+                        <!-- toc -->
+                        
+    <div class="toc-card i-card ">
+        <div class="toc-title i-card-title">目录</div>
+        <div class="toc-content">
+            <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#analysis-%E4%B8%8Eanalyzer">Analysis 与Analyzer</a></li>
+<li><a href="#analyzer-%E5%88%86%E8%AF%8D%E5%99%A8%E7%9A%84%E7%BB%84%E6%88%90">Analyzer （分词器）的组成</a>
+<ul>
+<li><a href="#character-filters-%E5%AD%97%E7%AC%A6%E8%BF%87%E6%BB%A4%E5%99%A8">Character Filters （字符过滤器）</a>
+<ul>
+<li><a href="#elasticsearch-%E8%87%AA%E5%B8%A6%E7%9A%84-character-filters">Elasticsearch 自带的 Character Filters</a></li>
+<li><a href="#%E4%BE%8B%E5%AD%90">例子</a>
+<ul>
+<li><a href="#%E5%B0%86%E6%96%87%E6%9C%AC%E4%B8%AD%E7%9A%84-%E4%B8%AD%E5%88%92%E7%BA%BF-%E6%9B%BF%E6%8D%A2%E6%88%90-%E4%B8%8B%E5%88%92%E7%BA%BF-_">将文本中的 中划线[ - ] 替换成 下划线 [ _ ]</a></li>
+<li><a href="#%E6%9B%BF%E6%8D%A2%E8%A1%A8%E6%83%85%E7%AC%A6%E5%8F%B7">替换表情符号</a></li>
+<li><a href="#%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F">正则表达式</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#tokenizer%E5%88%86%E8%A7%A3%E5%99%A8">tokenizer（分解器）</a>
+<ul>
+<li><a href="#elasticsearch-%E5%86%85%E7%BD%AE%E7%9A%84-tokenizers">Elasticsearch 内置的 Tokenizers</a></li>
+<li><a href="#%E4%BE%8B%E5%AD%90-2">例子</a>
+<ul>
+<li><a href="#path_hierarchy">path_hierarchy</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#token-filters-%E8%AF%8D%E5%85%83%E8%BF%87%E6%BB%A4%E5%99%A8">token filters  (词元过滤器)</a>
+<ul>
+<li><a href="#elasticsearch-%E8%87%AA%E5%B8%A6%E7%9A%84token-filters">Elasticsearch 自带的token filters</a></li>
+<li><a href="#%E4%BE%8B%E5%AD%90-3">例子</a>
+<ul>
+<li><a href="#stop">stop</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E4%BD%BF%E7%94%A8-_analyzer-api">使用 _analyzer API</a>
+<ul>
+<li><a href="#%E7%9B%B4%E6%8E%A5%E6%8C%87%E5%AE%9Aanalyzer-%E8%BF%9B%E8%A1%8C%E6%B5%8B%E8%AF%95">直接指定Analyzer 进行测试</a></li>
+<li><a href="#%E6%8C%87%E5%AE%9A%E7%B4%A2%E5%BC%95%E7%9A%84%E5%AD%97%E6%AE%B5%E8%BF%9B%E8%A1%8C%E6%B5%8B%E8%AF%95">指定索引的字段进行测试</a></li>
+<li><a href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E5%88%86%E8%AF%8D%E5%99%A8%E8%BF%9B%E8%A1%8C%E6%B5%8B%E8%AF%95">自定义分词器进行测试</a></li>
+</ul>
+</li>
+<li><a href="#elasticsearch%E7%9A%84%E5%86%85%E7%BD%AE%E5%88%86%E8%AF%8D%E5%99%A8">Elasticsearch的内置分词器</a>
+<ul>
+<li><a href="#standard-analyzer">Standard Analyzer</a></li>
+<li><a href="#simple-analyzer">Simple Analyzer</a></li>
+<li><a href="#whitespace-analyzer">Whitespace Analyzer</a></li>
+<li><a href="#stop-analyzer">Stop Analyzer</a></li>
+<li><a href="#keyword-analyzer">Keyword Analyzer</a></li>
+<li><a href="#pattern-analyzer">Pattern Analyzer</a></li>
+<li><a href="#language-%E6%8F%90%E4%BE%9B%E4%BA%8630%E5%A4%9A%E7%A7%8D%E5%B8%B8%E8%A7%81%E8%AF%AD%E8%A8%80%E7%9A%84%E5%88%86%E8%AF%8D%E5%99%A8">Language - 提供了30多种常见语言的分词器</a></li>
+</ul>
+</li>
+<li><a href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E5%88%86%E8%AF%8D%E5%99%A8">自定义分词器</a>
+<ul>
+<li><a href="#my_custom_analyzer">my_custom_analyzer</a>
+<ul>
+<li><a href="#%E5%AE%9A%E4%B9%89%E5%88%86%E8%AF%8D%E5%99%A8">定义分词器</a></li>
+<li><a href="#%E6%B5%8B%E8%AF%95%E8%87%AA%E5%AE%9A%E4%B9%89%E7%9A%84%E5%88%86%E8%AF%8D%E5%99%A8">测试自定义的分词器</a></li>
+<li><a href="#%E8%A7%A3%E6%9E%90">解析</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E5%85%B6%E4%BB%96%E5%88%86%E8%AF%8D%E5%99%A8">其他分词器</a>
+<ul>
+<li><a href="#analysis-icu">Analysis-ICU</a>
+<ul>
+<li><a href="#%E5%AE%89%E8%A3%85">安装</a></li>
+</ul>
+</li>
+<li><a href="#analysis-ik-%E4%B8%AD%E6%96%87%E5%88%86%E8%AF%8D%E6%8F%92%E4%BB%B6">Analysis-IK （中文分词插件）</a>
+<ul>
+<li><a href="#%E5%AE%89%E8%A3%85-2">安装</a></li>
+</ul>
+</li>
+<li><a href="#hanlp-%E4%B8%AD%E6%96%87%E5%88%86%E8%AF%8D%E6%8F%92%E4%BB%B6">HanLP （中文分词插件）</a>
+<ul>
+<li><a href="#%E5%AE%89%E8%A3%85-3">安装</a></li>
+</ul>
+</li>
+<li><a href="#pinyin-%E6%8B%BC%E9%9F%B3">Pinyin （拼音）</a>
+<ul>
+<li><a href="#%E5%AE%89%E8%A3%85-4">安装</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99">参考资料</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+        <script>
+            function locateCatelogList() {
+                /*获取文章目录集合,可通过:header过滤器*/
+                var alis = $('.post-content :header');
+                /*获取侧边栏目录列表集合**/
+                var sidebar_alis = $('.markdownIt-TOC a');
+                /*获取滚动条到顶部的距离*/
+                var scroll_height = $(window).scrollTop();
+                for (var i = 0; i < alis.length; i++) {
+                    /*获取锚点集合中的元素分别到顶点的距离*/
+                    var a_height = $(alis[i]).offset().top;
+                    if (a_height < scroll_height) {
+                        /*高亮显示*/
+                        sidebar_alis.removeClass('on');
+                        $(sidebar_alis[i]).addClass('on');
+                    }
+                }
+            }
+            $(function() {
+                /*绑定滚动事件 */
+                $(window).bind('scroll', locateCatelogList);
+            });
+        </script>
+    </div>
+    
+                            
+
+                </div>
+
+
+
+
+            </div>
+
+
+            <div class="site-footer">
+  Powered by <a href="https://github.com/kingofzihua" target="_blank">kingofzihua</a> | 
+  <a class="rss" href="http://kingofzihua.github.io/atom.xml" target="_blank">RSS</a>
+</div>
+
+<script>
+  hljs.initHighlightingOnLoad()
+</script>
+
+
+    </div>
+    <script>
+        $('#sidebar').stickySidebar({
+            topSpacing: 80,
+            // bottomSpacing: 60
+        });
+    </script>
+    
+</body>
+
+</html>
