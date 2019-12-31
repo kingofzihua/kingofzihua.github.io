@@ -7,14 +7,14 @@
 <title>
     Elasticsearch Analyzer (分词器) | kingofzihua
 </title>
-<link rel="shortcut icon" href="http://kingofzihua.github.io/favicon.ico?v=1577770835023">
+<link rel="shortcut icon" href="https://blog.kingofzihua.top/favicon.ico?v=1577771342871">
 <!-- <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous"> -->
 <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
-<link rel="stylesheet" href="http://kingofzihua.github.io/styles/main.css">
+<link rel="stylesheet" href="https://blog.kingofzihua.top/styles/main.css">
 <!-- js -->
 <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
-<script src="http://kingofzihua.github.io/media/js/jquery.sticky-sidebar.min.js"></script>
+<script src="https://blog.kingofzihua.top/media/js/jquery.sticky-sidebar.min.js"></script>
 <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
 <script src="https://cdn.bootcss.com/moment.js/2.23.0/moment.min.js"></script>
 
@@ -27,8 +27,8 @@
         <div class="header">
     <div class="nav">
         <div class="logo">
-            <a href="http://kingofzihua.github.io">
-                <img class="avatar" src="http://kingofzihua.github.io/images/avatar.png?v=1577770835023" alt="">
+            <a href="https://blog.kingofzihua.top">
+                <img class="avatar" src="https://blog.kingofzihua.top/images/avatar.png?v=1577771342871" alt="">
             </a>
             <div class="site-title">
                 <h1>
@@ -104,14 +104,14 @@
                         <div class="post-info">
                             <time class="post-time">2019-09-04</time>
                             
-                                <a href="http://kingofzihua.github.io/tag/n9VRPxrjY" class="post-tag i-tag
-                            i-tag-other_2">
+                                <a href="https://blog.kingofzihua.top/tag/n9VRPxrjY" class="post-tag i-tag
+                            i-tag-banana">
                             #elasticsearch
                         </a>
                                 
                         </div>
                         
-                            <div class="post-feature-image" style="background-image: url('http://kingofzihua.github.io/post-images/elasticsearch-analyzer-fen-ci-qi.jpg')"></div>
+                            <div class="post-feature-image" style="background-image: url('https://blog.kingofzihua.top/post-images/elasticsearch-analyzer-fen-ci-qi.jpg')"></div>
                             
                                 <div class="post-content">
                                     <blockquote>
@@ -133,7 +133,7 @@
 <blockquote>
 <p>分词器是专门处理分词的组件，分词器(analyzer)是由字符过滤器（Character Filters）、一个分解器(tokenizer)、零个或多个词元过滤器(token filters)组成。</p>
 </blockquote>
-<figure data-type="image" tabindex="1"><img src="http://kingofzihua.github.io/post-images/1567573386582.jpg" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="1"><img src="https://blog.kingofzihua.top/post-images/1567573386582.jpg" alt="" loading="lazy"></figure>
 <h3 id="character-filters-字符过滤器">Character Filters （字符过滤器）</h3>
 <pre><code>在分解器（Tokenizer）之前对文本进行预处理。处理的算法称谓字符过滤器（Character Filters）	
 </code></pre>
@@ -457,7 +457,7 @@
 <li>按词切分</li>
 <li>小写处理</li>
 </ul>
-<figure data-type="image" tabindex="2"><img src="http://kingofzihua.github.io/post-images/1567574028769.jpg" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="2"><img src="https://blog.kingofzihua.top/post-images/1567574028769.jpg" alt="" loading="lazy"></figure>
 <pre><code>GET _analyze
 {
  &quot;analyzer&quot;: &quot;standard&quot;,
@@ -566,7 +566,7 @@
 <li>按照非字母切分，非字母对都被去除</li>
 <li>小写处理</li>
 </ul>
-<figure data-type="image" tabindex="3"><img src="http://kingofzihua.github.io/post-images/1567574087251.jpg" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="3"><img src="https://blog.kingofzihua.top/post-images/1567574087251.jpg" alt="" loading="lazy"></figure>
 <pre><code>GET _analyze
   {
     &quot;analyzer&quot;: &quot;simple&quot;,
@@ -667,7 +667,7 @@
 <ul>
 <li>按照空格切分</li>
 </ul>
-<figure data-type="image" tabindex="4"><img src="http://kingofzihua.github.io/post-images/1567574121683.jpg" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="4"><img src="https://blog.kingofzihua.top/post-images/1567574121683.jpg" alt="" loading="lazy"></figure>
 <pre><code>GET _analyze
 {
   &quot;analyzer&quot;: &quot;whitespace&quot;,
@@ -772,7 +772,7 @@
 </ul>
 </li>
 </ul>
-<figure data-type="image" tabindex="5"><img src="http://kingofzihua.github.io/post-images/1567574149862.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="5"><img src="https://blog.kingofzihua.top/post-images/1567574149862.png" alt="" loading="lazy"></figure>
 <pre><code>GET _analyze
 {
   &quot;analyzer&quot;: &quot;stop&quot;,
@@ -859,7 +859,7 @@
 <ul>
 <li>不分词，直接将输入当一个<code>term</code>输出</li>
 </ul>
-<figure data-type="image" tabindex="6"><img src="http://kingofzihua.github.io/post-images/1567574187183.jpg" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="6"><img src="https://blog.kingofzihua.top/post-images/1567574187183.jpg" alt="" loading="lazy"></figure>
 <pre><code>GET _analyze
 {
   &quot;analyzer&quot;: &quot;keyword&quot;,
@@ -881,7 +881,7 @@
 </code></pre>
 <p><em>没有做任何的处理，直接把结果按一个<code>term</code>输出了</em></p>
 <h3 id="pattern-analyzer">Pattern Analyzer</h3>
-<figure data-type="image" tabindex="7"><img src="http://kingofzihua.github.io/post-images/1567571888516.jpg" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="7"><img src="https://blog.kingofzihua.top/post-images/1567571888516.jpg" alt="" loading="lazy"></figure>
 <ul>
 <li>通过正则表达式进行分词</li>
 <li>默认是\W+，非字符的符号进行分隔</li>
@@ -1141,7 +1141,7 @@
 <ul>
 <li>https://github.com/elastic/elasticsearch-analysis-icu</li>
 </ul>
-<figure data-type="image" tabindex="8"><img src="http://kingofzihua.github.io/post-images/1567576048362.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="8"><img src="https://blog.kingofzihua.top/post-images/1567576048362.png" alt="" loading="lazy"></figure>
 <h4 id="安装">安装</h4>
 <pre><code># 需要找到你的elasticsearch-plugin命令所在位置
 sudo /you-path/elasticsearch-plugin install analysis-icu
@@ -1189,7 +1189,7 @@ sudo /you-path/elasticsearch-plugin install https://github.com/medcl/elasticsear
                     
                         <div class="next-post">
                             <div class="next">下一篇</div>
-                            <a href="http://kingofzihua.github.io/post/elasticsearch-rest-api">
+                            <a href="https://blog.kingofzihua.top/post/elasticsearch-rest-api">
                                 <h3 class="post-title">
                                     Elasticsearch REST API
                                 </h3>
@@ -1345,7 +1345,7 @@ sudo /you-path/elasticsearch-plugin install https://github.com/medcl/elasticsear
 
             <div class="site-footer">
   Powered by <a href="https://github.com/kingofzihua" target="_blank">kingofzihua</a> | 
-  <a class="rss" href="http://kingofzihua.github.io/atom.xml" target="_blank">RSS</a>
+  <a class="rss" href="https://blog.kingofzihua.top/atom.xml" target="_blank">RSS</a>
 </div>
 
 <script>
