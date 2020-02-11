@@ -2,14 +2,14 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://kingofzihua.github.io</id>
     <title>kingofzihua</title>
-    <updated>2019-12-31T05:52:03.757Z</updated>
+    <updated>2020-02-11T07:57:09.030Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://kingofzihua.github.io"/>
     <link rel="self" href="https://kingofzihua.github.io/atom.xml"/>
     <subtitle>我未曾见过一个早起、勤奋、谨慎、诚实的人整天抱怨的 — 富兰克林</subtitle>
     <logo>https://kingofzihua.github.io/images/avatar.png</logo>
     <icon>https://kingofzihua.github.io/favicon.ico</icon>
-    <rights>All rights reserved 2019, kingofzihua</rights>
+    <rights>All rights reserved 2020, kingofzihua</rights>
     <entry>
         <title type="html"><![CDATA[Laravel 项目 伪静态分页处理]]></title>
         <id>https://kingofzihua.github.io/post/laravel-xiang-mu-wei-jing-tai-fen-ye-chu-li</id>
@@ -633,20 +633,20 @@ use App\Pagination\LengthAwarePaginator;
 }
 </code></pre>
 <h3 id="bool-嵌套">Bool 嵌套</h3>
-<figure data-type="image" tabindex="1"><img src="https://kingofzihua.github.io/post-images/1568255247856.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="1"><img src="https://kingofzihua.github.io/post-images/1568255247856.png" alt=""></figure>
 <h4 id="查询语句的结构会对相关度算分产生影响">查询语句的结构，会对相关度算分产生影响</h4>
 <ul>
 <li>同一层级下对竞争字段，具有相同对权重</li>
 <li>通过嵌套bool查询，可以改变对算分对影响</li>
 </ul>
-<figure data-type="image" tabindex="2"><img src="https://kingofzihua.github.io/post-images/1568255536825.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="2"><img src="https://kingofzihua.github.io/post-images/1568255536825.png" alt=""></figure>
 <h4 id="查询语法">查询语法</h4>
 <ul>
 <li>子查询可以任意顺序出现</li>
 <li>可以嵌套多个查询</li>
 <li>如果你的bool查询中，没有must条件，should中必须至少满足一条查询</li>
 </ul>
-<figure data-type="image" tabindex="3"><img src="https://kingofzihua.github.io/post-images/1568254527196.jpg" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="3"><img src="https://kingofzihua.github.io/post-images/1568254527196.jpg" alt=""></figure>
 <h2 id="boosting-相关性提升查询">Boosting 相关性提升查询</h2>
 <ul>
 <li>Boosting 是控制相关度的一种手段</li>
@@ -1815,7 +1815,7 @@ GET moulds/_search
 <blockquote>
 <p>分词器是专门处理分词的组件，分词器(analyzer)是由字符过滤器（Character Filters）、一个分解器(tokenizer)、零个或多个词元过滤器(token filters)组成。</p>
 </blockquote>
-<figure data-type="image" tabindex="1"><img src="https://kingofzihua.github.io/post-images/1567573386582.jpg" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="1"><img src="https://kingofzihua.github.io/post-images/1567573386582.jpg" alt=""></figure>
 <h3 id="character-filters-字符过滤器">Character Filters （字符过滤器）</h3>
 <pre><code>在分解器（Tokenizer）之前对文本进行预处理。处理的算法称谓字符过滤器（Character Filters）	
 </code></pre>
@@ -2139,7 +2139,7 @@ GET moulds/_search
 <li>按词切分</li>
 <li>小写处理</li>
 </ul>
-<figure data-type="image" tabindex="2"><img src="https://kingofzihua.github.io/post-images/1567574028769.jpg" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="2"><img src="https://kingofzihua.github.io/post-images/1567574028769.jpg" alt=""></figure>
 <pre><code>GET _analyze
 {
  &quot;analyzer&quot;: &quot;standard&quot;,
@@ -2248,7 +2248,7 @@ GET moulds/_search
 <li>按照非字母切分，非字母对都被去除</li>
 <li>小写处理</li>
 </ul>
-<figure data-type="image" tabindex="3"><img src="https://kingofzihua.github.io/post-images/1567574087251.jpg" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="3"><img src="https://kingofzihua.github.io/post-images/1567574087251.jpg" alt=""></figure>
 <pre><code>GET _analyze
   {
     &quot;analyzer&quot;: &quot;simple&quot;,
@@ -2349,7 +2349,7 @@ GET moulds/_search
 <ul>
 <li>按照空格切分</li>
 </ul>
-<figure data-type="image" tabindex="4"><img src="https://kingofzihua.github.io/post-images/1567574121683.jpg" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="4"><img src="https://kingofzihua.github.io/post-images/1567574121683.jpg" alt=""></figure>
 <pre><code>GET _analyze
 {
   &quot;analyzer&quot;: &quot;whitespace&quot;,
@@ -2454,7 +2454,7 @@ GET moulds/_search
 </ul>
 </li>
 </ul>
-<figure data-type="image" tabindex="5"><img src="https://kingofzihua.github.io/post-images/1567574149862.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="5"><img src="https://kingofzihua.github.io/post-images/1567574149862.png" alt=""></figure>
 <pre><code>GET _analyze
 {
   &quot;analyzer&quot;: &quot;stop&quot;,
@@ -2541,7 +2541,7 @@ GET moulds/_search
 <ul>
 <li>不分词，直接将输入当一个<code>term</code>输出</li>
 </ul>
-<figure data-type="image" tabindex="6"><img src="https://kingofzihua.github.io/post-images/1567574187183.jpg" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="6"><img src="https://kingofzihua.github.io/post-images/1567574187183.jpg" alt=""></figure>
 <pre><code>GET _analyze
 {
   &quot;analyzer&quot;: &quot;keyword&quot;,
@@ -2563,7 +2563,7 @@ GET moulds/_search
 </code></pre>
 <p><em>没有做任何的处理，直接把结果按一个<code>term</code>输出了</em></p>
 <h3 id="pattern-analyzer">Pattern Analyzer</h3>
-<figure data-type="image" tabindex="7"><img src="https://kingofzihua.github.io/post-images/1567571888516.jpg" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="7"><img src="https://kingofzihua.github.io/post-images/1567571888516.jpg" alt=""></figure>
 <ul>
 <li>通过正则表达式进行分词</li>
 <li>默认是\W+，非字符的符号进行分隔</li>
@@ -2823,7 +2823,7 @@ GET moulds/_search
 <ul>
 <li>https://github.com/elastic/elasticsearch-analysis-icu</li>
 </ul>
-<figure data-type="image" tabindex="8"><img src="https://kingofzihua.github.io/post-images/1567576048362.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="8"><img src="https://kingofzihua.github.io/post-images/1567576048362.png" alt=""></figure>
 <h4 id="安装">安装</h4>
 <pre><code># 需要找到你的elasticsearch-plugin命令所在位置
 sudo /you-path/elasticsearch-plugin install analysis-icu
@@ -2881,7 +2881,7 @@ sudo /you-path/elasticsearch-plugin install https://github.com/medcl/elasticsear
 </blockquote>
 <!-- more -->
 <h1 id="rest-api-很容易被各种语言调用">REST API - 很容易被各种语言调用</h1>
-<figure data-type="image" tabindex="1"><img src="https://kingofzihua.github.io/post-images/1567409800687.jpg" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="1"><img src="https://kingofzihua.github.io/post-images/1567409800687.jpg" alt=""></figure>
 <h2 id="文档的操作">文档的操作</h2>
 <table>
 <thead>
@@ -3207,92 +3207,7 @@ PUT users/_doc/1?op_type=create
 <li>返回结果包括了每一条操作执行的结果</li>
 </ul>
 <h4 id="demo">Demo</h4>
-<pre><code>POST _bulk
-{&quot;index&quot;:{&quot;_index&quot;:&quot;test&quot;,&quot;_id&quot;:&quot;1&quot;}}
-{&quot;field1&quot;:&quot;value1&quot;}
-{&quot;delete&quot;:{&quot;_index&quot;:&quot;test&quot;,&quot;_id&quot;:&quot;2&quot;}}
-{&quot;create&quot;:{&quot;_index&quot;:&quot;test2&quot;,&quot;_id&quot;:&quot;3&quot;}}
-{&quot;field1&quot;:&quot;value3&quot;}
-{&quot;update&quot;:{&quot;_index&quot;:&quot;test&quot;,&quot;_id&quot;:&quot;1&quot;}}
-{&quot;doc&quot;: {&quot;field2&quot;:&quot;value2&quot;}}
-</code></pre>
-<p>返回结果：</p>
-<pre><code>{
-  &quot;took&quot; : 288,
-  &quot;errors&quot; : false,
-  &quot;items&quot; : [
-    {
-      &quot;index&quot; : {
-        &quot;_index&quot; : &quot;test&quot;,
-        &quot;_type&quot; : &quot;_doc&quot;,
-        &quot;_id&quot; : &quot;1&quot;,
-        &quot;_version&quot; : 1,
-        &quot;result&quot; : &quot;created&quot;,
-        &quot;_shards&quot; : {
-          &quot;total&quot; : 2,
-          &quot;successful&quot; : 1,
-          &quot;failed&quot; : 0
-        },
-        &quot;_seq_no&quot; : 0,
-        &quot;_primary_term&quot; : 1,
-        &quot;status&quot; : 201
-      }
-    },
-    {
-      &quot;delete&quot; : {
-        &quot;_index&quot; : &quot;test&quot;,
-        &quot;_type&quot; : &quot;_doc&quot;,
-        &quot;_id&quot; : &quot;2&quot;,
-        &quot;_version&quot; : 1,
-        &quot;result&quot; : &quot;not_found&quot;,
-        &quot;_shards&quot; : {
-          &quot;total&quot; : 2,
-          &quot;successful&quot; : 1,
-          &quot;failed&quot; : 0
-        },
-        &quot;_seq_no&quot; : 1,
-        &quot;_primary_term&quot; : 1,
-        &quot;status&quot; : 404
-      }
-    },
-    {
-      &quot;create&quot; : {
-        &quot;_index&quot; : &quot;test2&quot;,
-        &quot;_type&quot; : &quot;_doc&quot;,
-        &quot;_id&quot; : &quot;3&quot;,
-        &quot;_version&quot; : 1,
-        &quot;result&quot; : &quot;created&quot;,
-        &quot;_shards&quot; : {
-          &quot;total&quot; : 2,
-          &quot;successful&quot; : 1,
-          &quot;failed&quot; : 0
-        },
-        &quot;_seq_no&quot; : 0,
-        &quot;_primary_term&quot; : 1,
-        &quot;status&quot; : 201
-      }
-    },
-    {
-      &quot;update&quot; : {
-        &quot;_index&quot; : &quot;test&quot;,
-        &quot;_type&quot; : &quot;_doc&quot;,
-        &quot;_id&quot; : &quot;1&quot;,
-        &quot;_version&quot; : 2,
-        &quot;result&quot; : &quot;updated&quot;,
-        &quot;_shards&quot; : {
-          &quot;total&quot; : 2,
-          &quot;successful&quot; : 1,
-          &quot;failed&quot; : 0
-        },
-        &quot;_seq_no&quot; : 2,
-        &quot;_primary_term&quot; : 1,
-        &quot;status&quot; : 200
-      }
-    }
-  ]
-}
-</code></pre>
-<h5 id="请求解析">请求解析</h5>
+<p>请求：</p>
 <pre><code>POST _bulk # 这个是请求地址
 # 索引一个文档  指明索引是test 文档编号(主键)是 1 字段名为 field1 值为 value1
 {&quot;index&quot;:{&quot;_index&quot;:&quot;test&quot;,&quot;_id&quot;:&quot;1&quot;}}
@@ -3309,7 +3224,7 @@ PUT users/_doc/1?op_type=create
 {&quot;update&quot;:{&quot;_index&quot;:&quot;test&quot;,&quot;_id&quot;:&quot;1&quot;}}
 {&quot;doc&quot;: {&quot;field2&quot;:&quot;value2&quot;}}
 </code></pre>
-<h5 id="响应解析">响应解析</h5>
+<p>返回结果：</p>
 <pre><code>{
   &quot;took&quot; : 288,
   &quot;errors&quot; : false,
@@ -3389,6 +3304,128 @@ PUT users/_doc/1?op_type=create
   ]
 }
 </code></pre>
+<h3 id="mget-批量读取">mget 批量读取</h3>
+<blockquote>
+<p>批量读取可以减少网络连接锁产生的开销。提高性能</p>
+</blockquote>
+<h4 id="demo-2">Demo</h4>
+<p>请求：</p>
+<pre><code>GET _mget
+{
+    &quot;docs&quot;:[
+        {
+            &quot;_index&quot;:&quot;test&quot;,
+            &quot;_id&quot;:1
+        },
+        {
+            &quot;_index&quot;:&quot;test2&quot;,
+            &quot;_id&quot;:1
+        }
+    ]
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;docs&quot; : [
+    {
+      &quot;_index&quot; : &quot;test&quot;,
+      &quot;_type&quot; : &quot;_doc&quot;,
+      &quot;_id&quot; : &quot;1&quot;,
+      &quot;_version&quot; : 2,
+      &quot;_seq_no&quot; : 2,
+      &quot;_primary_term&quot; : 1,
+      &quot;found&quot; : true,
+      &quot;_source&quot; : {
+        &quot;field1&quot; : &quot;value1&quot;,
+        &quot;field2&quot; : &quot;value2&quot;
+      }
+    },
+    {
+      &quot;_index&quot; : &quot;test2&quot;,
+      &quot;_type&quot; : &quot;_doc&quot;,
+      &quot;_id&quot; : &quot;1&quot;,
+      &quot;found&quot; : false    //未找到 只有id为3的没有id为1的
+    }
+  ]
+}
+
+</code></pre>
+<h3 id="msearch-批量查询">msearch 批量查询</h3>
+<h4 id="demo-3">Demo</h4>
+<p>请求：</p>
+<pre><code>POST test/_msearch    //在 test 索引上查查询
+{}
+{&quot;query&quot;:{&quot;match_all&quot;:{}},&quot;size&quot;:1} // 查询所有，只返回一条
+{&quot;index&quot;:&quot;test2&quot;}    //可以指定其他的索引，这个是 test2索引
+{&quot;query&quot;:{&quot;match_all&quot;:{}},&quot;size&quot;:1}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;took&quot; : 9,
+  &quot;responses&quot; : [
+    {
+      &quot;took&quot; : 2,
+      &quot;timed_out&quot; : false,
+      &quot;_shards&quot; : {
+        &quot;total&quot; : 1,
+        &quot;successful&quot; : 1,
+        &quot;skipped&quot; : 0,
+        &quot;failed&quot; : 0
+      },
+      &quot;hits&quot; : {
+        &quot;total&quot; : {
+          &quot;value&quot; : 1,
+          &quot;relation&quot; : &quot;eq&quot;
+        },
+        &quot;max_score&quot; : 1.0,
+        &quot;hits&quot; : [
+          {
+            &quot;_index&quot; : &quot;test&quot;,
+            &quot;_type&quot; : &quot;_doc&quot;,
+            &quot;_id&quot; : &quot;1&quot;,
+            &quot;_score&quot; : 1.0,
+            &quot;_source&quot; : {
+              &quot;field1&quot; : &quot;value1&quot;,
+              &quot;field2&quot; : &quot;value2&quot;
+            }
+          }
+        ]
+      },
+      &quot;status&quot; : 200
+    },
+    {
+      &quot;took&quot; : 1,
+      &quot;timed_out&quot; : false,
+      &quot;_shards&quot; : {
+        &quot;total&quot; : 1,
+        &quot;successful&quot; : 1,
+        &quot;skipped&quot; : 0,
+        &quot;failed&quot; : 0
+      },
+      &quot;hits&quot; : {
+        &quot;total&quot; : {
+          &quot;value&quot; : 1,
+          &quot;relation&quot; : &quot;eq&quot;
+        },
+        &quot;max_score&quot; : 1.0,
+        &quot;hits&quot; : [
+          {
+            &quot;_index&quot; : &quot;test2&quot;,
+            &quot;_type&quot; : &quot;_doc&quot;,
+            &quot;_id&quot; : &quot;3&quot;,
+            &quot;_score&quot; : 1.0,
+            &quot;_source&quot; : {
+              &quot;field1&quot; : &quot;value3&quot;
+            }
+          }
+        ]
+      },
+      &quot;status&quot; : 200
+    }
+  ]
+}
+
+</code></pre>
 <h1 id="常见错误返回">常见错误返回</h1>
 <table>
 <thead>
@@ -3460,7 +3497,7 @@ foo、Foo、FOO几个单词是不同的索引词。索引词（<code>term</code>
 </ul>
 <p><em>请注意，一个节点只能加入一个集群。此外，你还可以拥有多个独立的集群，每个集群都有起不同的集群名称。例如，在开发过程中，你可以建立开发集群库和测试集群库，分别为开发、测试服务。</em></p>
 <h4 id="elasticsearch集群结构">Elasticsearch集群结构</h4>
-<figure data-type="image" tabindex="1"><img src="https://kingofzihua.github.io/post-images/1567420390519.jpg" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="1"><img src="https://kingofzihua.github.io/post-images/1567420390519.jpg" alt=""></figure>
 <h3 id="节点node">节点(node)</h3>
 <p>一个节点是一个逻辑上独立的服务，他是集群的一部分，可以存储数据，并参与集群的索引和搜索功能。</p>
 <ul>
@@ -3582,7 +3619,7 @@ foo、Foo、FOO几个单词是不同的索引词。索引词（<code>term</code>
 </ul>
 <h4 id="示例">示例</h4>
 <p><strong>一个三节点的集群中，blogs索引的分片分布情况</strong><br>
-<img src="https://kingofzihua.github.io/post-images/1567417393236.jpg" alt="" loading="lazy"></p>
+<img src="https://kingofzihua.github.io/post-images/1567417393236.jpg" alt=""></p>
 <h4 id="分片的设定">分片的设定</h4>
 <p>对于生产环境中分片的设定，需要提现做好容量规划</p>
 <ul>
@@ -3659,10 +3696,10 @@ test_index     2 r UNASSIGNED
 </li>
 <li>索引的名字全部小写</li>
 <li>单个集群中可以定义多个你想要的索引<br>
-<img src="https://kingofzihua.github.io/post-images/1567407893547.jpg" alt="" loading="lazy"></li>
+<img src="https://kingofzihua.github.io/post-images/1567407893547.jpg" alt=""></li>
 </ul>
 <h4 id="索引的不同语意">索引的不同语意</h4>
-<figure data-type="image" tabindex="2"><img src="https://kingofzihua.github.io/post-images/1567408973411.jpg" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="2"><img src="https://kingofzihua.github.io/post-images/1567408973411.jpg" alt=""></figure>
 <h3 id="类型-type">类型 (type)</h3>
 <blockquote>
 <p>可以认为是数据库中的一个表</p>
@@ -3729,7 +3766,7 @@ test_index     2 r UNASSIGNED
 </ul>
 </li>
 </ul>
-<figure data-type="image" tabindex="3"><img src="https://kingofzihua.github.io/post-images/1567481358672.png" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="3"><img src="https://kingofzihua.github.io/post-images/1567481358672.png" alt=""></figure>
 <h4 id="json-文档">JSON 文档</h4>
 <ul>
 <li>一篇文档包行列一系列的字段，类似于数据库中的一条数据</li>
@@ -3737,13 +3774,13 @@ test_index     2 r UNASSIGNED
 <ul>
 <li>字段类型可以指定或者是通过<code>Elasticsearch</code> 自动推算(不推荐)</li>
 <li>支持数组 / 支持嵌套<br>
-<img src="https://kingofzihua.github.io/post-images/1567408397372.jpg" alt="" loading="lazy"><br>
+<img src="https://kingofzihua.github.io/post-images/1567408397372.jpg" alt=""><br>
 <em>CSV的文件 通过 logstash转化并写入elasticsearch</em></li>
 </ul>
 </li>
 </ul>
 <h4 id="文档的元数据">文档的元数据</h4>
-<figure data-type="image" tabindex="4"><img src="https://kingofzihua.github.io/post-images/1567407973203.jpg" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="4"><img src="https://kingofzihua.github.io/post-images/1567407973203.jpg" alt=""></figure>
 <h3 id="映射mapping">映射(mapping)</h3>
 <blockquote>
 <p>可以认为是数据库中的表结构</p>
@@ -3904,7 +3941,7 @@ test_index     2 r UNASSIGNED
         <link href="https://kingofzihua.github.io/post/tidewaysxhprof-he-xhgui-da-zao-php-fei-qin-ru-shi-jian-kong-ping-tai">
         </link>
         <updated>2019-08-30T08:50:24.000Z</updated>
-        <content type="html"><![CDATA[<figure data-type="image" tabindex="1"><img src="https://kingofzihua.github.io/post-images/1567390921096.png" alt="火焰图" loading="lazy"></figure>
+        <content type="html"><![CDATA[<figure data-type="image" tabindex="1"><img src="https://kingofzihua.github.io/post-images/1567390921096.png" alt="火焰图"></figure>
 <h2 id="推荐阅读">推荐阅读</h2>
 <ul>
 <li><strong><a href="https://github.com/guanguans/guanguans.github.io/issues/8">Tideways、xhprof 和 xhgui 打造 PHP 非侵入式监控平台</a></strong></li>
@@ -4014,8 +4051,8 @@ $ php install.php
 ; http://php.net/auto-prepend-file
 auto_prepend_file = &quot;/path/wwwroot/xhgui-branch/external/header.php&quot;
 </code></pre>
-<figure data-type="image" tabindex="2"><img src="https://kingofzihua.github.io/post-images/1567391345072.png" alt="函数监控" loading="lazy"></figure>
-<figure data-type="image" tabindex="3"><img src="https://kingofzihua.github.io/post-images/1567391356129.png" alt="调用图" loading="lazy"></figure>
+<figure data-type="image" tabindex="2"><img src="https://kingofzihua.github.io/post-images/1567391345072.png" alt="函数监控"></figure>
+<figure data-type="image" tabindex="3"><img src="https://kingofzihua.github.io/post-images/1567391356129.png" alt="调用图"></figure>
 <h2 id="参考链接">参考链接</h2>
 <ul>
 <li><a href="https://github.com/phacility/xhprof">https://github.com/phacility/xhprof</a></li>

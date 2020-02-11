@@ -7,7 +7,7 @@
 <title>
     Elasticsearch REST API | kingofzihua
 </title>
-<link rel="shortcut icon" href="https://kingofzihua.github.io/favicon.ico?v=1577771520482">
+<link rel="shortcut icon" href="https://kingofzihua.github.io/favicon.ico?v=1581407763178">
 <!-- <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous"> -->
 <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
@@ -28,7 +28,7 @@
     <div class="nav">
         <div class="logo">
             <a href="https://kingofzihua.github.io">
-                <img class="avatar" src="https://kingofzihua.github.io/images/avatar.png?v=1577771520482" alt="">
+                <img class="avatar" src="https://kingofzihua.github.io/images/avatar.png?v=1581407763178" alt="">
             </a>
             <div class="site-title">
                 <h1>
@@ -105,7 +105,7 @@
                             <time class="post-time">2019-09-03</time>
                             
                                 <a href="https://kingofzihua.github.io/tag/n9VRPxrjY" class="post-tag i-tag
-                            i-tag-primary">
+                            i-tag-success">
                             #elasticsearch
                         </a>
                                 
@@ -119,7 +119,7 @@
 </blockquote>
 <!-- more -->
 <h1 id="rest-api-很容易被各种语言调用">REST API - 很容易被各种语言调用</h1>
-<figure data-type="image" tabindex="1"><img src="https://kingofzihua.github.io/post-images/1567409800687.jpg" alt="" loading="lazy"></figure>
+<figure data-type="image" tabindex="1"><img src="https://kingofzihua.github.io/post-images/1567409800687.jpg" alt=""></figure>
 <h2 id="文档的操作">文档的操作</h2>
 <table>
 <thead>
@@ -445,92 +445,7 @@ PUT users/_doc/1?op_type=create
 <li>返回结果包括了每一条操作执行的结果</li>
 </ul>
 <h4 id="demo">Demo</h4>
-<pre><code>POST _bulk
-{&quot;index&quot;:{&quot;_index&quot;:&quot;test&quot;,&quot;_id&quot;:&quot;1&quot;}}
-{&quot;field1&quot;:&quot;value1&quot;}
-{&quot;delete&quot;:{&quot;_index&quot;:&quot;test&quot;,&quot;_id&quot;:&quot;2&quot;}}
-{&quot;create&quot;:{&quot;_index&quot;:&quot;test2&quot;,&quot;_id&quot;:&quot;3&quot;}}
-{&quot;field1&quot;:&quot;value3&quot;}
-{&quot;update&quot;:{&quot;_index&quot;:&quot;test&quot;,&quot;_id&quot;:&quot;1&quot;}}
-{&quot;doc&quot;: {&quot;field2&quot;:&quot;value2&quot;}}
-</code></pre>
-<p>返回结果：</p>
-<pre><code>{
-  &quot;took&quot; : 288,
-  &quot;errors&quot; : false,
-  &quot;items&quot; : [
-    {
-      &quot;index&quot; : {
-        &quot;_index&quot; : &quot;test&quot;,
-        &quot;_type&quot; : &quot;_doc&quot;,
-        &quot;_id&quot; : &quot;1&quot;,
-        &quot;_version&quot; : 1,
-        &quot;result&quot; : &quot;created&quot;,
-        &quot;_shards&quot; : {
-          &quot;total&quot; : 2,
-          &quot;successful&quot; : 1,
-          &quot;failed&quot; : 0
-        },
-        &quot;_seq_no&quot; : 0,
-        &quot;_primary_term&quot; : 1,
-        &quot;status&quot; : 201
-      }
-    },
-    {
-      &quot;delete&quot; : {
-        &quot;_index&quot; : &quot;test&quot;,
-        &quot;_type&quot; : &quot;_doc&quot;,
-        &quot;_id&quot; : &quot;2&quot;,
-        &quot;_version&quot; : 1,
-        &quot;result&quot; : &quot;not_found&quot;,
-        &quot;_shards&quot; : {
-          &quot;total&quot; : 2,
-          &quot;successful&quot; : 1,
-          &quot;failed&quot; : 0
-        },
-        &quot;_seq_no&quot; : 1,
-        &quot;_primary_term&quot; : 1,
-        &quot;status&quot; : 404
-      }
-    },
-    {
-      &quot;create&quot; : {
-        &quot;_index&quot; : &quot;test2&quot;,
-        &quot;_type&quot; : &quot;_doc&quot;,
-        &quot;_id&quot; : &quot;3&quot;,
-        &quot;_version&quot; : 1,
-        &quot;result&quot; : &quot;created&quot;,
-        &quot;_shards&quot; : {
-          &quot;total&quot; : 2,
-          &quot;successful&quot; : 1,
-          &quot;failed&quot; : 0
-        },
-        &quot;_seq_no&quot; : 0,
-        &quot;_primary_term&quot; : 1,
-        &quot;status&quot; : 201
-      }
-    },
-    {
-      &quot;update&quot; : {
-        &quot;_index&quot; : &quot;test&quot;,
-        &quot;_type&quot; : &quot;_doc&quot;,
-        &quot;_id&quot; : &quot;1&quot;,
-        &quot;_version&quot; : 2,
-        &quot;result&quot; : &quot;updated&quot;,
-        &quot;_shards&quot; : {
-          &quot;total&quot; : 2,
-          &quot;successful&quot; : 1,
-          &quot;failed&quot; : 0
-        },
-        &quot;_seq_no&quot; : 2,
-        &quot;_primary_term&quot; : 1,
-        &quot;status&quot; : 200
-      }
-    }
-  ]
-}
-</code></pre>
-<h5 id="请求解析">请求解析</h5>
+<p>请求：</p>
 <pre><code>POST _bulk # 这个是请求地址
 # 索引一个文档  指明索引是test 文档编号(主键)是 1 字段名为 field1 值为 value1
 {&quot;index&quot;:{&quot;_index&quot;:&quot;test&quot;,&quot;_id&quot;:&quot;1&quot;}}
@@ -547,7 +462,7 @@ PUT users/_doc/1?op_type=create
 {&quot;update&quot;:{&quot;_index&quot;:&quot;test&quot;,&quot;_id&quot;:&quot;1&quot;}}
 {&quot;doc&quot;: {&quot;field2&quot;:&quot;value2&quot;}}
 </code></pre>
-<h5 id="响应解析">响应解析</h5>
+<p>返回结果：</p>
 <pre><code>{
   &quot;took&quot; : 288,
   &quot;errors&quot; : false,
@@ -626,6 +541,128 @@ PUT users/_doc/1?op_type=create
     }
   ]
 }
+</code></pre>
+<h3 id="mget-批量读取">mget 批量读取</h3>
+<blockquote>
+<p>批量读取可以减少网络连接锁产生的开销。提高性能</p>
+</blockquote>
+<h4 id="demo-2">Demo</h4>
+<p>请求：</p>
+<pre><code>GET _mget
+{
+    &quot;docs&quot;:[
+        {
+            &quot;_index&quot;:&quot;test&quot;,
+            &quot;_id&quot;:1
+        },
+        {
+            &quot;_index&quot;:&quot;test2&quot;,
+            &quot;_id&quot;:1
+        }
+    ]
+}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;docs&quot; : [
+    {
+      &quot;_index&quot; : &quot;test&quot;,
+      &quot;_type&quot; : &quot;_doc&quot;,
+      &quot;_id&quot; : &quot;1&quot;,
+      &quot;_version&quot; : 2,
+      &quot;_seq_no&quot; : 2,
+      &quot;_primary_term&quot; : 1,
+      &quot;found&quot; : true,
+      &quot;_source&quot; : {
+        &quot;field1&quot; : &quot;value1&quot;,
+        &quot;field2&quot; : &quot;value2&quot;
+      }
+    },
+    {
+      &quot;_index&quot; : &quot;test2&quot;,
+      &quot;_type&quot; : &quot;_doc&quot;,
+      &quot;_id&quot; : &quot;1&quot;,
+      &quot;found&quot; : false    //未找到 只有id为3的没有id为1的
+    }
+  ]
+}
+
+</code></pre>
+<h3 id="msearch-批量查询">msearch 批量查询</h3>
+<h4 id="demo-3">Demo</h4>
+<p>请求：</p>
+<pre><code>POST test/_msearch    //在 test 索引上查查询
+{}
+{&quot;query&quot;:{&quot;match_all&quot;:{}},&quot;size&quot;:1} // 查询所有，只返回一条
+{&quot;index&quot;:&quot;test2&quot;}    //可以指定其他的索引，这个是 test2索引
+{&quot;query&quot;:{&quot;match_all&quot;:{}},&quot;size&quot;:1}
+</code></pre>
+<p>返回结果：</p>
+<pre><code>{
+  &quot;took&quot; : 9,
+  &quot;responses&quot; : [
+    {
+      &quot;took&quot; : 2,
+      &quot;timed_out&quot; : false,
+      &quot;_shards&quot; : {
+        &quot;total&quot; : 1,
+        &quot;successful&quot; : 1,
+        &quot;skipped&quot; : 0,
+        &quot;failed&quot; : 0
+      },
+      &quot;hits&quot; : {
+        &quot;total&quot; : {
+          &quot;value&quot; : 1,
+          &quot;relation&quot; : &quot;eq&quot;
+        },
+        &quot;max_score&quot; : 1.0,
+        &quot;hits&quot; : [
+          {
+            &quot;_index&quot; : &quot;test&quot;,
+            &quot;_type&quot; : &quot;_doc&quot;,
+            &quot;_id&quot; : &quot;1&quot;,
+            &quot;_score&quot; : 1.0,
+            &quot;_source&quot; : {
+              &quot;field1&quot; : &quot;value1&quot;,
+              &quot;field2&quot; : &quot;value2&quot;
+            }
+          }
+        ]
+      },
+      &quot;status&quot; : 200
+    },
+    {
+      &quot;took&quot; : 1,
+      &quot;timed_out&quot; : false,
+      &quot;_shards&quot; : {
+        &quot;total&quot; : 1,
+        &quot;successful&quot; : 1,
+        &quot;skipped&quot; : 0,
+        &quot;failed&quot; : 0
+      },
+      &quot;hits&quot; : {
+        &quot;total&quot; : {
+          &quot;value&quot; : 1,
+          &quot;relation&quot; : &quot;eq&quot;
+        },
+        &quot;max_score&quot; : 1.0,
+        &quot;hits&quot; : [
+          {
+            &quot;_index&quot; : &quot;test2&quot;,
+            &quot;_type&quot; : &quot;_doc&quot;,
+            &quot;_id&quot; : &quot;3&quot;,
+            &quot;_score&quot; : 1.0,
+            &quot;_source&quot; : {
+              &quot;field1&quot; : &quot;value3&quot;
+            }
+          }
+        ]
+      },
+      &quot;status&quot; : 200
+    }
+  ]
+}
+
 </code></pre>
 <h1 id="常见错误返回">常见错误返回</h1>
 <table>
@@ -733,12 +770,17 @@ PUT users/_doc/1?op_type=create
 <ul>
 <li><a href="#bulk-api">Bulk API</a>
 <ul>
-<li><a href="#demo">Demo</a>
-<ul>
-<li><a href="#%E8%AF%B7%E6%B1%82%E8%A7%A3%E6%9E%90">请求解析</a></li>
-<li><a href="#%E5%93%8D%E5%BA%94%E8%A7%A3%E6%9E%90">响应解析</a></li>
+<li><a href="#demo">Demo</a></li>
 </ul>
 </li>
+<li><a href="#mget-%E6%89%B9%E9%87%8F%E8%AF%BB%E5%8F%96">mget 批量读取</a>
+<ul>
+<li><a href="#demo-2">Demo</a></li>
+</ul>
+</li>
+<li><a href="#msearch-%E6%89%B9%E9%87%8F%E6%9F%A5%E8%AF%A2">msearch 批量查询</a>
+<ul>
+<li><a href="#demo-3">Demo</a></li>
 </ul>
 </li>
 </ul>
